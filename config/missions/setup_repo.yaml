@@ -19,6 +19,9 @@ goal: |
      - Post a comment asking the user to provide the missing details or correct the URL.
   5. If all information is present and valid:
      - Call `configure_upstream` to set the UPSTREAM_REPO repository variable (enables automatic code sync from template).
+     - Attempt to create a welcome announcement using `create_welcome_announcement` with the topic (and source_url if available).
+       - If successful, include the discussion URL in your response.
+       - If it fails due to missing Announcements category, note this in your response (user can create it manually).
      - Post a comment instructing GitHub Copilot to:
        "Configure the repository with Source URL: [URL], Topic: [Topic], Frequency: [Freq], Model: [Model].
        1. Remove all files and subdirectories from `dev_data/` directory (but preserve the `dev_data/` directory itself).
@@ -36,12 +39,14 @@ constraints:
 success_criteria:
   - Configuration details extracted and validated.
   - User requested for more info OR Copilot instructed and assigned.
+  - Welcome announcement created (or noted if category missing).
 
-max_steps: 5
+max_steps: 6
 allowed_tools:
   - validate_url
   - post_comment
   - assign_issue_to_copilot
   - get_issue_comments
   - configure_upstream
+  - create_welcome_announcement
 requires_approval: false
