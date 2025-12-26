@@ -640,6 +640,209 @@ def update_issue(
         raise GitHubIssueError(f"Failed to reach GitHub API: {exc.reason}") from exc
 
 
+# -----------------------------------------------------------------------------
+# Repository Label Management
+# -----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class LabelInfo:
+    """Represents a repository label with its metadata."""
+
+    name: str
+    color: str
+    description: str
+
+
+# Required labels for project operations with their metadata
+REQUIRED_LABELS: tuple[LabelInfo, ...] = (
+    LabelInfo(
+        name="setup",
+        color="0e8a16",  # Green
+        description="Repository setup and configuration",
+    ),
+    LabelInfo(
+        name="question",
+        color="d876e3",  # Purple
+        description="Question requiring agent response",
+    ),
+    LabelInfo(
+        name="source-approved",
+        color="0052cc",  # Blue
+        description="Approved source pending implementation",
+    ),
+    LabelInfo(
+        name="source-proposal",
+        color="fbca04",  # Yellow
+        description="Proposed source under review",
+    ),
+    LabelInfo(
+        name="wontfix",
+        color="ffffff",  # White
+        description="This will not be worked on",
+    ),
+)
+
+
+def get_repository_labels(
+    *,
+    token: str,
+    repository: str,
+    api_url: str = DEFAULT_API_URL,
+) -> list[dict[str, str]]:
+    """Get all labels from a repository."""
+    owner, name = normalize_repository(repository)
+    url = f"{api_url.rstrip('/')}/repos/{owner}/{name}/labels?per_page=100"
+
+    req = request.Request(url, method="GET")
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Accept", "application/vnd.github+json")
+    req.add_header("X-GitHub-Api-Version", API_VERSION)
+
+    try:
+        with request.urlopen(req) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            return [{"name": lbl["name"], "color": lbl.get("color", ""), "description": lbl.get("description", "")} for lbl in data]
+    except error.HTTPError as exc:
+        error_text = exc.read().decode("utf-8", errors="replace")
+        raise GitHubIssueError(
+            f"GitHub API error ({exc.code}): {error_text.strip()}"
+        ) from exc
+    except error.URLError as exc:
+        raise GitHubIssueError(f"Failed to reach GitHub API: {exc.reason}") from exc
+
+
+def create_label(
+    *,
+    token: str,
+    repository: str,
+    name: str,
+    color: str,
+    description: str = "",
+    api_url: str = DEFAULT_API_URL,
+) -> None:
+    """Create a new label in a repository."""
+    if not name:
+        raise GitHubIssueError("Label name must be provided.")
+    if not color:
+        raise GitHubIssueError("Label color must be provided.")
+
+    owner, repo_name = normalize_repository(repository)
+    url = f"{api_url.rstrip('/')}/repos/{owner}/{repo_name}/labels"
+    payload = {
+        "name": name,
+        "color": color.lstrip("#"),  # GitHub API expects color without #
+        "description": description,
+    }
+    raw_body = json.dumps(payload).encode("utf-8")
+
+    req = request.Request(url, data=raw_body, method="POST")
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Accept", "application/vnd.github+json")
+    req.add_header("X-GitHub-Api-Version", API_VERSION)
+    req.add_header("Content-Type", "application/json; charset=utf-8")
+
+    try:
+        with request.urlopen(req) as response:
+            response.read()
+    except error.HTTPError as exc:
+        error_text = exc.read().decode("utf-8", errors="replace")
+        raise GitHubIssueError(
+            f"GitHub API error ({exc.code}): {error_text.strip()}"
+        ) from exc
+    except error.URLError as exc:
+        raise GitHubIssueError(f"Failed to reach GitHub API: {exc.reason}") from exc
+
+
+def update_label(
+    *,
+    token: str,
+    repository: str,
+    name: str,
+    color: str | None = None,
+    description: str | None = None,
+    new_name: str | None = None,
+    api_url: str = DEFAULT_API_URL,
+) -> None:
+    """Update an existing label in a repository."""
+    if not name:
+        raise GitHubIssueError("Label name must be provided.")
+
+    owner, repo_name = normalize_repository(repository)
+    from urllib.parse import quote
+    encoded_name = quote(name, safe="")
+    url = f"{api_url.rstrip('/')}/repos/{owner}/{repo_name}/labels/{encoded_name}"
+
+    payload: dict[str, str] = {}
+    if new_name is not None:
+        payload["new_name"] = new_name
+    if color is not None:
+        payload["color"] = color.lstrip("#")
+    if description is not None:
+        payload["description"] = description
+
+    if not payload:
+        return  # Nothing to update
+
+    raw_body = json.dumps(payload).encode("utf-8")
+
+    req = request.Request(url, data=raw_body, method="PATCH")
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Accept", "application/vnd.github+json")
+    req.add_header("X-GitHub-Api-Version", API_VERSION)
+    req.add_header("Content-Type", "application/json; charset=utf-8")
+
+    try:
+        with request.urlopen(req) as response:
+            response.read()
+    except error.HTTPError as exc:
+        error_text = exc.read().decode("utf-8", errors="replace")
+        raise GitHubIssueError(
+            f"GitHub API error ({exc.code}): {error_text.strip()}"
+        ) from exc
+    except error.URLError as exc:
+        raise GitHubIssueError(f"Failed to reach GitHub API: {exc.reason}") from exc
+
+
+def ensure_required_labels(
+    *,
+    token: str,
+    repository: str,
+    api_url: str = DEFAULT_API_URL,
+) -> dict[str, list[str]]:
+    """Ensure all required labels exist in the repository.
+
+    Creates missing labels and optionally updates existing ones if metadata differs.
+
+    Returns:
+        Dictionary with 'created' and 'existing' label name lists.
+    """
+    existing_labels = get_repository_labels(
+        token=token, repository=repository, api_url=api_url
+    )
+    existing_names = {lbl["name"].lower(): lbl for lbl in existing_labels}
+
+    created: list[str] = []
+    existing: list[str] = []
+
+    for label in REQUIRED_LABELS:
+        label_lower = label.name.lower()
+        if label_lower in existing_names:
+            existing.append(label.name)
+        else:
+            create_label(
+                token=token,
+                repository=repository,
+                name=label.name,
+                color=label.color,
+                description=label.description,
+                api_url=api_url,
+            )
+            created.append(label.name)
+
+    return {"created": created, "existing": existing}
+
+
 def lock_issue(
     *,
     token: str,

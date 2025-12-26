@@ -11,10 +11,13 @@ from pathlib import Path
 from src.integrations.github.issues import (
     create_issue,
     get_repository_details,
+    get_repository_labels,
     post_comment,
     resolve_repository,
     resolve_token,
+    ensure_required_labels,
     GitHubIssueError,
+    REQUIRED_LABELS,
 )
 from src.integrations.github.sync import get_repository_variable
 from src.integrations.github import discussions as github_discussions
@@ -114,6 +117,14 @@ def setup_repo_cli(args: argparse.Namespace) -> int:
         shutil.rmtree(dev_data)
 
     try:
+        # 0. Ensure required labels exist
+        print("Ensuring required labels exist...")
+        label_result = ensure_required_labels(token=token, repository=repo)
+        if label_result["created"]:
+            print(f"  Created labels: {', '.join(label_result['created'])}")
+        if label_result["existing"]:
+            print(f"  Existing labels: {', '.join(label_result['existing'])}")
+
         # 1. Create the setup issue
         issue = create_issue(
             token=token,
@@ -322,7 +333,34 @@ def validate_setup(
         warnings.append(f"Could not check discussion categories: {e}")
         if not quiet:
             print(f"⚠️  Could not check discussion categories: {e}")
-    
+
+    # Check 8: Required labels exist
+    required_label_names = {lbl.name for lbl in REQUIRED_LABELS}
+    missing_labels = []
+
+    try:
+        existing_labels = get_repository_labels(token=token, repository=repo, api_url=api_url)
+        existing_label_names = {lbl["name"].lower() for lbl in existing_labels}
+
+        for label in REQUIRED_LABELS:
+            if label.name.lower() in existing_label_names:
+                if not quiet:
+                    print(f"✓ '{label.name}' label exists")
+            else:
+                missing_labels.append(label.name)
+                if not quiet:
+                    print(f"⚠️  '{label.name}' label not found")
+
+        if missing_labels:
+            warnings.append(
+                f"Missing labels: {', '.join(missing_labels)}. "
+                "Re-run 'python -m main setup' to create them automatically."
+            )
+    except Exception as e:
+        warnings.append(f"Could not check repository labels: {e}")
+        if not quiet:
+            print(f"⚠️  Could not check repository labels: {e}")
+
     if not quiet:
         print("\n=========================================\n")
     
