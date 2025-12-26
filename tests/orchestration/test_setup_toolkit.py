@@ -250,3 +250,146 @@ class TestIsOfficialDomain:
     def test_malformed_url_not_official(self) -> None:
         """Malformed URLs should not be official."""
         assert _is_official_domain("not-a-url") is False
+
+
+# =============================================================================
+# Tests for create_welcome_announcement
+# =============================================================================
+
+
+class TestCreateWelcomeAnnouncement:
+    """Tests for create_welcome_announcement function."""
+
+    def test_requires_topic(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Should fail if topic is not provided."""
+        from src.orchestration.toolkit.setup import create_welcome_announcement
+        
+        monkeypatch.setenv("GITHUB_REPOSITORY", "owner/repo")
+        monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+        
+        result = create_welcome_announcement({})
+        
+        assert result["success"] is False
+        assert "Topic is required" in result["error"]
+
+    def test_requires_repository(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Should fail if repository is not set."""
+        from src.orchestration.toolkit.setup import create_welcome_announcement
+        
+        monkeypatch.delenv("GITHUB_REPOSITORY", raising=False)
+        
+        result = create_welcome_announcement({"topic": "Test Topic"})
+        
+        assert result["success"] is False
+        assert "Repository not specified" in result["error"]
+
+    def test_requires_token(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Should fail if token is not set."""
+        from src.orchestration.toolkit.setup import create_welcome_announcement
+        
+        monkeypatch.setenv("GITHUB_REPOSITORY", "owner/repo")
+        monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+        monkeypatch.delenv("GH_TOKEN", raising=False)
+        
+        result = create_welcome_announcement({"topic": "Test Topic"})
+        
+        assert result["success"] is False
+        assert "Token not specified" in result["error"]
+
+    def test_handles_missing_announcements_category(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Should return specific error if Announcements category is missing."""
+        from src.orchestration.toolkit.setup import create_welcome_announcement
+        
+        monkeypatch.setenv("GITHUB_REPOSITORY", "owner/repo")
+        monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+        
+        with patch(
+            "src.integrations.github.discussions.get_category_by_name",
+            return_value=None,
+        ):
+            result = create_welcome_announcement({"topic": "Test Topic"})
+        
+        assert result["success"] is False
+        assert "Announcements category not found" in result["error"]
+        assert result.get("category_missing") is True
+
+    def test_creates_announcement_successfully(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Should create announcement when category exists."""
+        from src.orchestration.toolkit.setup import create_welcome_announcement
+        from src.integrations.github.discussions import Discussion, DiscussionCategory
+        
+        monkeypatch.setenv("GITHUB_REPOSITORY", "owner/repo")
+        monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+        
+        mock_category = DiscussionCategory(
+            id="cat123",
+            name="Announcements",
+            slug="announcements",
+        )
+        mock_discussion = Discussion(
+            id="disc123",
+            number=42,
+            title="Welcome to Test Topic Research",
+            body="...",
+            url="https://github.com/owner/repo/discussions/42",
+        )
+        
+        with patch(
+            "src.integrations.github.discussions.get_category_by_name",
+            return_value=mock_category,
+        ), patch(
+            "src.integrations.github.discussions.find_discussion_by_title",
+            return_value=None,
+        ), patch(
+            "src.integrations.github.discussions.create_discussion",
+            return_value=mock_discussion,
+        ):
+            result = create_welcome_announcement({
+                "topic": "Test Topic",
+                "source_url": "https://example.gov/data",
+            })
+        
+        assert result["success"] is True
+        assert result["action"] == "created"
+        assert result["discussion_url"] == "https://github.com/owner/repo/discussions/42"
+        assert result["discussion_number"] == 42
+
+    def test_skips_if_announcement_exists(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Should return existing discussion if already created."""
+        from src.orchestration.toolkit.setup import create_welcome_announcement
+        from src.integrations.github.discussions import Discussion, DiscussionCategory
+        
+        monkeypatch.setenv("GITHUB_REPOSITORY", "owner/repo")
+        monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+        
+        mock_category = DiscussionCategory(
+            id="cat123",
+            name="Announcements",
+            slug="announcements",
+        )
+        existing_discussion = Discussion(
+            id="disc999",
+            number=99,
+            title="Welcome to Test Topic Research",
+            body="...",
+            url="https://github.com/owner/repo/discussions/99",
+        )
+        
+        with patch(
+            "src.integrations.github.discussions.get_category_by_name",
+            return_value=mock_category,
+        ), patch(
+            "src.integrations.github.discussions.find_discussion_by_title",
+            return_value=existing_discussion,
+        ):
+            result = create_welcome_announcement({"topic": "Test Topic"})
+        
+        assert result["success"] is True
+        assert result["action"] == "already_exists"
+        assert result["discussion_url"] == "https://github.com/owner/repo/discussions/99"
