@@ -76,6 +76,9 @@ jobs:
           echo "2. Set **UPSTREAM_REPO** variable (e.g., \`owner/template-repo\`)" >> $GITHUB_STEP_SUMMARY
           echo "3. Set **SYNC_SIGNATURE_SECRET** for secure dispatch verification" >> $GITHUB_STEP_SUMMARY
           echo "4. Add **speculum-downstream** topic to this repository" >> $GITHUB_STEP_SUMMARY
-          echo "5. Enable **Discussions** and create a **Sources** category for source curation" >> $GITHUB_STEP_SUMMARY
+          echo "5. Enable **Discussions** and create the following categories:" >> $GITHUB_STEP_SUMMARY
+          echo "   - **Sources** - for source curation workflow" >> $GITHUB_STEP_SUMMARY
+          echo "   - **People** - for Person entity profiles" >> $GITHUB_STEP_SUMMARY
+          echo "   - **Organizations** - for Organization entity profiles" >> $GITHUB_STEP_SUMMARY
           echo "6. Run the upstream sync workflow to pull latest changes" >> $GITHUB_STEP_SUMMARY
 
