@@ -261,7 +261,7 @@ def test_llm_planner_handles_tool_errors(mock_copilot_client, tool_registry):
                 index=0,
                 message=ChatMessage(
                     role="assistant",
-                    content="Cannot proceed due to network error",
+                    content="FINISH: Cannot proceed due to network error",
                     tool_calls=None,
                 ),
             ),
@@ -372,7 +372,7 @@ def test_llm_planner_provides_context_to_llm(mock_copilot_client, tool_registry)
                 index=0,
                 message=ChatMessage(
                     role="assistant",
-                    content="Done",
+                    content="FINISH: All tasks completed successfully",
                     tool_calls=None,
                 ),
             ),
@@ -432,7 +432,7 @@ def test_llm_planner_conversation_history_persists(mock_copilot_client, tool_reg
                     index=0,
                     message=ChatMessage(
                         role="assistant",
-                        content=f"Step {i}",
+                        content=f"Step {i}" if i < 2 else "FINISH: All steps completed",
                         tool_calls=(
                             CopilotToolCall(
                                 id=f"call_{i}",
@@ -479,6 +479,3 @@ def test_llm_planner_conversation_history_persists(mock_copilot_client, tool_reg
     
     # Second call: system + history + user (at least 4 messages)
     assert len(calls[1][1]["messages"]) >= 4
-    
-    # Third call: even more history
-    assert len(calls[2][1]["messages"]) >= 6

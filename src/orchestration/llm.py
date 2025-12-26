@@ -48,6 +48,9 @@ class LLMPlanner(Planner):
         self._temperature = temperature
         self._conversation_history: List[Dict[str, Any]] = []
 
+    # Maximum retries when LLM responds without tool call or explicit finish
+    MAX_CLARIFICATION_RETRIES = 2
+
     def plan_next(self, state: AgentState) -> Thought:
         """Use LLM to determine the next action based on mission state.
 
@@ -79,27 +82,51 @@ class LLMPlanner(Planner):
 
         messages = self._build_messages(system_prompt, state, user_message)
 
-        try:
-            response = self._copilot.chat_completion(
-                messages=messages,
-                tools=tools if tools else None,
-                max_tokens=self._max_tokens,
-                temperature=self._temperature,
-            )
-        except CopilotClientError as exc:
-            raise LLMPlannerError(f"LLM call failed: {exc}") from exc
+        # Retry loop for when LLM responds without a tool call or finish signal
+        for attempt in range(self.MAX_CLARIFICATION_RETRIES + 1):
+            try:
+                response = self._copilot.chat_completion(
+                    messages=messages,
+                    tools=tools if tools else None,
+                    max_tokens=self._max_tokens,
+                    temperature=self._temperature,
+                )
+            except CopilotClientError as exc:
+                raise LLMPlannerError(f"LLM call failed: {exc}") from exc
 
-        thought = self._parse_response(response, state)
+            try:
+                thought = self._parse_response(response, state)
+                
+                # Success - update conversation history and return
+                assistant_message_dict = self._message_to_dict(response.choices[0].message)
+                self._conversation_history.append(dict(user_message))
+                self._conversation_history.append(assistant_message_dict)
+                # Keep a rolling window to avoid unbounded growth
+                if len(self._conversation_history) > 40:
+                    self._conversation_history = self._conversation_history[-40:]
 
-        assistant_message_dict = self._message_to_dict(response.choices[0].message)
-        # Persist the conversational context so future calls can extend it if needed
-        self._conversation_history.append(dict(user_message))
-        self._conversation_history.append(assistant_message_dict)
-        # Keep a rolling window to avoid unbounded growth
-        if len(self._conversation_history) > 40:
-            self._conversation_history = self._conversation_history[-40:]
-
-        return thought
+                return thought
+                
+            except LLMPlannerError as exc:
+                if "without a tool call or explicit finish signal" not in str(exc):
+                    raise  # Re-raise other errors
+                    
+                if attempt >= self.MAX_CLARIFICATION_RETRIES:
+                    raise  # Exhausted retries
+                    
+                # Add clarification request to messages and retry
+                assistant_content = response.choices[0].message.content or ""
+                messages.append({"role": "assistant", "content": assistant_content})
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "Please use a tool to take action. If you have completed all success criteria, "
+                        "respond with 'FINISH:' followed by a summary. Otherwise, call the appropriate tool."
+                    ),
+                })
+        
+        # Should not reach here, but satisfy type checker
+        raise LLMPlannerError("Unexpected state in plan_next retry loop")
 
     def _build_system_prompt(self, state: AgentState) -> str:
         """Create system prompt with mission context and instructions."""
@@ -160,6 +187,7 @@ class LLMPlanner(Planner):
             "Analyze the current state and mission goal carefully",
             "Review all success criteria - you must complete ALL of them, not just some",
             "Take concrete actions with available tools to satisfy each criterion",
+            "ALWAYS use a tool call to take action - do not just describe what you would do",
         ]
 
         if can_modify_labels:
@@ -181,7 +209,7 @@ class LLMPlanner(Planner):
             )
 
         instruction_lines.append(
-            "Only respond with FINISH when ALL success criteria are demonstrably met"
+            "When ALL success criteria are met, signal completion by starting your response with 'FINISH:'"
         )
 
         for index, instruction in enumerate(instruction_lines, start=1):
@@ -378,12 +406,46 @@ class LLMPlanner(Planner):
                 ),
             )
 
-        # No tool call - should be a finish signal
-        content = message.content or "Mission complete"
-        return Thought(
-            content=content,
-            type=ThoughtType.FINISH,
+        # No tool call - check if LLM explicitly signaled completion
+        content = message.content or ""
+        if self._is_explicit_finish(content):
+            return Thought(
+                content=content or "Mission complete",
+                type=ThoughtType.FINISH,
+            )
+
+        # LLM responded without a tool call and without explicit finish signal.
+        # This typically means it's "thinking out loud" without taking action.
+        # Raise an error so the caller can retry or handle gracefully.
+        raise LLMPlannerError(
+            "LLM responded without a tool call or explicit finish signal. "
+            "To complete the mission, include 'FINISH:' in your response. "
+            f"Response was: {content[:200]}"
         )
+
+    def _is_explicit_finish(self, content: str) -> bool:
+        """Determine if the response content explicitly signals mission completion.
+
+        Looks for explicit markers like 'FINISH:', 'Mission complete', etc.
+        This prevents ambiguous responses from prematurely ending missions.
+        """
+        if not content:
+            return False
+
+        content_lower = content.lower()
+
+        # Explicit finish markers that indicate intentional completion
+        explicit_markers = [
+            "finish:",
+            "mission complete",
+            "mission accomplished",
+            "all success criteria",
+            "successfully completed all",
+            "all tasks completed",
+            "all criteria met",
+        ]
+
+        return any(marker in content_lower for marker in explicit_markers)
 
     def _message_to_dict(self, message) -> Dict[str, Any]:
         payload: Dict[str, Any] = {"role": message.role}

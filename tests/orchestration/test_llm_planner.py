@@ -406,7 +406,7 @@ def test_conversation_history_tracks_interactions(mock_copilot_client, tool_regi
         ),
     )
     
-    # Second call - finish
+    # Second call - finish (must include explicit finish marker)
     response2 = ChatCompletionResponse(
         id="test2",
         model="gpt-4o-mini",
@@ -415,7 +415,7 @@ def test_conversation_history_tracks_interactions(mock_copilot_client, tool_regi
                 index=0,
                 message=ChatMessage(
                     role="assistant",
-                    content="Done",
+                    content="FINISH: All tasks completed successfully",
                     tool_calls=None,
                 ),
             ),
@@ -453,6 +453,108 @@ def test_conversation_history_tracks_interactions(mock_copilot_client, tool_regi
     
     planner.plan_next(state2)
     assert len(planner._conversation_history) == 4  # 2 user + 2 assistant
+
+
+def test_plan_next_rejects_ambiguous_finish(mock_copilot_client, tool_registry, simple_mission):
+    """LLMPlanner raises error after retries when LLM never provides tool call or explicit finish."""
+    # Response without tool call and without explicit completion signal
+    mock_response = ChatCompletionResponse(
+        id="test",
+        model="gpt-4o-mini",
+        choices=(
+            Choice(
+                index=0,
+                message=ChatMessage(
+                    role="assistant",
+                    content="I need to check the issue details first.",
+                    tool_calls=None,
+                ),
+            ),
+        ),
+    )
+    
+    mock_copilot_client.chat_completion.return_value = mock_response
+    
+    planner = LLMPlanner(
+        copilot_client=mock_copilot_client,
+        tool_registry=tool_registry,
+    )
+    
+    state = AgentState(
+        mission=simple_mission,
+        context=ExecutionContext(),
+        steps=tuple(),
+    )
+    
+    with pytest.raises(LLMPlannerError, match="without a tool call or explicit finish signal"):
+        planner.plan_next(state)
+    
+    # Verify retries happened (initial + MAX_CLARIFICATION_RETRIES)
+    assert mock_copilot_client.chat_completion.call_count == 3
+
+
+def test_plan_next_retries_and_succeeds(mock_copilot_client, tool_registry, simple_mission):
+    """LLMPlanner retries when LLM responds without action, then succeeds on retry."""
+    # First response - ambiguous (no tool call, no finish marker)
+    ambiguous_response = ChatCompletionResponse(
+        id="test1",
+        model="gpt-4o-mini",
+        choices=(
+            Choice(
+                index=0,
+                message=ChatMessage(
+                    role="assistant",
+                    content="Let me think about this...",
+                    tool_calls=None,
+                ),
+            ),
+        ),
+    )
+    
+    # Second response - proper tool call
+    tool_response = ChatCompletionResponse(
+        id="test2",
+        model="gpt-4o-mini",
+        choices=(
+            Choice(
+                index=0,
+                message=ChatMessage(
+                    role="assistant",
+                    content="Fetching issue details",
+                    tool_calls=(
+                        CopilotToolCall(
+                            id="call_001",
+                            type="function",
+                            function=FunctionCall(
+                                name="get_issue_details",
+                                arguments='{"issue_number": 42}',
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    )
+    
+    mock_copilot_client.chat_completion.side_effect = [ambiguous_response, tool_response]
+    
+    planner = LLMPlanner(
+        copilot_client=mock_copilot_client,
+        tool_registry=tool_registry,
+    )
+    
+    state = AgentState(
+        mission=simple_mission,
+        context=ExecutionContext(),
+        steps=tuple(),
+    )
+    
+    thought = planner.plan_next(state)
+    
+    # Should succeed on retry
+    assert thought.type == ThoughtType.ACTION
+    assert thought.tool_call.name == "get_issue_details"
+    assert mock_copilot_client.chat_completion.call_count == 2
 
 
 def test_get_openai_tool_schemas_format(tool_registry):

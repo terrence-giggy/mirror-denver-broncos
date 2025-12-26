@@ -10,8 +10,10 @@ def test_load_parsing_config_defaults(monkeypatch, tmp_path) -> None:
 
     assert isinstance(config, ParsingConfig)
     
-    # Expected root depends on SPECULUM_DATA_DIR
-    expected_root = (paths.get_evidence_root() / "parsed").resolve()
+    # Expected root depends on CWD since SPECULUM_DATA_DIR is not set
+    # paths.get_evidence_root() returns Path(".") / "evidence" = "evidence" (relative)
+    # Then it gets resolved relative to CWD (tmp_path)
+    expected_root = (tmp_path / "evidence" / "parsed").resolve()
     assert config.output_root == expected_root
     
     assert config.scan.suffixes
