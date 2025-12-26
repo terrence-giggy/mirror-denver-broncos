@@ -1,70 +1,62 @@
-# Mission to curate source registry via GitHub Issues.
+# Mission to curate source registry via GitHub Discussions.
 
 id: curate_sources
-version: 1
+version: 2
 metadata:
   owner: copilot-orchestrator
   created_at: 2025-12-24
+  updated_at: 2025-12-25
   summary_tooling: source-curation
 
 goal: |
-  Manage the source registry by processing source proposals and maintaining
-  source metadata in GitHub Discussions.
+  Process approval and rejection commands in source proposal Discussions.
   
   Triggered by:
-  1. Issues with `source-proposal` label (new source proposals)
-  2. Issues with `source-review` label (re-validation requests)
-  3. Comments containing `/approve-source` or `/reject-source`
+  1. Discussion comments containing `/approve-source`
+  2. Discussion comments containing `/reject-source [reason]`
   
   Actions:
-  1. For new proposals:
-     - Validate URL accessibility
-     - Calculate credibility score
-     - Post assessment as Issue comment
-     - Await human approval
+  1. For `/approve-source` commands:
+     - Verify Discussion is in "Sources" category
+     - Verify source is not already registered
+     - Create Issue with `source-approved` label
+     - Assign Issue to copilot for implementation
+     - Post approval confirmation to Discussion with Issue link
   
-  2. For approval commands:
-     - Register source in knowledge-graph/sources/
-     - Create or update Discussion in "Sources" category
-     - Close the proposal Issue with summary
-  
-  3. For rejection commands:
-     - Add rejection note to registry (for history)
-     - Close Issue with rejection reason
+  2. For `/reject-source` commands:
+     - Post rejection summary with reason to Discussion
+     - Mark Discussion as resolved/rejected
+     - No Issue is created
 
 constraints:
-  - "Never register sources without explicit human approval"
-  - "Always create Issues for transparency"
-  - "Maintain audit trail in Issue comments"
-  - "Derived sources require approval_issue reference"
-  - "Primary source registration is reserved for setup workflow"
+  - "Never register sources directly - create Issue for implementation"
+  - "Require explicit `/approve-source` or `/reject-source` command"
+  - "Only process commands in 'Sources' category Discussions"
+  - "Maintain audit trail in Discussion thread"
+  - "Derived sources require implementation_issue reference"
 
 success_criteria:
-  - Source proposals have credibility assessments
-  - Approved sources appear in registry and Discussions
-  - Rejected sources are documented with reasons
-  - All source decisions are transparent via Issues
+  - Approved sources have implementation Issues created
+  - Issues have `source-approved` label and are assigned to copilot
+  - Rejected sources are documented with reasons in Discussion
+  - All decisions are transparent in Discussion thread
 
 max_steps: 10
 allowed_tools:
-  - get_issue_details
-  - get_issue_comments
-  - post_comment
-  - close_issue
-  - add_label_to_issue
-  - verify_source_accessibility
-  - calculate_credibility_score
-  - register_source
-  - get_source
-  - list_sources
-  - update_source_status
-  - discover_sources
-  - propose_source
-  - process_source_approval
-  - sync_source_discussion
+  - get_discussion
+  - get_discussion_comments
+  - add_discussion_comment
   - list_discussion_categories
   - get_category_by_name
   - find_discussion_by_title
-  - create_discussion
-  - update_discussion
+  - create_issue
+  - add_label_to_issue
+  - assign_issue_to_copilot
+  - verify_source_accessibility
+  - calculate_credibility_score
+  - get_source
+  - list_sources
+  - process_source_approval
+  - process_source_rejection
+  - create_source_implementation_issue
 requires_approval: false
