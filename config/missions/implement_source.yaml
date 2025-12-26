@@ -1,0 +1,53 @@
+# Mission to implement approved sources from GitHub Issues.
+
+id: implement_source
+version: 1
+metadata:
+  owner: copilot-orchestrator
+  created_at: 2025-12-25
+  summary_tooling: source-implementation
+
+goal: |
+  Implement approved sources by registering them in the knowledge graph
+  and closing the implementation Issue.
+  
+  Triggered by:
+  1. Issues with `source-approved` label assigned to copilot
+  2. Issues created by the curate_sources mission after /approve-source command
+  
+  Actions:
+  1. Read the Issue to extract:
+     - Source URL
+     - Source name
+     - Discussion number (from Issue body)
+     - Who approved the source
+  2. Register the source in knowledge-graph/sources/
+  3. Update the original Discussion with "Implementation Complete" status
+  4. Close the Issue with an implementation summary
+
+constraints:
+  - "Only process Issues with `source-approved` label"
+  - "Verify the source is not already registered before proceeding"
+  - "Track both proposal_discussion and implementation_issue in SourceEntry"
+  - "Update Discussion to reflect final status"
+
+success_criteria:
+  - Approved sources appear in the registry at knowledge-graph/sources/
+  - SourceEntry includes proposal_discussion and implementation_issue numbers
+  - Discussion is updated with implementation status
+  - Issue is closed with summary comment
+
+max_steps: 8
+allowed_tools:
+  - get_issue_details
+  - get_issue_comments
+  - post_comment
+  - close_issue
+  - get_discussion
+  - add_discussion_comment
+  - implement_approved_source
+  - register_source
+  - get_source
+  - list_sources
+  - update_source_status
+requires_approval: false
