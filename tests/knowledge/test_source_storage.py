@@ -237,6 +237,178 @@ class TestSourceEntrySerialization:
 
 
 # =============================================================================
+# SourceEntry Monitoring Fields Tests
+# =============================================================================
+
+
+class TestSourceEntryMonitoringFields:
+    """Tests for SourceEntry monitoring metadata fields."""
+
+    def test_monitoring_fields_default_values(self) -> None:
+        """Monitoring fields should have correct defaults."""
+        entry = SourceEntry(
+            url="https://example.com/page",
+            name="Test",
+            source_type="primary",
+            status="active",
+            last_verified=datetime(2025, 12, 24, tzinfo=timezone.utc),
+            added_at=datetime(2025, 12, 24, tzinfo=timezone.utc),
+            added_by="user",
+            proposal_discussion=None,
+            implementation_issue=None,
+            credibility_score=0.5,
+            is_official=False,
+            requires_auth=False,
+            discovered_from=None,
+            parent_source_url=None,
+            content_type="webpage",
+            update_frequency=None,
+        )
+        
+        assert entry.last_content_hash is None
+        assert entry.last_etag is None
+        assert entry.last_modified_header is None
+        assert entry.last_checked is None
+        assert entry.check_failures == 0
+        assert entry.next_check_after is None
+
+    def test_monitoring_fields_serialization(self) -> None:
+        """Monitoring fields should serialize correctly."""
+        checked_at = datetime(2025, 12, 25, 10, 30, 0, tzinfo=timezone.utc)
+        next_check = datetime(2025, 12, 26, 10, 30, 0, tzinfo=timezone.utc)
+        
+        entry = SourceEntry(
+            url="https://example.com/monitored",
+            name="Monitored Source",
+            source_type="primary",
+            status="active",
+            last_verified=datetime(2025, 12, 24, tzinfo=timezone.utc),
+            added_at=datetime(2025, 12, 24, tzinfo=timezone.utc),
+            added_by="user",
+            proposal_discussion=None,
+            implementation_issue=None,
+            credibility_score=0.9,
+            is_official=True,
+            requires_auth=False,
+            discovered_from=None,
+            parent_source_url=None,
+            content_type="webpage",
+            update_frequency="daily",
+            last_content_hash="abc123def456",
+            last_etag='"etag-value-12345"',
+            last_modified_header="Wed, 25 Dec 2025 10:00:00 GMT",
+            last_checked=checked_at,
+            check_failures=2,
+            next_check_after=next_check,
+        )
+        
+        data = entry.to_dict()
+        
+        assert data["last_content_hash"] == "abc123def456"
+        assert data["last_etag"] == '"etag-value-12345"'
+        assert data["last_modified_header"] == "Wed, 25 Dec 2025 10:00:00 GMT"
+        assert data["last_checked"] == "2025-12-25T10:30:00+00:00"
+        assert data["check_failures"] == 2
+        assert data["next_check_after"] == "2025-12-26T10:30:00+00:00"
+
+    def test_monitoring_fields_round_trip(self) -> None:
+        """Monitoring fields should survive to_dict/from_dict round-trip."""
+        checked_at = datetime(2025, 12, 25, 10, 30, 0, tzinfo=timezone.utc)
+        next_check = datetime(2025, 12, 26, 10, 30, 0, tzinfo=timezone.utc)
+        
+        original = SourceEntry(
+            url="https://example.com/monitored",
+            name="Monitored Source",
+            source_type="derived",
+            status="active",
+            last_verified=datetime(2025, 12, 24, tzinfo=timezone.utc),
+            added_at=datetime(2025, 12, 24, tzinfo=timezone.utc),
+            added_by="monitor-agent",
+            proposal_discussion=5,
+            implementation_issue=10,
+            credibility_score=0.8,
+            is_official=False,
+            requires_auth=False,
+            discovered_from="checksum123",
+            parent_source_url="https://parent.com/source",
+            content_type="pdf",
+            update_frequency="weekly",
+            last_content_hash="sha256-hash-here",
+            last_etag='"weak-etag"',
+            last_modified_header="Tue, 24 Dec 2025 08:00:00 GMT",
+            last_checked=checked_at,
+            check_failures=1,
+            next_check_after=next_check,
+        )
+        
+        data = original.to_dict()
+        restored = SourceEntry.from_dict(data)
+        
+        assert restored.last_content_hash == original.last_content_hash
+        assert restored.last_etag == original.last_etag
+        assert restored.last_modified_header == original.last_modified_header
+        assert restored.last_checked == original.last_checked
+        assert restored.check_failures == original.check_failures
+        assert restored.next_check_after == original.next_check_after
+
+    def test_monitoring_fields_backward_compatibility(self) -> None:
+        """from_dict should handle legacy payloads without monitoring fields."""
+        legacy_data = {
+            "url": "https://example.com/legacy",
+            "name": "Legacy Source",
+            "source_type": "reference",
+            "status": "active",
+            "last_verified": "2025-12-24T00:00:00+00:00",
+            "added_at": "2025-12-20T00:00:00+00:00",
+            "added_by": "admin",
+            # No monitoring fields present
+        }
+        
+        entry = SourceEntry.from_dict(legacy_data)
+        
+        # Should have default values
+        assert entry.last_content_hash is None
+        assert entry.last_etag is None
+        assert entry.last_modified_header is None
+        assert entry.last_checked is None
+        assert entry.check_failures == 0
+        assert entry.next_check_after is None
+
+    def test_monitoring_fields_null_datetime_serialization(self) -> None:
+        """Null datetime fields should serialize as None."""
+        entry = SourceEntry(
+            url="https://example.com/page",
+            name="Test",
+            source_type="primary",
+            status="active",
+            last_verified=datetime(2025, 12, 24, tzinfo=timezone.utc),
+            added_at=datetime(2025, 12, 24, tzinfo=timezone.utc),
+            added_by="user",
+            proposal_discussion=None,
+            implementation_issue=None,
+            credibility_score=0.5,
+            is_official=False,
+            requires_auth=False,
+            discovered_from=None,
+            parent_source_url=None,
+            content_type="webpage",
+            update_frequency=None,
+            last_checked=None,
+            next_check_after=None,
+        )
+        
+        data = entry.to_dict()
+        
+        assert data["last_checked"] is None
+        assert data["next_check_after"] is None
+        
+        # Round-trip should preserve None values
+        restored = SourceEntry.from_dict(data)
+        assert restored.last_checked is None
+        assert restored.next_check_after is None
+
+
+# =============================================================================
 # SourceRegistry Tests
 # =============================================================================
 
