@@ -497,6 +497,7 @@ def run_mission_cli(args: argparse.Namespace) -> int:
         register_extraction_tools,
         register_discussion_tools,
         register_setup_tools,
+        register_source_curator_tools,
     )
     
     # Register read-only GitHub tools (always safe)
@@ -512,6 +513,7 @@ def run_mission_cli(args: argparse.Namespace) -> int:
     register_extraction_tools(registry)
     register_discussion_tools(registry)
     register_setup_tools(registry)
+    register_source_curator_tools(registry)
     
     # Choose planner based on flag
     planner_type = args.planner

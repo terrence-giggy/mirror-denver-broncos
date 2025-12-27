@@ -49,8 +49,7 @@ allowed_tools:
   - list_discussion_categories
   - get_category_by_name
   - find_discussion_by_title
-  - create_issue
-  - add_label_to_issue
+  - add_label
   - assign_issue_to_copilot
   - verify_source_accessibility
   - calculate_credibility_score
