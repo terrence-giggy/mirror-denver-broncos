@@ -1,0 +1,20 @@
+{
+  "url": "https://www.usa.gov/",
+  "name": "USA.gov",
+  "source_type": "derived",
+  "status": "active",
+  "last_verified": "2025-12-27T02:32:09.251867+00:00",
+  "added_at": "2025-12-27T02:32:09.251870+00:00",
+  "added_by": "terrence-giggy",
+  "proposal_discussion": 8,
+  "implementation_issue": 12,
+  "credibility_score": 1.0,
+  "is_official": true,
+  "requires_auth": false,
+  "discovered_from": null,
+  "parent_source_url": null,
+  "content_type": "webpage",
+  "update_frequency": null,
+  "topics": [],
+  "notes": "Official U.S. government website. Approved via Discussion #8, Issue #12."
+}
