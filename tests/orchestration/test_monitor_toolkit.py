@@ -98,6 +98,35 @@ def tool_registry() -> ToolRegistry:
     return registry
 
 
+@pytest.fixture
+def pending_review_source() -> SourceEntry:
+    """Create a source in pending_review status."""
+    return SourceEntry(
+        url="https://example.com/pending-doc.html",
+        name="Pending Review Document",
+        source_type="derived",
+        status="pending_review",
+        last_verified=datetime(2025, 12, 24, tzinfo=timezone.utc),
+        added_at=datetime(2025, 12, 24, tzinfo=timezone.utc),
+        added_by="source-curator",
+        proposal_discussion=15,
+        implementation_issue=16,
+        credibility_score=0.7,
+        is_official=False,
+        requires_auth=False,
+        discovered_from=None,
+        parent_source_url=None,
+        content_type="webpage",
+        update_frequency=None,
+        last_content_hash=None,
+        last_etag=None,
+        last_modified_header=None,
+        last_checked=None,
+        check_failures=0,
+        next_check_after=None,
+    )
+
+
 # =============================================================================
 # URL Hash Tests
 # =============================================================================
@@ -320,6 +349,27 @@ class TestGetSourcesPendingInitialHandler:
         
         assert result.success is True
         assert result.output["count"] == 0
+
+    def test_returns_message_when_pending_review_sources_exist(
+        self,
+        temp_registry: SourceRegistry,
+        pending_review_source: SourceEntry,
+    ) -> None:
+        """Should return helpful message when no active sources but pending_review exists."""
+        temp_registry.save_source(pending_review_source)
+        
+        registry = ToolRegistry()
+        register_monitor_tools(registry)
+        
+        tool = registry.get_tool("get_sources_pending_initial")
+        result = tool.handler({"kb_root": str(temp_registry.root)})
+        
+        assert result.success is True
+        assert result.output["count"] == 0
+        assert result.output["message"] is not None
+        assert "pending_review" in result.output["message"]
+        assert "1 source(s)" in result.output["message"]
+        assert "implement_approved_source" in result.output["message"]
 
 
 class TestGetSourcesDueForCheckHandler:
