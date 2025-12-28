@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "artifact_path": "2025/denverbroncos-mock-html-9c0ae3264aff/index.md",
+      "checksum": "9c0ae3264aff99d74bcf31d0fbfe5398f37838c461a28b3f7d77e9183197026f",
+      "metadata": {
+        "artifact_type": "page-directory",
+        "content_type": "text/html",
+        "encoding": "utf-8",
+        "extracted_characters": 931,
+        "file_size": 2440,
+        "page_unit": "segment",
+        "segments_total": 1
+      },
+      "parser": "web",
+      "processed_at": "2025-12-28T16:47:48.405239+00:00",
+      "source": "/tmp/test_acquisition/denverbroncos_mock.html",
+      "status": "completed"
+    }
+  ],
+  "version": 1
+}
