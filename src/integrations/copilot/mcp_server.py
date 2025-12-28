@@ -3,21 +3,6 @@
 This module provides a Model Context Protocol (MCP) server that enables the
 Copilot coding agent to fetch content from external sources. MCP servers run
 OUTSIDE the agent firewall, providing unrestricted network access.
-
-Key insight from GitHub docs:
-> "The firewall only applies to processes started by the agent via its Bash tool.
-> It does not apply to Model Context Protocol (MCP) servers..."
-
-Usage:
-    Configure in .github/copilot-mcp.json:
-    {
-        "mcpServers": {
-            "evidence-acquisition": {
-                "command": "python",
-                "args": ["-m", "src.integrations.copilot.mcp_server"]
-            }
-        }
-    }
 """
 
 from __future__ import annotations

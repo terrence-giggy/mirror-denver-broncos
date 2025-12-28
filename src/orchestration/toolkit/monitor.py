@@ -55,90 +55,76 @@ def _build_initial_acquisition_body(source: SourceEntry, detection: ChangeDetect
     
     return f"""## Initial Acquisition: {source.name}
 
-**Source URL**: {source.url}
-**Approved**: {source.added_at.isoformat()}
-**Approved By**: {source.added_by}
-**Approval Discussion**: {f'#{source.proposal_discussion}' if source.proposal_discussion else 'N/A'}
-
-### Source Profile
-
-- **Type**: {source.source_type} ({source.content_type})
-- **Credibility Score**: {source.credibility_score:.2f}
-- **Official Domain**: {'Yes' if source.is_official else 'No'}
-- **Requires Auth**: {'Yes' if source.requires_auth else 'No'}
+| Field | Value |
+|-------|-------|
+| **Source URL** | {source.url} |
+| **Type** | {source.source_type} ({source.content_type}) |
+| **Credibility** | {source.credibility_score:.2f} |
+| **Approved By** | {source.added_by} |
+| **Urgency** | {detection.urgency} |
 
 ---
 
-## ⚡ Task Type: CONTENT ACQUISITION
+## 🚨 CRITICAL INSTRUCTIONS
 
-**This is an EXECUTION task, not an IMPLEMENTATION task.**
+**This is a 3-step execution task. DO NOT:**
+- ❌ Create new Python scripts or modules
+- ❌ Create new GitHub Actions workflows  
+- ❌ Create documentation or status report files
+- ❌ Use `curl`, `wget`, or Python `requests` (blocked by firewall)
+- ❌ Propose workarounds or alternative approaches
 
-DO NOT create new modules, toolkits, or infrastructure. Use the existing parsing system.
+**YOU MUST use the MCP tool `fetch_source_content` to fetch content.** This is the ONLY way to access external URLs.
 
 ---
 
-### Execution Steps
+## Execution Steps
 
-1. **Fetch and parse** using the existing web parser:
-   ```python
-   from src.parsing.runner import parse_single_target
-   from src.parsing.storage import ParseStorage
-   from src import paths
-   
-   storage = ParseStorage(root=paths.get_evidence_root() / "parsed")
-   result = parse_single_target("{source.url}", storage=storage, is_remote=True)
-   ```
+### Step 1: Fetch Content via MCP Tool
 
-2. **Update source registry** with content hash:
-   ```python
-   from src.knowledge.storage import SourceRegistry
-   from src import paths
-   
-   registry = SourceRegistry(root=paths.get_knowledge_graph_root())
-   source = registry.get_source("{source.url}")
-   # Update source.last_content_hash = result.checksum
-   # Save with registry.save_source(updated_source)
-   ```
+Call the MCP tool `fetch_source_content` with the source URL:
 
-3. **Commit changes** via GitHub API (Actions environment requires GitHubStorageClient)
-
-### Available Infrastructure (DO NOT RECREATE)
-
-| Module | Purpose |
-|--------|---------|
-| `src/parsing/web.py` | WebParser for HTML/URL content |
-| `src/parsing/runner.py` | `parse_single_target()` orchestrator |
-| `src/parsing/storage.py` | ParseStorage, manifest management |
-| `src/knowledge/storage.py` | SourceRegistry for metadata |
-
-### Storage Location
-
-Parsed content will be stored at:
 ```
-evidence/parsed/{{year}}/{domain}-{{hash[:8]}}/
-├── content.md          # Extracted content
-└── metadata.json       # Provenance info
+URL: {source.url}
 ```
 
-### ⚠️ Network Requirements
+The tool returns JSON with:
+- `content` - Extracted markdown content
+- `content_hash` - SHA-256 hash of the content
+- `title`, `description` - Page metadata
 
-This task requires **external network access** to fetch content from the source URL.
-- **GitHub Actions**: Network access available
-- **Sandboxed environments**: May fail at fetch stage
+### Step 2: Store Content via GitHub API
 
-If network is blocked, close this issue with label `blocked-network` and a comment explaining the limitation.
+Save the fetched content to `evidence/parsed/{domain}/content.md` using the GitHub Contents API.
+
+Create a metadata.json alongside it with:
+```json
+{{
+  "source_url": "{source.url}",
+  "fetched_at": "<timestamp>",
+  "content_hash": "<hash from step 1>"
+}}
+```
+
+**Important:** Use `GitHubStorageClient` or direct GitHub API calls. Local file writes are discarded.
+
+### Step 3: Update Source Registry
+
+Update the source entry in `knowledge-graph/sources/`:
+- Set `last_content_hash` to the hash from Step 1
+- Set `last_checked` to current timestamp
+- Save via GitHub API
 
 ---
 
-### Acceptance Criteria
+## Completion
 
-- [ ] Content fetched from source URL
-- [ ] Parsed content stored in `evidence/parsed/`
-- [ ] Manifest entry created with checksum
-- [ ] `SourceEntry.last_content_hash` updated in registry
-- [ ] Issue closed with acquisition summary
-
-**Urgency**: {detection.urgency}
+When done, close this issue with a brief comment:
+```
+Acquired content from {source.url}
+- Content hash: <first 16 chars>
+- Stored at: evidence/parsed/{domain}/
+```
 
 <!-- monitor-initial:{_url_hash(source.url)} -->
 """
@@ -148,10 +134,6 @@ def _build_content_update_body(source: SourceEntry, detection: ChangeDetection) 
     """Build the Issue body for a content update request."""
     prev_hash_display = detection.previous_hash[:16] if detection.previous_hash else "N/A"
     curr_hash_display = detection.current_hash[:16] if detection.current_hash else "N/A"
-    prev_etag = source.last_etag or "N/A"
-    curr_etag = detection.current_etag or "N/A"
-    prev_modified = source.last_modified_header or "N/A"
-    curr_modified = detection.current_last_modified or "N/A"
     prev_checked = detection.previous_checked.isoformat() if detection.previous_checked else "N/A"
 
     # Extract domain for storage path hint
@@ -160,93 +142,80 @@ def _build_content_update_body(source: SourceEntry, detection: ChangeDetection) 
 
     return f"""## Content Update: {source.name}
 
-**Source URL**: {source.url}
-**Change Detected**: {detection.detected_at.isoformat()}
-**Detection Method**: {detection.detection_method}
-**Previous Check**: {prev_checked}
-
-### Change Summary
-
-| Metric | Previous | Current |
-|--------|----------|---------|
-| Content Hash | `{prev_hash_display}` | `{curr_hash_display}` |
-| ETag | {prev_etag} | {curr_etag} |
-| Last-Modified | {prev_modified} | {curr_modified} |
+| Field | Value |
+|-------|-------|
+| **Source URL** | {source.url} |
+| **Detection Method** | {detection.detection_method} |
+| **Previous Hash** | `{prev_hash_display}` |
+| **Current Hash** | `{curr_hash_display}` |
+| **Previous Check** | {prev_checked} |
+| **Urgency** | {detection.urgency} |
 
 ---
 
-## ⚡ Task Type: CONTENT UPDATE
+## 🚨 CRITICAL INSTRUCTIONS
 
-**This is an EXECUTION task, not an IMPLEMENTATION task.**
+**This is a 3-step execution task. DO NOT:**
+- ❌ Create new Python scripts or modules
+- ❌ Create new GitHub Actions workflows  
+- ❌ Create documentation or status report files
+- ❌ Use `curl`, `wget`, or Python `requests` (blocked by firewall)
+- ❌ Propose workarounds or alternative approaches
 
-DO NOT create new modules, toolkits, or infrastructure. Use the existing parsing system.
+**YOU MUST use the MCP tool `fetch_source_content` to fetch content.** This is the ONLY way to access external URLs.
 
 ---
 
-### Execution Steps
+## Execution Steps
 
-1. **Fetch and parse** the updated content:
-   ```python
-   from src.parsing.runner import parse_single_target
-   from src.parsing.storage import ParseStorage
-   from src import paths
-   
-   storage = ParseStorage(root=paths.get_evidence_root() / "parsed")
-   result = parse_single_target("{source.url}", storage=storage, is_remote=True, force=True)
-   ```
+### Step 1: Fetch Updated Content via MCP Tool
 
-2. **Update source registry** with new content hash:
-   ```python
-   from src.knowledge.storage import SourceRegistry
-   from src import paths
-   
-   registry = SourceRegistry(root=paths.get_knowledge_graph_root())
-   source = registry.get_source("{source.url}")
-   # Update source.last_content_hash = result.checksum
-   # Save with registry.save_source(updated_source)
-   ```
+Call the MCP tool `fetch_source_content` with the source URL:
 
-3. **Commit changes** via GitHub API (Actions environment requires GitHubStorageClient)
-
-### Available Infrastructure (DO NOT RECREATE)
-
-| Module | Purpose |
-|--------|---------|
-| `src/parsing/web.py` | WebParser for HTML/URL content |
-| `src/parsing/runner.py` | `parse_single_target()` orchestrator |
-| `src/parsing/storage.py` | ParseStorage, manifest management |
-| `src/knowledge/storage.py` | SourceRegistry for metadata |
-
-### Storage Location
-
-New version will be stored at:
 ```
-evidence/parsed/{{year}}/{domain}-{{new_hash[:8]}}/
-├── content.md          # Updated content
-└── metadata.json       # Provenance (links to previous version)
+URL: {source.url}
 ```
 
-Previous version remains at its original location for diff comparison.
+The tool returns JSON with:
+- `content` - Extracted markdown content
+- `content_hash` - SHA-256 hash of the content
+- `title`, `description` - Page metadata
 
-### ⚠️ Network Requirements
+### Step 2: Store Updated Content via GitHub API
 
-This task requires **external network access** to fetch content from the source URL.
-- **GitHub Actions**: Network access available
-- **Sandboxed environments**: May fail at fetch stage
+Save the fetched content to `evidence/parsed/{domain}/content.md` using the GitHub Contents API.
 
-If network is blocked, close this issue with label `blocked-network` and a comment explaining the limitation.
+Update metadata.json alongside it with:
+```json
+{{
+  "source_url": "{source.url}",
+  "fetched_at": "<timestamp>",
+  "content_hash": "<hash from step 1>",
+  "previous_hash": "{prev_hash_display}"
+}}
+```
+
+**Important:** Use `GitHubStorageClient` or direct GitHub API calls. Local file writes are discarded.
+
+### Step 3: Update Source Registry
+
+Update the source entry in `knowledge-graph/sources/`:
+- Set `last_content_hash` to the hash from Step 1
+- Set `last_checked` to current timestamp
+- Update `last_etag` and `last_modified_header` if available
+- Save via GitHub API
 
 ---
 
-### Acceptance Criteria
+## Completion
 
-- [ ] Updated content fetched from source URL
-- [ ] New version stored in `evidence/parsed/`
-- [ ] Manifest entry created with new checksum
-- [ ] `SourceEntry.last_content_hash` updated in registry
-- [ ] Issue closed with update summary (note what changed if detectable)
-
-**Urgency**: {detection.urgency}
+When done, close this issue with a brief comment:
+```
+Updated content from {source.url}
+- Previous hash: {prev_hash_display}
+- New hash: <first 16 chars>
+- Stored at: evidence/parsed/{domain}/
+```
 
 <!-- monitor-update:{_url_hash(source.url)}:{detection.current_hash or 'pending'} -->
 """
