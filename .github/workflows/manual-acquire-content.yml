@@ -1,0 +1,114 @@
+name: "Manual: Acquire Source Content"
+
+# Manual workflow to acquire content from approved sources
+# Triggered manually with source URL as input
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_url:
+        description: 'Source URL to acquire (must be registered in knowledge graph)'
+        required: true
+        default: 'https://www.denverbroncos.com'
+      force_reacquire:
+        description: 'Force reacquisition even if already processed'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  acquire-content:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Acquire content from source
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python << 'EOF'
+          import sys
+          from pathlib import Path
+          from datetime import datetime, timezone
+          
+          PROJECT_ROOT = Path(".")
+          sys.path.insert(0, str(PROJECT_ROOT))
+          
+          from src.parsing.runner import parse_single_target
+          from src.parsing.storage import ParseStorage
+          from src.knowledge.storage import SourceRegistry
+          from src.integrations.github.storage import get_github_storage_client
+          from src import paths
+          
+          url = "${{ github.event.inputs.source_url }}"
+          force = "${{ github.event.inputs.force_reacquire }}" == "true"
+          
+          print(f"Acquiring content from: {url}")
+          print(f"Force reacquisition: {force}")
+          print()
+          
+          # Initialize storage
+          github_client = get_github_storage_client()
+          evidence_root = paths.get_evidence_root()
+          storage = ParseStorage(
+              root=evidence_root / "parsed",
+              github_client=github_client,
+              project_root=PROJECT_ROOT,
+          )
+          
+          # Parse content
+          result = parse_single_target(
+              url,
+              storage=storage,
+              is_remote=True,
+              force=force,
+          )
+          
+          if not result.succeeded:
+              print(f"✗ Acquisition failed: {result.error or result.status}")
+              sys.exit(1)
+          
+          print(f"✓ Content acquired")
+          print(f"  Checksum: {result.checksum}")
+          print(f"  Artifact: {result.artifact_path}")
+          
+          # Update registry
+          kg_root = paths.get_knowledge_graph_root()
+          registry = SourceRegistry(
+              root=kg_root,
+              github_client=github_client,
+              project_root=PROJECT_ROOT,
+          )
+          
+          source = registry.get_source(url)
+          if source:
+              source.last_content_hash = result.checksum
+              source.last_checked = datetime.now(timezone.utc)
+              registry.save_source(source)
+              print(f"✓ Registry updated")
+          else:
+              print(f"⚠ Source not in registry, skipping update")
+          
+          print(f"\n✓ Acquisition complete!")
+          EOF
+      
+      - name: Commit acquired content
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Acquire content from ${{ github.event.inputs.source_url }}"
+          file_pattern: "evidence/parsed/* knowledge-graph/sources/*"
