@@ -11,6 +11,25 @@ This is a **template repository** for research projects. Clones receive code upd
 3. Call `configure_python_environment` with `.venv` before any Python command.
 4. `main.py` is the only CLI entry point.
 
+## GitHub Actions Persistence
+Agent missions run in **ephemeral GitHub Actions runners**. File writes to the local filesystem are discarded when the workflow ends.
+
+**Required Pattern:**
+- **Reads**: Use local filesystem (files available from `actions/checkout`)
+- **Writes**: Use GitHub Contents API via `GitHubStorageClient` or `commit_file()`
+
+**Never** use git CLI commands (`git add`, `git commit`, `git push`) in workflows. All persistence must go through the GitHub API.
+
+Storage classes (`SourceRegistry`, `KnowledgeGraphStorage`) accept an optional `github_client` parameter. When running in Actions, pass a `GitHubStorageClient` instance to persist changes.
+
+```python
+from src.integrations.github.storage import get_github_storage_client
+
+# In tool handlers:
+github_client = get_github_storage_client()  # Returns None if not in Actions
+registry = SourceRegistry(github_client=github_client)
+```
+
 ## Key Directories
 - `src/integrations/github/`: GitHub API utilities including sync, issues, discussions, PRs.
 - `src/orchestration/`: Agent runtime, tools, missions, and LLM planner.
