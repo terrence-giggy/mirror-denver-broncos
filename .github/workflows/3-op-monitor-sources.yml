@@ -3,8 +3,8 @@ name: "3. Op: Monitor Sources"
 # Monitor sources for content changes on a schedule
 on:
   schedule:
-    # Run every 6 hours
-    - cron: "0 */6 * * *"
+    # Run weekly on Sundays at 00:00 UTC
+    - cron: '0 0 * * 0'
   workflow_dispatch:
     inputs:
       source_url:
