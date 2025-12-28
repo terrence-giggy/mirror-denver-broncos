@@ -151,3 +151,32 @@ def test_search_by_label_requires_label() -> None:
     searcher = GitHubIssueSearcher(token="token", repository="octocat/hello-world")
     with pytest.raises(GitHubIssueError):
         searcher.search_by_label("")
+
+
+def test_search_by_body_content(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that search_by_body_content uses in:body qualifier."""
+    captured_urls: list[str] = []
+
+    def fake_urlopen(req: object):
+        captured_urls.append(req.full_url)  # type: ignore[attr-defined]
+        return DummyResponse(make_payload(1))
+
+    monkeypatch.setattr(search_issues.request, "urlopen", fake_urlopen)
+
+    searcher = GitHubIssueSearcher(token="token", repository="octocat/hello-world")
+    results = searcher.search_by_body_content("monitor-initial:abc123", limit=5)
+
+    assert captured_urls
+    url = captured_urls[0]
+    # Verify the quoted search term and in:body qualifier are present
+    assert "monitor-initial%3Aabc123" in url
+    assert "in%3Abody" in url
+    assert "is%3Aopen" in url
+    assert len(results) == 1
+
+
+def test_search_by_body_content_requires_text() -> None:
+    """Test that search_by_body_content requires non-empty text."""
+    searcher = GitHubIssueSearcher(token="token", repository="octocat/hello-world")
+    with pytest.raises(GitHubIssueError):
+        searcher.search_by_body_content("")

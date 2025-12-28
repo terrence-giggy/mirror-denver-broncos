@@ -49,6 +49,10 @@ def _url_hash(url: str) -> str:
 
 def _build_initial_acquisition_body(source: SourceEntry, detection: ChangeDetection) -> str:
     """Build the Issue body for an initial acquisition request."""
+    # Extract domain for storage path hint
+    from urllib.parse import urlparse
+    domain = urlparse(source.url).netloc.replace("www.", "")
+    
     return f"""## Initial Acquisition: {source.name}
 
 **Source URL**: {source.url}
@@ -63,13 +67,76 @@ def _build_initial_acquisition_body(source: SourceEntry, detection: ChangeDetect
 - **Official Domain**: {'Yes' if source.is_official else 'No'}
 - **Requires Auth**: {'Yes' if source.requires_auth else 'No'}
 
-### Acquisition Scope
+---
 
-This is the **first acquisition** of this source. The Acquisition Agent should:
-1. Fetch complete content from the source URL
-2. Parse all pages/segments using appropriate parser
-3. Store in `evidence/` with full provenance
-4. Update source registry with content hash and acquisition timestamp
+## ⚡ Task Type: CONTENT ACQUISITION
+
+**This is an EXECUTION task, not an IMPLEMENTATION task.**
+
+DO NOT create new modules, toolkits, or infrastructure. Use the existing parsing system.
+
+---
+
+### Execution Steps
+
+1. **Fetch and parse** using the existing web parser:
+   ```python
+   from src.parsing.runner import parse_single_target
+   from src.parsing.storage import ParseStorage
+   from src import paths
+   
+   storage = ParseStorage(root=paths.get_evidence_root() / "parsed")
+   result = parse_single_target("{source.url}", storage=storage, is_remote=True)
+   ```
+
+2. **Update source registry** with content hash:
+   ```python
+   from src.knowledge.storage import SourceRegistry
+   from src import paths
+   
+   registry = SourceRegistry(root=paths.get_knowledge_graph_root())
+   source = registry.get_source("{source.url}")
+   # Update source.last_content_hash = result.checksum
+   # Save with registry.save_source(updated_source)
+   ```
+
+3. **Commit changes** via GitHub API (Actions environment requires GitHubStorageClient)
+
+### Available Infrastructure (DO NOT RECREATE)
+
+| Module | Purpose |
+|--------|---------|
+| `src/parsing/web.py` | WebParser for HTML/URL content |
+| `src/parsing/runner.py` | `parse_single_target()` orchestrator |
+| `src/parsing/storage.py` | ParseStorage, manifest management |
+| `src/knowledge/storage.py` | SourceRegistry for metadata |
+
+### Storage Location
+
+Parsed content will be stored at:
+```
+evidence/parsed/{{year}}/{domain}-{{hash[:8]}}/
+├── content.md          # Extracted content
+└── metadata.json       # Provenance info
+```
+
+### ⚠️ Network Requirements
+
+This task requires **external network access** to fetch content from the source URL.
+- **GitHub Actions**: Network access available
+- **Sandboxed environments**: May fail at fetch stage
+
+If network is blocked, close this issue with label `blocked-network` and a comment explaining the limitation.
+
+---
+
+### Acceptance Criteria
+
+- [ ] Content fetched from source URL
+- [ ] Parsed content stored in `evidence/parsed/`
+- [ ] Manifest entry created with checksum
+- [ ] `SourceEntry.last_content_hash` updated in registry
+- [ ] Issue closed with acquisition summary
 
 **Urgency**: {detection.urgency}
 
@@ -87,6 +154,10 @@ def _build_content_update_body(source: SourceEntry, detection: ChangeDetection) 
     curr_modified = detection.current_last_modified or "N/A"
     prev_checked = detection.previous_checked.isoformat() if detection.previous_checked else "N/A"
 
+    # Extract domain for storage path hint
+    from urllib.parse import urlparse
+    domain = urlparse(source.url).netloc.replace("www.", "")
+
     return f"""## Content Update: {source.name}
 
 **Source URL**: {source.url}
@@ -102,50 +173,83 @@ def _build_content_update_body(source: SourceEntry, detection: ChangeDetection) 
 | ETag | {prev_etag} | {curr_etag} |
 | Last-Modified | {prev_modified} | {curr_modified} |
 
-### Acquisition Instructions
+---
 
-This is an **incremental update**. The Acquisition Agent should:
-1. Fetch current content from the source URL
-2. Parse and compare against previous version in `evidence/`
-3. Store new version with provenance linking to previous
-4. Update source registry with new content hash
+## ⚡ Task Type: CONTENT UPDATE
+
+**This is an EXECUTION task, not an IMPLEMENTATION task.**
+
+DO NOT create new modules, toolkits, or infrastructure. Use the existing parsing system.
+
+---
+
+### Execution Steps
+
+1. **Fetch and parse** the updated content:
+   ```python
+   from src.parsing.runner import parse_single_target
+   from src.parsing.storage import ParseStorage
+   from src import paths
+   
+   storage = ParseStorage(root=paths.get_evidence_root() / "parsed")
+   result = parse_single_target("{source.url}", storage=storage, is_remote=True, force=True)
+   ```
+
+2. **Update source registry** with new content hash:
+   ```python
+   from src.knowledge.storage import SourceRegistry
+   from src import paths
+   
+   registry = SourceRegistry(root=paths.get_knowledge_graph_root())
+   source = registry.get_source("{source.url}")
+   # Update source.last_content_hash = result.checksum
+   # Save with registry.save_source(updated_source)
+   ```
+
+3. **Commit changes** via GitHub API (Actions environment requires GitHubStorageClient)
+
+### Available Infrastructure (DO NOT RECREATE)
+
+| Module | Purpose |
+|--------|---------|
+| `src/parsing/web.py` | WebParser for HTML/URL content |
+| `src/parsing/runner.py` | `parse_single_target()` orchestrator |
+| `src/parsing/storage.py` | ParseStorage, manifest management |
+| `src/knowledge/storage.py` | SourceRegistry for metadata |
+
+### Storage Location
+
+New version will be stored at:
+```
+evidence/parsed/{{year}}/{domain}-{{new_hash[:8]}}/
+├── content.md          # Updated content
+└── metadata.json       # Provenance (links to previous version)
+```
+
+Previous version remains at its original location for diff comparison.
+
+### ⚠️ Network Requirements
+
+This task requires **external network access** to fetch content from the source URL.
+- **GitHub Actions**: Network access available
+- **Sandboxed environments**: May fail at fetch stage
+
+If network is blocked, close this issue with label `blocked-network` and a comment explaining the limitation.
+
+---
+
+### Acceptance Criteria
+
+- [ ] Updated content fetched from source URL
+- [ ] New version stored in `evidence/parsed/`
+- [ ] Manifest entry created with new checksum
+- [ ] `SourceEntry.last_content_hash` updated in registry
+- [ ] Issue closed with update summary (note what changed if detectable)
 
 **Urgency**: {detection.urgency}
 
 <!-- monitor-update:{_url_hash(source.url)}:{detection.current_hash or 'pending'} -->
 """
-
-
-def _check_issue_exists(
-    searcher: GitHubIssueSearcher,
-    marker: str,
-) -> bool:
-    """Check if an issue with the given marker already exists.
-    
-    Searches open issues with acquisition-candidate label and checks
-    if the marker exists in the issue body.
-    
-    Args:
-        searcher: GitHub issue searcher instance
-        marker: The HTML comment marker to search for (e.g., 'monitor-initial:abc123')
-        
-    Returns:
-        True if an issue with this marker exists, False otherwise
-        
-    Note:
-        Currently returns False as a placeholder. Full implementation requires
-        GitHubIssueSearcher enhancement to support body content search.
-        See: https://github.com/speculum-principum/speculum-principum/issues/TBD
-        
-    TODO(monitor-dedup): Implement actual deduplication by:
-        1. Enhancing GitHubIssueSearcher.search_by_label to return issue bodies
-        2. Checking each returned issue body for the marker string
-        3. Or using GitHub's code search API with 'in:body' qualifier
-    """
-    # Placeholder: actual implementation pending GitHubIssueSearcher enhancement
-    _ = searcher  # Unused until implementation
-    _ = marker    # Unused until implementation
-    return False
 
 
 # =============================================================================
@@ -587,6 +691,34 @@ def _create_initial_acquisition_issue_handler(
             output="Source already has content hash. Use content update instead.",
         )
 
+    # Resolve repository and token early for dedup check
+    try:
+        repository = github_issues.resolve_repository(arguments.get("repository"))
+        token = github_issues.resolve_token(None)
+    except github_issues.GitHubIssueError as e:
+        return ToolResult(success=False, output=str(e))
+
+    # Check for existing issue before creating a new one
+    dedup_marker = f"monitor-initial:{_url_hash(source.url)}"
+    try:
+        searcher = GitHubIssueSearcher(token=token, repository=repository)
+        existing_issues = searcher.search_by_body_content(dedup_marker, limit=1)
+        if existing_issues:
+            existing = existing_issues[0]
+            return ToolResult(
+                success=True,
+                output={
+                    "issue_number": existing.number,
+                    "issue_url": existing.url,
+                    "source_url": source.url,
+                    "skipped": True,
+                    "reason": "Issue already exists for this source",
+                },
+            )
+    except github_issues.GitHubIssueError:
+        # If search fails, proceed with creation (fail-open for dedup)
+        pass
+
     # Create ChangeDetection for initial acquisition
     now = datetime.now(timezone.utc)
     detection = ChangeDetection(
@@ -614,13 +746,6 @@ def _create_initial_acquisition_issue_handler(
     elif detection.urgency == "low":
         labels.append("low-priority")
 
-    # Resolve repository and token
-    try:
-        repository = github_issues.resolve_repository(arguments.get("repository"))
-        token = github_issues.resolve_token(None)
-    except github_issues.GitHubIssueError as e:
-        return ToolResult(success=False, output=str(e))
-
     # Create the issue
     try:
         outcome = github_issues.create_issue(
@@ -632,6 +757,26 @@ def _create_initial_acquisition_issue_handler(
         )
     except github_issues.GitHubIssueError as e:
         return ToolResult(success=False, output=f"Failed to create issue: {e}")
+
+    # Assign the issue to Copilot
+    try:
+        github_issues.assign_issue_to_copilot(
+            token=token,
+            repository=repository,
+            issue_number=outcome.number,
+        )
+    except github_issues.GitHubIssueError as e:
+        # Issue was created but assignment failed - log but don't fail
+        return ToolResult(
+            success=True,
+            output={
+                "issue_number": outcome.number,
+                "issue_url": outcome.html_url,
+                "source_url": source.url,
+                "urgency": detection.urgency,
+                "warning": f"Issue created but Copilot assignment failed: {e}",
+            },
+        )
 
     return ToolResult(
         success=True,
@@ -717,6 +862,27 @@ def _create_content_update_issue_handler(
         )
     except github_issues.GitHubIssueError as e:
         return ToolResult(success=False, output=f"Failed to create issue: {e}")
+
+    # Assign the issue to Copilot
+    try:
+        github_issues.assign_issue_to_copilot(
+            token=token,
+            repository=repository,
+            issue_number=outcome.number,
+        )
+    except github_issues.GitHubIssueError as e:
+        # Issue was created but assignment failed - log but don't fail
+        return ToolResult(
+            success=True,
+            output={
+                "issue_number": outcome.number,
+                "issue_url": outcome.html_url,
+                "source_url": source.url,
+                "detection_method": detection_method,
+                "urgency": detection.urgency,
+                "warning": f"Issue created but Copilot assignment failed: {e}",
+            },
+        )
 
     return ToolResult(
         success=True,

@@ -1,0 +1,85 @@
+# Mission to acquire content from a source URL identified in an acquisition Issue.
+
+id: acquire_source
+version: 1
+metadata:
+  owner: copilot-orchestrator
+  created_at: 2025-12-28
+  summary_tooling: source-acquisition
+
+goal: |
+  Acquire content from a source URL identified in an acquisition Issue.
+  
+  ⚠️ CRITICAL: This is an EXECUTION mission - use existing infrastructure, do NOT build new tools.
+  
+  Context:
+  - This mission is triggered by Issues created by the Monitor Agent
+  - Issues have labels `initial-acquisition` (first fetch) or `content-update` (changed content)
+  - The source URL is in the Issue body under "Source URL"
+  
+  Execution Steps:
+  1. Extract the source URL from the Issue body
+  2. Use `src/parsing/runner.parse_single_target()` to fetch and parse the content
+  3. Store output to `evidence/parsed/` using ParseStorage
+  4. Update `SourceEntry.last_content_hash` via SourceRegistry
+  5. Close the Issue with a summary of acquired content
+  
+  Available Infrastructure (already implemented - DO NOT recreate):
+  - `src/parsing/web.py` - WebParser for HTML/URL content
+  - `src/parsing/runner.py` - `parse_single_target()` orchestrator  
+  - `src/parsing/storage.py` - ParseStorage for evidence storage
+  - `src/knowledge/storage.py` - SourceRegistry for metadata
+  
+  Example usage:
+  ```python
+  from src.parsing.runner import parse_single_target
+  from src.parsing.storage import ParseStorage
+  from src.knowledge.storage import SourceRegistry
+  from src import paths
+  
+  # Parse and store
+  storage = ParseStorage(root=paths.get_evidence_root() / "parsed")
+  result = parse_single_target(url, storage=storage, is_remote=True)
+  
+  # Update registry
+  registry = SourceRegistry(root=paths.get_knowledge_graph_root())
+  source = registry.get_source(url)
+  # Update last_content_hash and save
+  ```
+  
+  Network Requirements:
+  - This task requires external network access to fetch content
+  - In GitHub Actions: Network access is available
+  - In sandboxed environments: Will fail at fetch stage
+  - If blocked: Close Issue with label `blocked-network`
+
+constraints:
+  - "DO NOT create new modules, toolkits, or infrastructure"
+  - "DO NOT recreate existing parsing functionality"
+  - "Use existing parse_single_target() for ALL parsing"
+  - "Use GitHubStorageClient for persistence in Actions environment"
+  - "If network is blocked, close Issue with label 'blocked-network'"
+  - "Update last_content_hash after successful acquisition"
+  - "Close the Issue with a summary upon completion"
+
+success_criteria:
+  - Content fetched and parsed without errors
+  - Parsed content stored in evidence/parsed/
+  - Manifest entry created with checksum
+  - Source registry updated with content hash
+  - Issue closed with acquisition summary
+
+max_steps: 15
+allowed_tools:
+  # Read tools
+  - read_file
+  - list_dir
+  - grep_search
+  - semantic_search
+  
+  # Write tools - limited to execution, not development
+  - run_in_terminal
+  - create_file
+  - replace_string_in_file
+
+requires_approval: false

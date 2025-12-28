@@ -83,6 +83,25 @@ class GitHubIssueSearcher:
             order="desc",
         )
 
+    def search_by_body_content(
+        self, body_text: str, *, limit: int = 30
+    ) -> list[IssueSearchResult]:
+        """Return open issues containing the specified text in their body.
+        
+        Args:
+            body_text: The text to search for in issue bodies.
+            limit: Maximum number of results to return.
+            
+        Returns:
+            List of matching issues.
+        """
+        if not body_text:
+            raise GitHubIssueError("Body text must be provided for body searches.")
+        # Quote the search term and use in:body qualifier
+        quoted_text = f'"{body_text}"'
+        qualifier = f"{quoted_text} in:body"
+        return self._search(qualifier, limit=limit)
+
     def search_with_label_filters(
         self,
         *,
