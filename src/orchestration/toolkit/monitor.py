@@ -236,6 +236,17 @@ def _get_sources_pending_initial_handler(
     monitor = SourceMonitor(registry=reg)
     sources = monitor.get_sources_pending_initial()
 
+    # Provide helpful context if no active sources but pending ones exist
+    pending_review_count = len(reg.list_sources(status="pending_review"))
+    message = None
+    if len(sources) == 0 and pending_review_count > 0:
+        message = (
+            f"No active sources need initial acquisition. "
+            f"However, {pending_review_count} source(s) are in 'pending_review' status. "
+            f"Sources must be approved (status='active') before they can be monitored. "
+            f"Use the implement_approved_source tool or update_source_status to activate them."
+        )
+
     return ToolResult(
         success=True,
         output={
@@ -250,6 +261,7 @@ def _get_sources_pending_initial_handler(
                 }
                 for s in sources
             ],
+            "message": message,
         },
     )
 

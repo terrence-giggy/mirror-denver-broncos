@@ -16,23 +16,27 @@ goal: |
   2. Issues created by the curate_sources mission after /approve-source command
   
   Actions:
-  1. Read the Issue to extract:
-     - Source URL
-     - Source name
-     - Discussion number (from Issue body)
-     - Who approved the source
-  2. Register the source in knowledge-graph/sources/
-  3. Update the original Discussion with "Implementation Complete" status
-  4. Close the Issue with an implementation summary
+  1. Call `get_issue_details` to read the Issue and extract:
+     - Source URL (from issue body)
+     - Source name (from issue title or body)
+     - Discussion number (from issue body, e.g., "Discussion #15")
+     - Who approved the source (from issue body)
+  2. Call `implement_approved_source` with the extracted details
+     - This registers the source with status="active" (approved and ready for monitoring)
+     - Do NOT use register_source - that tool is for unapproved sources
+  3. Call `add_discussion_comment` to update the original Discussion with "Implementation Complete"
+  4. Call `close_issue` with an implementation summary comment
 
 constraints:
   - "Only process Issues with `source-approved` label"
+  - "MUST use implement_approved_source tool - this sets status='active'"
+  - "Do NOT use register_source - that sets derived sources to pending_review"
   - "Verify the source is not already registered before proceeding"
   - "Track both proposal_discussion and implementation_issue in SourceEntry"
   - "Update Discussion to reflect final status"
 
 success_criteria:
-  - Approved sources appear in the registry at knowledge-graph/sources/
+  - Approved sources appear in the registry with status="active"
   - SourceEntry includes proposal_discussion and implementation_issue numbers
   - Discussion is updated with implementation status
   - Issue is closed with summary comment
@@ -46,7 +50,6 @@ allowed_tools:
   - get_discussion
   - add_discussion_comment
   - implement_approved_source
-  - register_source
   - get_source
   - list_sources
   - update_source_status
