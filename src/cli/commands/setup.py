@@ -23,18 +23,62 @@ from src.integrations.github.sync import get_repository_variable
 from src.integrations.github import discussions as github_discussions
 
 SETUP_ISSUE_TITLE = "Project Configuration & Setup"
-SETUP_ISSUE_BODY = (
-    "This issue tracks the initial configuration of the repository.\n\n"
-    "The setup agent will guide you through the process."
-)
+SETUP_ISSUE_BODY = """\
+This issue tracks the initial configuration of the repository.
+
+## ✅ Setup Checklist
+
+Complete the following steps to finish repository configuration:
+
+### 1. GitHub Token & Secrets
+- [ ] Configure **GH_TOKEN** secret with `repo` and `workflow` permissions
+- [ ] Set **SYNC_SIGNATURE_SECRET** secret for secure dispatch verification
+
+### 2. Repository Variables
+- [ ] Set **UPSTREAM_REPO** variable (e.g., `owner/template-repo`)
+
+### 3. Repository Settings
+- [ ] Add **speculum-downstream** topic to this repository
+
+### 4. Enable Discussions
+Enable Discussions and create the following categories:
+- [ ] **Sources** — for source curation workflow
+- [ ] **People** — for Person entity profiles
+- [ ] **Organizations** — for Organization entity profiles
+
+### 5. Configure Copilot Coding Agent MCP
+Navigate to **Settings → Copilot → Coding agent → MCP configuration** and add:
+
+```json
+{
+  "mcpServers": {
+    "evidence-acquisition": {
+      "type": "local",
+      "command": "python",
+      "args": ["-m", "src.integrations.copilot.mcp_server"],
+      "tools": ["fetch_source_content", "check_source_headers"]
+    }
+  }
+}
+```
+
+This enables the agent to fetch external content (bypasses firewall).
+
+### 6. Sync from Upstream
+- [ ] Run the **2. Sync: Pull from Upstream** workflow to pull latest changes
+
+---
+
+Once all steps are complete, close this issue.
+"""
 WELCOME_COMMENT = (
     "Welcome to the repository setup wizard! 🧙‍♂️\n\n"
-    "I will help you configure your project. Please provide the following details:\n\n"
-    "1. **Source URL**: The URL of the data source you want to track.\n"
-    "2. **Topic**: The main topic or category for this data.\n"
-    "3. **Frequency**: How often you want to check for updates (e.g., daily, weekly).\n"
-    "4. **Model**: The LLM model to use for operations (default: gpt-4o).\n\n"
-    "Please reply to this comment with the information above."
+    "I've created a checklist above to guide you through the configuration process.\n\n"
+    "**Quick Start:**\n"
+    "1. Review and complete each checkbox in the issue description\n"
+    "2. Run the `validate-setup` command to verify configuration\n"
+    "3. Close this issue when setup is complete\n\n"
+    "If you have any questions, check the documentation in `docs/guides/`."
 )
 
 
