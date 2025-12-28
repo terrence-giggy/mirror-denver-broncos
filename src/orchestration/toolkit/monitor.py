@@ -28,6 +28,7 @@ from src.knowledge.storage import SourceEntry, SourceRegistry
 from ..safety import ActionRisk
 from ..tools import ToolDefinition, ToolRegistry
 from ..types import ToolResult
+from ._github_context import resolve_github_client
 
 
 def register_monitor_tools(registry: ToolRegistry) -> None:
@@ -494,7 +495,8 @@ def _update_source_monitoring_metadata_handler(
     kb_root = arguments.get("kb_root")
     root_path = Path(kb_root) if kb_root else paths.get_knowledge_graph_root()
 
-    reg = SourceRegistry(root=root_path)
+    github_client = resolve_github_client()
+    reg = SourceRegistry(root=root_path, github_client=github_client)
     source = reg.get_source(url)
     if source is None:
         return ToolResult(success=False, output=f"Source not found: {url}")

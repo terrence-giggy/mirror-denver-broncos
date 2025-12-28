@@ -20,6 +20,8 @@ from src.knowledge.extraction import (
 from src.parsing.storage import ParseStorage
 from src.orchestration.tools import ToolRegistry
 
+from ._github_context import resolve_github_client
+
 
 def register_extraction_tools(registry: ToolRegistry) -> None:
     """Register extraction tools with the provided registry."""
@@ -35,7 +37,10 @@ class ExtractionToolkit:
         # Initialize with defaults
         config = load_parsing_config(None)
         self.storage = ParseStorage(config.output_root)
-        self.kb_storage = KnowledgeGraphStorage(None)
+        
+        # KnowledgeGraphStorage with GitHub API support for Actions
+        github_client = resolve_github_client()
+        self.kb_storage = KnowledgeGraphStorage(github_client=github_client)
         
         # Client will be initialized on first use or we can try now
         # Ideally we share the client but for now we create a new one

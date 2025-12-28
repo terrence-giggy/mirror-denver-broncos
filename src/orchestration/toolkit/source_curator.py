@@ -18,6 +18,7 @@ from src.knowledge.storage import SourceEntry, SourceRegistry
 from ..safety import ActionRisk
 from ..tools import ToolDefinition, ToolRegistry
 from ..types import ToolResult
+from ._github_context import resolve_github_client
 
 
 def register_source_curator_tools(registry: ToolRegistry) -> None:
@@ -781,7 +782,8 @@ def _register_source_handler(args: Mapping[str, Any]) -> ToolResult:
 
     # Check if already registered
     registry_path = Path(kb_root) if kb_root else paths.get_knowledge_graph_root()
-    registry = SourceRegistry(root=registry_path)
+    github_client = resolve_github_client()
+    registry = SourceRegistry(root=registry_path, github_client=github_client)
 
     if registry.source_exists(url):
         return ToolResult(
@@ -850,7 +852,8 @@ def _update_source_status_handler(args: Mapping[str, Any]) -> ToolResult:
     kb_root = args.get("kb_root")
 
     registry_path = Path(kb_root) if kb_root else paths.get_knowledge_graph_root()
-    registry = SourceRegistry(root=registry_path)
+    github_client = resolve_github_client()
+    registry = SourceRegistry(root=registry_path, github_client=github_client)
 
     source = registry.get_source(url)
     if source is None:
@@ -1364,7 +1367,8 @@ def _implement_approved_source_handler(args: Mapping[str, Any]) -> ToolResult:
     repository, token = creds
 
     registry_path = Path(kb_root) if kb_root else paths.get_knowledge_graph_root()
-    registry = SourceRegistry(root=registry_path)
+    github_client = resolve_github_client()
+    registry = SourceRegistry(root=registry_path, github_client=github_client)
 
     # Check if already registered
     if registry.source_exists(source_url):
@@ -1606,7 +1610,8 @@ def _process_source_approval_handler(args: Mapping[str, Any]) -> ToolResult:
     repository, token = creds
 
     registry_path = Path(kb_root) if kb_root else paths.get_knowledge_graph_root()
-    registry = SourceRegistry(root=registry_path)
+    github_client = resolve_github_client()
+    registry = SourceRegistry(root=registry_path, github_client=github_client)
 
     if command == "approve":
         # Check if already registered

@@ -6,11 +6,14 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from . import utils
 from .base import ParsedDocument
 from .markdown import document_to_markdown
+
+if TYPE_CHECKING:
+    from src.integrations.github.storage import GitHubStorageClient
 
 _MANIFEST_VERSION = 1
 _DEFAULT_MANIFEST = "manifest.json"
@@ -83,12 +86,36 @@ class Manifest:
 
 
 class ParseStorage:
-    def __init__(self, root: Path, *, manifest_filename: str = _DEFAULT_MANIFEST) -> None:
+    """Manages storage of parsed document artifacts.
+
+    When running in GitHub Actions, pass a GitHubStorageClient to persist
+    writes via the GitHub API instead of the local filesystem.
+    """
+
+    def __init__(
+        self,
+        root: Path,
+        *,
+        manifest_filename: str = _DEFAULT_MANIFEST,
+        github_client: "GitHubStorageClient | None" = None,
+        project_root: Path | None = None,
+    ) -> None:
         self.root = Path(root)
         self.root = self.root if self.root.is_absolute() else self.root.resolve()
         self._manifest_filename = manifest_filename
+        self._github_client = github_client
+        # Project root for computing relative paths (defaults to cwd)
+        self._project_root = project_root or Path.cwd()
         utils.ensure_directory(self.root)
         self._manifest = self._load_manifest()
+
+    def _get_relative_path(self, path: Path) -> str:
+        """Get path relative to project root for GitHub API."""
+        try:
+            return str(path.relative_to(self._project_root))
+        except ValueError:
+            # Path is not under project root, use absolute path
+            return str(path)
 
     @property
     def manifest_path(self) -> Path:
@@ -244,9 +271,19 @@ class ParseStorage:
 
     def _write_manifest(self) -> None:
         payload = self._manifest.to_dict()
-        tmp_path = self.manifest_path.with_suffix(".tmp")
-        tmp_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-        tmp_path.replace(self.manifest_path)
+        content = json.dumps(payload, indent=2, sort_keys=True)
+
+        if self._github_client:
+            rel_path = self._get_relative_path(self.manifest_path)
+            self._github_client.commit_file(
+                path=rel_path,
+                content=content,
+                message="Update parsed document manifest",
+            )
+        else:
+            tmp_path = self.manifest_path.with_suffix(".tmp")
+            tmp_path.write_text(content, encoding="utf-8")
+            tmp_path.replace(self.manifest_path)
 
     def _prepare_artifact_directory(
         self,

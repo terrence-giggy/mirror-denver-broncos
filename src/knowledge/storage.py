@@ -7,10 +7,13 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
 from src import paths
 from src.parsing import utils
+
+if TYPE_CHECKING:
+    from src.integrations.github.storage import GitHubStorageClient
 
 _DEFAULT_KB_ROOT = paths.get_knowledge_graph_root()
 
@@ -165,11 +168,23 @@ class ExtractedAssociations:
 
 
 class KnowledgeGraphStorage:
-    """Manages storage of extracted knowledge graph entities."""
+    """Manages storage of extracted knowledge graph entities.
 
-    def __init__(self, root: Path | None = None) -> None:
+    When running in GitHub Actions, pass a GitHubStorageClient to persist
+    writes via the GitHub API instead of the local filesystem.
+    """
+
+    def __init__(
+        self,
+        root: Path | None = None,
+        github_client: "GitHubStorageClient | None" = None,
+        project_root: Path | None = None,
+    ) -> None:
         self.root = root or _DEFAULT_KB_ROOT
         self.root = self.root if self.root.is_absolute() else self.root.resolve()
+        self._github_client = github_client
+        # Project root for computing relative paths (defaults to cwd)
+        self._project_root = project_root or Path.cwd()
         utils.ensure_directory(self.root)
         self._people_dir = self.root / "people"
         utils.ensure_directory(self._people_dir)
@@ -182,15 +197,33 @@ class KnowledgeGraphStorage:
         self._profiles_dir = self.root / "profiles"
         utils.ensure_directory(self._profiles_dir)
 
+    def _get_relative_path(self, path: Path) -> str:
+        """Get path relative to project root for GitHub API."""
+        try:
+            return str(path.relative_to(self._project_root))
+        except ValueError:
+            # Path is not under project root, use path relative to storage root
+            # and prefix with the root's name
+            return str(path)
+
     def save_extracted_people(self, source_checksum: str, people: List[str]) -> None:
         """Save extracted people for a given source document."""
         entry = ExtractedPeople(source_checksum=source_checksum, people=people)
         path = self._get_people_path(source_checksum)
-        
-        # Write atomic
-        tmp_path = path.with_suffix(path.suffix + ".tmp")
-        tmp_path.write_text(json.dumps(entry.to_dict(), indent=2), encoding="utf-8")
-        tmp_path.replace(path)
+        content = json.dumps(entry.to_dict(), indent=2)
+
+        if self._github_client:
+            rel_path = self._get_relative_path(path)
+            self._github_client.commit_file(
+                path=rel_path,
+                content=content,
+                message=f"Extract people from {source_checksum[:12]}",
+            )
+        else:
+            # Local atomic write
+            tmp_path = path.with_suffix(path.suffix + ".tmp")
+            tmp_path.write_text(content, encoding="utf-8")
+            tmp_path.replace(path)
 
     def get_extracted_people(self, source_checksum: str) -> ExtractedPeople | None:
         """Retrieve extracted people for a given source document."""
@@ -208,11 +241,20 @@ class KnowledgeGraphStorage:
         """Save extracted organizations for a given source document."""
         entry = ExtractedOrganizations(source_checksum=source_checksum, organizations=organizations)
         path = self._get_organizations_path(source_checksum)
-        
-        # Write atomic
-        tmp_path = path.with_suffix(path.suffix + ".tmp")
-        tmp_path.write_text(json.dumps(entry.to_dict(), indent=2), encoding="utf-8")
-        tmp_path.replace(path)
+        content = json.dumps(entry.to_dict(), indent=2)
+
+        if self._github_client:
+            rel_path = self._get_relative_path(path)
+            self._github_client.commit_file(
+                path=rel_path,
+                content=content,
+                message=f"Extract organizations from {source_checksum[:12]}",
+            )
+        else:
+            # Local atomic write
+            tmp_path = path.with_suffix(path.suffix + ".tmp")
+            tmp_path.write_text(content, encoding="utf-8")
+            tmp_path.replace(path)
 
     def get_extracted_organizations(self, source_checksum: str) -> ExtractedOrganizations | None:
         """Retrieve extracted organizations for a given source document."""
@@ -230,11 +272,20 @@ class KnowledgeGraphStorage:
         """Save extracted concepts for a given source document."""
         entry = ExtractedConcepts(source_checksum=source_checksum, concepts=concepts)
         path = self._get_concepts_path(source_checksum)
-        
-        # Write atomic
-        tmp_path = path.with_suffix(path.suffix + ".tmp")
-        tmp_path.write_text(json.dumps(entry.to_dict(), indent=2), encoding="utf-8")
-        tmp_path.replace(path)
+        content = json.dumps(entry.to_dict(), indent=2)
+
+        if self._github_client:
+            rel_path = self._get_relative_path(path)
+            self._github_client.commit_file(
+                path=rel_path,
+                content=content,
+                message=f"Extract concepts from {source_checksum[:12]}",
+            )
+        else:
+            # Local atomic write
+            tmp_path = path.with_suffix(path.suffix + ".tmp")
+            tmp_path.write_text(content, encoding="utf-8")
+            tmp_path.replace(path)
 
     def get_extracted_concepts(self, source_checksum: str) -> ExtractedConcepts | None:
         """Retrieve extracted concepts for a given source document."""
@@ -252,11 +303,20 @@ class KnowledgeGraphStorage:
         """Save extracted associations for a given source document."""
         entry = ExtractedAssociations(source_checksum=source_checksum, associations=associations)
         path = self._get_associations_path(source_checksum)
-        
-        # Write atomic
-        tmp_path = path.with_suffix(path.suffix + ".tmp")
-        tmp_path.write_text(json.dumps(entry.to_dict(), indent=2), encoding="utf-8")
-        tmp_path.replace(path)
+        content = json.dumps(entry.to_dict(), indent=2)
+
+        if self._github_client:
+            rel_path = self._get_relative_path(path)
+            self._github_client.commit_file(
+                path=rel_path,
+                content=content,
+                message=f"Extract associations from {source_checksum[:12]}",
+            )
+        else:
+            # Local atomic write
+            tmp_path = path.with_suffix(path.suffix + ".tmp")
+            tmp_path.write_text(content, encoding="utf-8")
+            tmp_path.replace(path)
 
     def get_extracted_associations(self, source_checksum: str) -> ExtractedAssociations | None:
         """Retrieve extracted associations for a given source document."""
@@ -274,11 +334,20 @@ class KnowledgeGraphStorage:
         """Save extracted profiles for a given source document."""
         entry = ExtractedProfiles(source_checksum=source_checksum, profiles=profiles)
         path = self._get_profiles_path(source_checksum)
-        
-        # Write atomic
-        tmp_path = path.with_suffix(path.suffix + ".tmp")
-        tmp_path.write_text(json.dumps(entry.to_dict(), indent=2), encoding="utf-8")
-        tmp_path.replace(path)
+        content = json.dumps(entry.to_dict(), indent=2)
+
+        if self._github_client:
+            rel_path = self._get_relative_path(path)
+            self._github_client.commit_file(
+                path=rel_path,
+                content=content,
+                message=f"Extract profiles from {source_checksum[:12]}",
+            )
+        else:
+            # Local atomic write
+            tmp_path = path.with_suffix(path.suffix + ".tmp")
+            tmp_path.write_text(content, encoding="utf-8")
+            tmp_path.replace(path)
 
     def get_extracted_profiles(self, source_checksum: str) -> ExtractedProfiles | None:
         """Retrieve extracted profiles for a given source document."""
@@ -504,15 +573,35 @@ class SourceEntry:
 
 
 class SourceRegistry:
-    """Manages storage of authoritative sources."""
+    """Manages storage of authoritative sources.
 
-    def __init__(self, root: Path | None = None) -> None:
+    When running in GitHub Actions, pass a GitHubStorageClient to persist
+    writes via the GitHub API instead of the local filesystem.
+    """
+
+    def __init__(
+        self,
+        root: Path | None = None,
+        github_client: "GitHubStorageClient | None" = None,
+        project_root: Path | None = None,
+    ) -> None:
         self.root = root or _DEFAULT_KB_ROOT
         self.root = self.root if self.root.is_absolute() else self.root.resolve()
+        self._github_client = github_client
+        # Project root for computing relative paths (defaults to cwd)
+        self._project_root = project_root or Path.cwd()
         utils.ensure_directory(self.root)
         self._sources_dir = self.root / "sources"
         utils.ensure_directory(self._sources_dir)
         self._registry_path = self._sources_dir / "registry.json"
+
+    def _get_relative_path(self, path: Path) -> str:
+        """Get path relative to project root for GitHub API."""
+        try:
+            return str(path.relative_to(self._project_root))
+        except ValueError:
+            # Path is not under project root, use absolute path
+            return str(path)
 
     def _get_source_path(self, url: str) -> Path:
         """Get the path for an individual source entry."""
@@ -535,23 +624,55 @@ class SourceRegistry:
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "sources": index,
         }
-        tmp_path = self._registry_path.with_suffix(".json.tmp")
-        tmp_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        tmp_path.replace(self._registry_path)
+        content = json.dumps(data, indent=2)
+
+        if self._github_client:
+            rel_path = self._get_relative_path(self._registry_path)
+            self._github_client.commit_file(
+                path=rel_path,
+                content=content,
+                message="Update source registry index",
+            )
+        else:
+            tmp_path = self._registry_path.with_suffix(".json.tmp")
+            tmp_path.write_text(content, encoding="utf-8")
+            tmp_path.replace(self._registry_path)
 
     def save_source(self, source: SourceEntry) -> None:
         """Save a source entry to storage."""
         path = self._get_source_path(source.url)
-
-        # Write atomic
-        tmp_path = path.with_suffix(path.suffix + ".tmp")
-        tmp_path.write_text(json.dumps(source.to_dict(), indent=2), encoding="utf-8")
-        tmp_path.replace(path)
+        source_content = json.dumps(source.to_dict(), indent=2)
 
         # Update registry index
         index = self._load_registry_index()
         index[source.url_hash] = source.url
-        self._save_registry_index(index)
+        index_data = {
+            "version": 1,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "sources": index,
+        }
+        index_content = json.dumps(index_data, indent=2)
+
+        if self._github_client:
+            # Batch commit both files together
+            source_rel = self._get_relative_path(path)
+            index_rel = self._get_relative_path(self._registry_path)
+            self._github_client.commit_files_batch(
+                files=[
+                    (source_rel, source_content),
+                    (index_rel, index_content),
+                ],
+                message=f"Update source: {source.name}",
+            )
+        else:
+            # Local atomic writes
+            tmp_path = path.with_suffix(path.suffix + ".tmp")
+            tmp_path.write_text(source_content, encoding="utf-8")
+            tmp_path.replace(path)
+
+            tmp_idx = self._registry_path.with_suffix(".json.tmp")
+            tmp_idx.write_text(index_content, encoding="utf-8")
+            tmp_idx.replace(self._registry_path)
 
     def get_source(self, url: str) -> SourceEntry | None:
         """Retrieve a source entry by URL."""

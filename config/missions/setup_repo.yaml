@@ -1,10 +1,11 @@
 # Mission to setup the repository configuration via an interactive issue.
 
 id: setup_repo
-version: 1
+version: 2
 metadata:
   owner: copilot-orchestrator
   created_at: 2025-12-06
+  updated_at: 2025-12-27
   summary_tooling: setup-workflow
 
 goal: |
@@ -27,21 +28,42 @@ goal: |
        1. Remove all files and subdirectories from `dev_data/` directory (but preserve the `dev_data/` directory itself).
        2. Create `config/manifest.json` with the following JSON structure:
           { \"source_url\": \"[URL]\", \"topic\": \"[Topic]\", \"frequency\": \"[Freq]\", \"model\": \"[Model]\" }
-       3. Clean the `evidence/`, `knowledge-graph/`, and `reports/` directories (delete all files but keep `.gitkeep`)."
-       4. Re-write README.md to reflect the research goals defined in the manifest. This is no longer a template repo.
+       3. Register the primary source for the Monitor Agent by creating `knowledge-graph/sources/[url_hash].json` with:
+          - url: [URL]
+          - name: \"[Topic] - Primary Source\"
+          - source_type: \"primary\"
+          - status: \"active\"
+          - last_verified: [current ISO timestamp]
+          - added_at: [current ISO timestamp]
+          - added_by: \"system\"
+          - proposal_discussion: null
+          - implementation_issue: null
+          - credibility_score: 0.95 for .gov/.edu, 0.70 otherwise
+          - is_official: true for .gov/.edu/.mil, false otherwise
+          - requires_auth: false
+          - content_type: \"webpage\"
+          - update_frequency: \"[Freq]\"
+          - topics: [\"[Topic]\"]
+          - notes: \"Primary source from manifest.json\"
+          - last_content_hash: null (triggers initial acquisition by Monitor Agent)
+          Also create/update `knowledge-graph/sources/registry.json` with the source index.
+       4. Clean the `evidence/`, `knowledge-graph/` (except sources/), and `reports/` directories (delete all files but keep `.gitkeep`).
+       5. Re-write README.md to reflect the research goals defined in the manifest. This is no longer a template repo.
+       6. Commit all changes."
      - Assign the issue to Copilot using `assign_issue_to_copilot`.
 
 constraints:
-  - Do NOT perform the setup actions (cleaning, configuring, committing) yourself. Delegate to Copilot.
+  - Do NOT perform the file operations yourself. Delegate to Copilot via posted instructions.
   - Only assign to Copilot if the configuration is complete and valid.
   - If the user does not specify a model, default to "gpt-4o".
 
 success_criteria:
   - Configuration details extracted and validated.
+  - Instructions posted for Copilot to create both manifest.json and source registry entry.
   - User requested for more info OR Copilot instructed and assigned.
   - Welcome announcement created (or noted if category missing).
 
-max_steps: 6
+max_steps: 12
 allowed_tools:
   - validate_url
   - post_comment
