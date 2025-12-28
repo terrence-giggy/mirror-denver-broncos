@@ -41,6 +41,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
+          # NOTE: This workflow currently uses inline Python for flexibility
+          # with different source URLs and force_reacquire option.
+          # For production use, consider creating a generic acquisition CLI command.
           python << 'EOF'
           import sys
           from pathlib import Path

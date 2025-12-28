@@ -38,15 +38,18 @@ from src.knowledge.storage import SourceRegistry
 from src.integrations.github.storage import get_github_storage_client
 from src import paths
 
+# Display configuration
+SEPARATOR_WIDTH = 70
+
 
 def main() -> int:
     """Execute content acquisition for Denver Broncos official website."""
     
     url = "https://www.denverbroncos.com"
     
-    print("="*70)
+    print("=" * SEPARATOR_WIDTH)
     print("Denver Broncos Content Acquisition")
-    print("="*70)
+    print("=" * SEPARATOR_WIDTH)
     print(f"Source URL: {url}")
     print(f"Timestamp: {datetime.now(timezone.utc).isoformat()}")
     print()
@@ -72,9 +75,9 @@ def main() -> int:
     print()
     
     # Step 1: Fetch and parse content
-    print("-" * 70)
+    print("-" * SEPARATOR_WIDTH)
     print("Step 1: Fetching and parsing content...")
-    print("-" * 70)
+    print("-" * SEPARATOR_WIDTH)
     
     try:
         result = parse_single_target(
@@ -111,9 +114,9 @@ def main() -> int:
     print()
     
     # Step 2: Update source registry
-    print("-" * 70)
+    print("-" * SEPARATOR_WIDTH)
     print("Step 2: Updating source registry...")
-    print("-" * 70)
+    print("-" * SEPARATOR_WIDTH)
     
     kg_root = paths.get_knowledge_graph_root()
     registry = SourceRegistry(
@@ -144,9 +147,9 @@ def main() -> int:
     print()
     
     # Summary
-    print("="*70)
+    print("=" * SEPARATOR_WIDTH)
     print("Acquisition Complete!")
-    print("="*70)
+    print("=" * SEPARATOR_WIDTH)
     print(f"Source: {url}")
     print(f"Checksum: {result.checksum}")
     print(f"Artifact: {result.artifact_path}")
