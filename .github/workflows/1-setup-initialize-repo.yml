@@ -72,13 +72,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "1. Ensure **GH_TOKEN** secret is configured with repo permissions" >> $GITHUB_STEP_SUMMARY
-          echo "2. Set **UPSTREAM_REPO** variable (e.g., \`owner/template-repo\`)" >> $GITHUB_STEP_SUMMARY
-          echo "3. Set **SYNC_SIGNATURE_SECRET** for secure dispatch verification" >> $GITHUB_STEP_SUMMARY
-          echo "4. Add **speculum-downstream** topic to this repository" >> $GITHUB_STEP_SUMMARY
-          echo "5. Enable **Discussions** and create the following categories:" >> $GITHUB_STEP_SUMMARY
-          echo "   - **Sources** - for source curation workflow" >> $GITHUB_STEP_SUMMARY
-          echo "   - **People** - for Person entity profiles" >> $GITHUB_STEP_SUMMARY
-          echo "   - **Organizations** - for Organization entity profiles" >> $GITHUB_STEP_SUMMARY
-          echo "6. Run the upstream sync workflow to pull latest changes" >> $GITHUB_STEP_SUMMARY
+          echo "A setup issue has been created with a detailed checklist." >> $GITHUB_STEP_SUMMARY
+          echo "Navigate to the **Issues** tab to find **Project Configuration & Setup**." >> $GITHUB_STEP_SUMMARY
 
