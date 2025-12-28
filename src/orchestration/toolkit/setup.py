@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import shutil
-import subprocess
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 from pathlib import Path
@@ -333,31 +332,6 @@ def create_welcome_announcement(args: Mapping[str, Any]) -> dict[str, Any]:
         return {"success": False, "error": f"Failed to create announcement: {e}"}
 
 
-def commit_and_push(args: Mapping[str, Any]) -> dict[str, Any]:
-    branch = args.get("branch", "setup-config")
-    message = args.get("message", "Setup repository configuration")
-    
-    try:
-        # Configure git
-        subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=True)
-        subprocess.run(["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"], check=True)
-        
-        # Create branch
-        subprocess.run(["git", "checkout", "-b", branch], check=True)
-        
-        # Add changes
-        subprocess.run(["git", "add", "."], check=True)
-        
-        # Commit
-        subprocess.run(["git", "commit", "-m", message], check=True)
-        
-        # Push
-        subprocess.run(["git", "push", "origin", branch], check=True)
-        
-        return {"success": True, "branch": branch}
-    except subprocess.CalledProcessError as e:
-        return {"success": False, "error": str(e)}
-
 def register_setup_tools(registry: ToolRegistry) -> None:
     registry.register_tool(
         ToolDefinition(
@@ -420,22 +394,6 @@ def register_setup_tools(registry: ToolRegistry) -> None:
             },
             handler=configure_upstream,
             risk_level=ActionRisk.SAFE
-        )
-    )
-    registry.register_tool(
-        ToolDefinition(
-            name="commit_and_push",
-            description="Commit local changes and push to a new branch.",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "branch": {"type": "string", "description": "Branch name to create and push to."},
-                    "message": {"type": "string", "description": "Commit message."}
-                },
-                "required": ["branch", "message"],
-            },
-            handler=commit_and_push,
-            risk_level=ActionRisk.DESTRUCTIVE
         )
     )
     registry.register_tool(
