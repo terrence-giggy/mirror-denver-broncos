@@ -1,9 +1,9 @@
 name: "2. Op: Implement Source"
 
-# Trigger when an Issue with source-approved label is assigned to copilot
+# Trigger when an Issue with source-approved label is created or assigned to copilot
 on:
   issues:
-    types: [labeled, assigned]
+    types: [opened, labeled, assigned]
 
 permissions:
   issues: write
