@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "artifact_path": "2025/www-denverbroncos-com-cd9fa631c7fa/index.md",
+      "checksum": "cd9fa631c7faea9b771f8e545e53c823c965b774ce38baae51674a6df9730451",
+      "metadata": {
+        "artifact_type": "page-directory",
+        "content_type": "text/html",
+        "extracted_characters": 643,
+        "fetched_at": "2025-12-28T20:15:27.433380+00:00",
+        "final_url": "https://www.denverbroncos.com",
+        "mock_data": true,
+        "page_unit": "segment",
+        "segments_total": 10,
+        "status_code": 200,
+        "title": "Denver Broncos Official Website",
+        "url": "https://www.denverbroncos.com"
+      },
+      "parser": "web",
+      "processed_at": "2025-12-28T20:15:27.433369+00:00",
+      "source": "https://www.denverbroncos.com",
+      "status": "completed"
+    }
+  ],
+  "version": 1
+}
