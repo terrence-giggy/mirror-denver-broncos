@@ -12,13 +12,14 @@ from typing import Any, Mapping
 
 from src import paths
 from src.integrations.github.storage import get_github_storage_client
-from src.knowledge.storage import SourceRegistry
+from src.knowledge.storage import SourceEntry, SourceRegistry
 from src.parsing.runner import parse_single_target
 from src.parsing.storage import ParseStorage
 
 from ..safety import ActionRisk
 from ..tools import ToolDefinition, ToolRegistry
 from ..types import ToolResult
+from ._github_context import resolve_github_client
 
 
 def register_acquisition_tools(registry: ToolRegistry) -> None:
@@ -135,11 +136,9 @@ def _acquire_source_content_handler(args: Mapping[str, Any]) -> ToolResult:
             "check_failures": 0,
         })
         
-        from src.knowledge.storage import SourceEntry
         updated_source = SourceEntry.from_dict(source_dict)
         
         # Save with GitHub client if available
-        from src.orchestration.toolkit._github_context import resolve_github_client
         github_client_for_registry = resolve_github_client()
         registry_with_client = SourceRegistry(root=kb_root, github_client=github_client_for_registry)
         registry_with_client.save_source(updated_source)
