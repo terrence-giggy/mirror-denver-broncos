@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,20 +22,31 @@ from .base import ParsedDocument, ParseTarget, ParserError
 from .markdown import document_to_markdown
 from .registry import registry
 
+logger = logging.getLogger(__name__)
+
 _HTML_SUFFIXES = (".html", ".htm", ".xhtml")
 _HTML_MEDIA_TYPES = ("text/html", "application/xhtml+xml")
 _DEFAULT_USER_AGENT = "speculum-principum-web-parser/1.0"
 
+# Minimum content length to trigger rendering fallback
+_MIN_CONTENT_FOR_SUCCESS = 100
+
 
 @dataclass(slots=True)
 class WebParser:
-    """Concrete :class:`DocumentParser` for HTML sources and URLs."""
+    """Concrete :class:`DocumentParser` for HTML sources and URLs.
+    
+    Supports optional JavaScript rendering via Playwright when static
+    extraction yields insufficient content. Enable with `enable_rendering=True`.
+    """
 
     name: str = "web"
     timeout: float = 10.0
     delay_seconds: float = 0.0
     wait_callback: Callable[[ParseTarget], None] | None = None
     user_agent: str = _DEFAULT_USER_AGENT
+    enable_rendering: bool = False
+    rendering_timeout: int = 30000  # milliseconds
     _session: Session | None = field(default=None, init=False, repr=False)
 
     def detect(self, target: ParseTarget) -> bool:
@@ -87,8 +99,88 @@ class WebParser:
             }
         )
 
+        # Try static extraction first
         self._populate_segments(document, response.text, document_target)
+        
+        # Check if we need rendering fallback
+        if self.enable_rendering and self._needs_rendering_fallback(document, response.text):
+            self._try_rendering_fallback(document, target, fetched_at)
+        
         return document
+
+    def _needs_rendering_fallback(self, document: ParsedDocument, html: str) -> bool:
+        """Determine if we should try JavaScript rendering."""
+        # If we got enough content, no need for rendering
+        extracted_chars = document.metadata.get("extracted_characters", 0)
+        if extracted_chars >= _MIN_CONTENT_FOR_SUCCESS:
+            return False
+        
+        # Check for SPA indicators
+        from .rendering import needs_rendering
+        extracted_text = "\n".join(document.segments) if document.segments else None
+        return needs_rendering(html, extracted_text)
+
+    def _try_rendering_fallback(
+        self, 
+        document: ParsedDocument, 
+        target: ParseTarget,
+        fetched_at: datetime,
+    ) -> None:
+        """Attempt to extract content using browser rendering."""
+        from .rendering import render_page, RenderingError, is_playwright_available
+        
+        if not is_playwright_available():
+            document.warnings.append(
+                "JavaScript rendering unavailable: Playwright not installed"
+            )
+            return
+        
+        logger.info("Static extraction insufficient, trying browser rendering for %s", target.source)
+        
+        try:
+            rendered = render_page(
+                target.source,
+                headless=True,
+                timeout=self.rendering_timeout,
+                user_agent=self.user_agent,
+            )
+            
+            # Update metadata with rendering info
+            document.metadata["rendered"] = True
+            document.metadata["rendered_at"] = datetime.now(timezone.utc).isoformat()
+            document.metadata["final_url"] = rendered.final_url
+            if rendered.title:
+                document.metadata["title"] = rendered.title
+            
+            # Update checksum to reflect rendered content
+            document.checksum = utils.sha256_bytes(rendered.html.encode("utf-8"))
+            
+            # Clear previous extraction and re-extract from rendered HTML
+            document.segments.clear()
+            document.warnings = [w for w in document.warnings if "No extractable" not in w and "empty extraction" not in w]
+            
+            # Re-populate segments from rendered HTML
+            rendered_target = ParseTarget(
+                source=rendered.final_url,
+                is_remote=True,
+                media_type="text/html",
+            )
+            self._populate_segments(document, rendered.html, rendered_target)
+            
+            if document.segments:
+                logger.info(
+                    "Browser rendering extracted %d characters from %s",
+                    document.metadata.get("extracted_characters", 0),
+                    target.source,
+                )
+            else:
+                document.warnings.append(
+                    "Browser rendering completed but extraction still yielded no content"
+                )
+                
+        except RenderingError as e:
+            document.warnings.append(f"Browser rendering failed: {e}")
+            logger.warning("Rendering fallback failed for %s: %s", target.source, e)
 
     def _extract_local(self, target: ParseTarget) -> ParsedDocument:
         path = self._require_local_file(target)
