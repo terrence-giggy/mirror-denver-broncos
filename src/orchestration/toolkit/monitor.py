@@ -62,56 +62,51 @@ def _build_initial_acquisition_body(source: SourceEntry, detection: ChangeDetect
 | **Credibility** | {source.credibility_score:.2f} |
 | **Approved By** | {source.added_by} |
 | **Urgency** | {detection.urgency} |
+| **Domain** | `{domain}` |
 
 ---
 
-## 🚨 CRITICAL INSTRUCTIONS
+## ⚠️ FIREWALL NOTICE
 
-**This is a 3-step execution task. DO NOT:**
-- ❌ Create new Python scripts or modules
-- ❌ Create new GitHub Actions workflows  
-- ❌ Create documentation or status report files
-- ❌ Use `curl`, `wget`, or Python `requests` (blocked by firewall)
-- ❌ Propose workarounds or alternative approaches
+The Copilot coding agent runs inside a **firewall sandbox**. External URLs are blocked unless the domain is on the **firewall allowlist** (Repository Settings → Copilot → Coding Agent → Firewall configuration).
 
-**YOU MUST use the MCP tool `fetch_source_content` to fetch content.** This is the ONLY way to access external URLs.
+### If Blocked by Firewall
+
+If you cannot fetch content due to firewall restrictions:
+1. Add a comment: "Blocked by firewall - domain `{domain}` not on allowlist"
+2. Add the label `blocked-by-firewall`
+3. Close this issue (a human must add the domain to the allowlist)
+4. The issue can be reopened once the domain is allowlisted
 
 ---
 
-## Execution Steps
+## Execution Steps (If Domain is Allowlisted)
 
-### Step 1: Fetch Content via MCP Tool
+### Step 1: Fetch Content
 
-Call the MCP tool `fetch_source_content` with the source URL:
+Use `WebParser` with rendering fallback for JavaScript-heavy pages:
+```python
+from src.parsing.web import WebParser
+from src.parsing.base import ParseTarget
 
+parser = WebParser(enable_rendering=True)
+target = ParseTarget(source="{source.url}", is_remote=True)
+document = parser.extract(target)
+markdown = parser.to_markdown(document)
 ```
-URL: {source.url}
-```
-
-The tool returns JSON with:
-- `content` - Extracted markdown content
-- `content_hash` - SHA-256 hash of the content
-- `title`, `description` - Page metadata
 
 ### Step 2: Store Content via GitHub API
 
-Save the fetched content to `evidence/parsed/{domain}/content.md` using the GitHub Contents API.
+Save to `evidence/parsed/{domain}/` using the GitHub Contents API:
+- `content.md` - the extracted markdown
+- `metadata.json` - source URL, timestamp, content hash
 
-Create a metadata.json alongside it with:
-```json
-{{
-  "source_url": "{source.url}",
-  "fetched_at": "<timestamp>",
-  "content_hash": "<hash from step 1>"
-}}
-```
-
-**Important:** Use `GitHubStorageClient` or direct GitHub API calls. Local file writes are discarded.
+**Important:** Use `GitHubStorageClient` or direct GitHub API. Local file writes are discarded.
 
 ### Step 3: Update Source Registry
 
 Update the source entry in `knowledge-graph/sources/`:
-- Set `last_content_hash` to the hash from Step 1
+- Set `last_content_hash` to the content hash
 - Set `last_checked` to current timestamp
 - Save via GitHub API
 
@@ -150,57 +145,51 @@ def _build_content_update_body(source: SourceEntry, detection: ChangeDetection) 
 | **Current Hash** | `{curr_hash_display}` |
 | **Previous Check** | {prev_checked} |
 | **Urgency** | {detection.urgency} |
+| **Domain** | `{domain}` |
 
 ---
 
-## 🚨 CRITICAL INSTRUCTIONS
+## ⚠️ FIREWALL NOTICE
 
-**This is a 3-step execution task. DO NOT:**
-- ❌ Create new Python scripts or modules
-- ❌ Create new GitHub Actions workflows  
-- ❌ Create documentation or status report files
-- ❌ Use `curl`, `wget`, or Python `requests` (blocked by firewall)
-- ❌ Propose workarounds or alternative approaches
+The Copilot coding agent runs inside a **firewall sandbox**. External URLs are blocked unless the domain is on the **firewall allowlist** (Repository Settings → Copilot → Coding Agent → Firewall configuration).
 
-**YOU MUST use the MCP tool `fetch_source_content` to fetch content.** This is the ONLY way to access external URLs.
+### If Blocked by Firewall
+
+If you cannot fetch content due to firewall restrictions:
+1. Add a comment: "Blocked by firewall - domain `{domain}` not on allowlist"
+2. Add the label `blocked-by-firewall`
+3. Close this issue (a human must add the domain to the allowlist)
+4. The issue can be reopened once the domain is allowlisted
 
 ---
 
-## Execution Steps
+## Execution Steps (If Domain is Allowlisted)
 
-### Step 1: Fetch Updated Content via MCP Tool
+### Step 1: Fetch Updated Content
 
-Call the MCP tool `fetch_source_content` with the source URL:
+Use `WebParser` with rendering fallback for JavaScript-heavy pages:
+```python
+from src.parsing.web import WebParser
+from src.parsing.base import ParseTarget
 
+parser = WebParser(enable_rendering=True)
+target = ParseTarget(source="{source.url}", is_remote=True)
+document = parser.extract(target)
+markdown = parser.to_markdown(document)
 ```
-URL: {source.url}
-```
-
-The tool returns JSON with:
-- `content` - Extracted markdown content
-- `content_hash` - SHA-256 hash of the content
-- `title`, `description` - Page metadata
 
 ### Step 2: Store Updated Content via GitHub API
 
-Save the fetched content to `evidence/parsed/{domain}/content.md` using the GitHub Contents API.
+Save to `evidence/parsed/{domain}/` using the GitHub Contents API:
+- `content.md` - the extracted markdown
+- `metadata.json` - source URL, timestamp, content hash, previous hash
 
-Update metadata.json alongside it with:
-```json
-{{
-  "source_url": "{source.url}",
-  "fetched_at": "<timestamp>",
-  "content_hash": "<hash from step 1>",
-  "previous_hash": "{prev_hash_display}"
-}}
-```
-
-**Important:** Use `GitHubStorageClient` or direct GitHub API calls. Local file writes are discarded.
+**Important:** Use `GitHubStorageClient` or direct GitHub API. Local file writes are discarded.
 
 ### Step 3: Update Source Registry
 
 Update the source entry in `knowledge-graph/sources/`:
-- Set `last_content_hash` to the hash from Step 1
+- Set `last_content_hash` to the new content hash
 - Set `last_checked` to current timestamp
 - Update `last_etag` and `last_modified_header` if available
 - Save via GitHub API
