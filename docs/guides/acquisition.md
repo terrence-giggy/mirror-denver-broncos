@@ -167,17 +167,36 @@ Content acquisition requires external network access to fetch from source URLs.
 
 | Environment | Network Status | Behavior |
 |-------------|---------------|----------|
-| GitHub Actions | ✅ Available | Normal operation |
+| GitHub Actions (normal workflow) | ✅ Available | Normal operation |
 | Local development | ✅ Available | Normal operation |
-| Sandboxed/Firewalled | ❌ Blocked | Fails at fetch |
+| Copilot Coding Agent | ⚠️ **Firewalled** | Requires domain allowlist |
+
+### Copilot Coding Agent Firewall
+
+The GitHub Copilot coding agent runs inside a **firewall sandbox** that blocks outbound network requests by default. This affects:
+- Direct HTTP requests (`curl`, `wget`, Python `requests`)
+- Any code running inside the agent environment
+
+**To enable content acquisition in Copilot:**
+
+#### Option 1: Firewall Allowlist (Recommended)
+Add specific domains to the allowlist:
+1. Go to Repository Settings → Copilot → Coding Agent
+2. In "Firewall configuration", add the domain(s) to allowlist
+3. Copilot can now make direct requests to those domains
+4. Use the parsing infrastructure in `src/parsing/` to extract content
+
+#### Option 2: Pre-Firewall Fetch (Setup Steps)
+The `copilot-setup-steps.yml` workflow runs **before** the firewall is enabled. Content can be fetched there if URLs are known in advance.
 
 ### Handling Network Blocks
 
-If acquisition fails due to network restrictions:
+If acquisition fails due to firewall restrictions:
 
-1. Add the `blocked-network` label to the Issue
-2. Close the Issue with a comment explaining the limitation
-3. The Issue can be retried when network access is available
+1. Add the `blocked-by-firewall` label to the Issue
+2. Add a comment: "Blocked by firewall - domain `example.com` not on allowlist"
+3. Close the Issue (a human must add the domain to the allowlist)
+4. Reopen the Issue once the domain is allowlisted
 
 ## Troubleshooting
 

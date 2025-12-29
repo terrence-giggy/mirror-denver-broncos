@@ -46,23 +46,12 @@ Enable Discussions and create the following categories:
 - [ ] **People** — for Person entity profiles
 - [ ] **Organizations** — for Organization entity profiles
 
-### 5. Configure Copilot Coding Agent MCP
-Navigate to **Settings → Copilot → Coding agent → MCP configuration** and add:
+### 5. Configure Copilot Firewall Allowlist (Optional)
+If you want Copilot coding agent to fetch content from external sources:
+1. Navigate to **Settings → Copilot → Coding agent → Firewall configuration**
+2. Add trusted domains to the allowlist (e.g., `example.gov`, `example.com`)
 
-```json
-{
-  "mcpServers": {
-    "evidence-acquisition": {
-      "type": "local",
-      "command": "python",
-      "args": ["-m", "src.integrations.copilot.mcp_server"],
-      "tools": ["fetch_source_content", "check_source_headers"]
-    }
-  }
-}
-```
-
-This enables the agent to fetch external content (bypasses firewall).
+Note: The agent runs in a firewall sandbox. Only allowlisted domains can be accessed.
 
 ### 6. Sync from Upstream
 - [ ] Run the **2. Sync: Pull from Upstream** workflow to pull latest changes

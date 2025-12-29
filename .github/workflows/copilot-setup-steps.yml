@@ -1,8 +1,8 @@
 name: "Copilot Setup Steps"
 
 # This workflow runs before the Copilot coding agent starts working.
-# It installs Python dependencies required for the agent and MCP servers.
-# MCP configuration is done via Repository Settings (see 1-setup-initialize-repo.yml output).
+# It installs Python dependencies required for the agent.
+# Note: This runs BEFORE the firewall is enabled, so it can fetch external content.
 
 on:
   workflow_dispatch:
@@ -34,5 +34,5 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      # Note: MCP server dependencies (requests, trafilatura, beautifulsoup4)
-      # are included in requirements.txt
+      - name: Install Playwright browsers
+        run: playwright install chromium --with-deps

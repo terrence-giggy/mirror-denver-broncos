@@ -252,9 +252,12 @@ class TestBuildContentUpdateBody:
         
         body = _build_content_update_body(sample_source, detection)
         
-        assert "| Metric |" in body
-        assert "Content Hash" in body
-        assert "ETag" in body
+        # Check for Field/Value table format
+        assert "| Field | Value |" in body
+        # Check for key fields in the table
+        assert "Detection Method" in body
+        assert "Previous Hash" in body
+        assert "Current Hash" in body
 
     def test_contains_dedup_marker_with_hash(self, sample_source: SourceEntry) -> None:
         """Body should contain deduplication marker with current hash."""
