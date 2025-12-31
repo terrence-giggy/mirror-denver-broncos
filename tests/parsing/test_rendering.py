@@ -139,6 +139,46 @@ class TestRenderPage:
         assert page.title == "Test Page"
         assert page.content_length == len(page.html)
 
+    def test_ssl_certificate_handling(self) -> None:
+        """Verify that SSL certificate errors are handled by ignoring them."""
+        from src.parsing.rendering import render_page
+        
+        # Mock playwright components
+        mock_page = MagicMock()
+        mock_page.goto.return_value = MagicMock(status=200)
+        mock_page.content.return_value = "<html><body>Test</body></html>"
+        mock_page.title.return_value = "Test"
+        mock_page.url = "https://example.com"
+        
+        mock_context = MagicMock()
+        mock_context.new_page.return_value = mock_page
+        
+        mock_browser = MagicMock()
+        mock_browser.new_context.return_value = mock_context
+        
+        mock_playwright = MagicMock()
+        mock_playwright.chromium.launch.return_value = mock_browser
+        
+        with patch("playwright.sync_api.sync_playwright") as mock_sync_pw:
+            mock_sync_pw.return_value.__enter__.return_value = mock_playwright
+            
+            result = render_page("https://example.com")
+            
+            # Verify browser was launched with SSL cert ignore args
+            mock_playwright.chromium.launch.assert_called_once()
+            launch_kwargs = mock_playwright.chromium.launch.call_args[1]
+            assert 'args' in launch_kwargs
+            assert '--ignore-certificate-errors' in launch_kwargs['args']
+            
+            # Verify context was created with ignore_https_errors
+            mock_browser.new_context.assert_called_once()
+            context_kwargs = mock_browser.new_context.call_args[1]
+            assert context_kwargs.get('ignore_https_errors') is True
+            
+            # Verify the result is a valid RenderedPage
+            assert result.url == "https://example.com"
+            assert result.html == "<html><body>Test</body></html>"
+
 
 class TestRenderAndExtractText:
     """Tests for the render_and_extract_text function."""
