@@ -117,7 +117,7 @@ def render_page(
                 context_options["user_agent"] = (
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/131.0.0.0 Safari/537.36"
+                    "Chrome/134.0.0.0 Safari/537.36"
                 )
             else:
                 context_options["user_agent"] = user_agent
@@ -133,21 +133,56 @@ def render_page(
             context = browser.new_context(**context_options)
             page = context.new_page()
             
-            # Mask WebDriver property and navigator properties
-            await_js = """
+            # Enhanced anti-detection script
+            stealth_js = """
+            // Remove webdriver property
             Object.defineProperty(navigator, 'webdriver', {
                 get: () => undefined
             });
-            // Override plugin array to appear non-headless
+            
+            // Add chrome object for better Chrome impersonation
+            window.chrome = {
+                runtime: {},
+                loadTimes: function() {},
+                csi: function() {},
+                app: {}
+            };
+            
+            // Override plugins to appear non-headless
             Object.defineProperty(navigator, 'plugins', {
-                get: () => [1, 2, 3, 4, 5]
+                get: () => {
+                    return [
+                        {name: 'Chrome PDF Plugin', description: 'Portable Document Format', filename: 'internal-pdf-viewer'},
+                        {name: 'Chrome PDF Viewer', description: '', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai'},
+                        {name: 'Native Client', description: '', filename: 'internal-nacl-plugin'}
+                    ];
+                }
             });
+            
             // Set realistic language
             Object.defineProperty(navigator, 'languages', {
                 get: () => ['en-US', 'en']
             });
+            
+            // Override permissions
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state: Notification.permission }) :
+                    originalQuery(parameters)
+            );
+            
+            // Set platform
+            Object.defineProperty(navigator, 'platform', {
+                get: () => 'Win32'
+            });
+            
+            // Set hardware concurrency
+            Object.defineProperty(navigator, 'hardwareConcurrency', {
+                get: () => 8
+            });
             """
-            page.add_init_script(await_js)
+            page.add_init_script(stealth_js)
             
             # Set timeout
             page.set_default_timeout(timeout)
