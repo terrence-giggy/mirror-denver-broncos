@@ -68,6 +68,13 @@ def render_page(
     waits for the page to fully load (including JavaScript execution),
     and returns the rendered HTML.
     
+    **Security Note**: This function disables SSL certificate validation
+    to support operation in containerized environments where certificate
+    trust stores may be incomplete. This should only be used for content
+    acquisition from known, trusted sources in controlled environments.
+    For production use with untrusted URLs, consider implementing proper
+    certificate management.
+    
     Args:
         url: The URL to render.
         headless: Whether to run the browser in headless mode.
@@ -92,7 +99,9 @@ def render_page(
     
     try:
         with sync_playwright() as p:
-            # Launch browser with args to ignore certificate errors
+            # Launch browser with SSL cert ignore args
+            # NOTE: This disables certificate validation for containerized environments.
+            # Only use for trusted content sources in controlled environments.
             browser = p.chromium.launch(
                 headless=headless,
                 args=['--ignore-certificate-errors']
@@ -102,7 +111,8 @@ def render_page(
             context_options = {}
             if user_agent:
                 context_options["user_agent"] = user_agent
-            # Ignore HTTPS errors
+            # NOTE: ignore_https_errors bypasses SSL validation.
+            # This is required for GitHub Actions containerized environment.
             context_options["ignore_https_errors"] = True
             
             context = browser.new_context(**context_options)
