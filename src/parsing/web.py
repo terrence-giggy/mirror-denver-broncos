@@ -41,7 +41,7 @@ class WebParser:
     user_agent: str = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/134.0.0.0 Safari/537.36"
+        "Chrome/131.0.0.0 Safari/537.36"
     )
 
     def detect(self, target: ParseTarget) -> bool:
@@ -109,6 +109,7 @@ class WebParser:
                 "content_type": "text/html",
                 "content_length": rendered.content_length,
                 "rendered": True,
+                "user_agent": rendered.user_agent,
             }
         )
         if rendered.title:
@@ -204,6 +205,19 @@ def _rewrite_key_value_tables(html: str) -> str:
         return html
 
     soup = BeautifulSoup(html, "html.parser")
+    
+    # Remove aria-hidden elements before extraction (these are hidden from screen readers
+    # and should not be included in text extraction)
+    for hidden in soup.find_all(attrs={"aria-hidden": "true"}):
+        hidden.decompose()
+    
+    # Remove elements with common "hide" CSS classes
+    for hidden in soup.find_all(class_=lambda c: c and any(
+        hide_pattern in c for hide_pattern in ["--hide", "hidden", "visually-hidden", "sr-only"]
+    )):
+        # Only remove if it looks like a visibility utility class
+        hidden.decompose()
+    
     tables = soup.find_all("table")
     for table in tables:
         rows = table.find_all("tr")
