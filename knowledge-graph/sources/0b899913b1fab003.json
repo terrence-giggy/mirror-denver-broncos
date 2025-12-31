@@ -17,10 +17,19 @@
   "update_frequency": null,
   "topics": [],
   "notes": "Creating an initial-acquisition issue for fetching full content. The source has not been acquired yet.",
-  "last_content_hash": null,
+  "last_content_hash": "3fb0e64853b5217913f84e898bd65ec3c4b4f600feab9569c4183f984a72273c",
   "last_etag": null,
   "last_modified_header": null,
-  "last_checked": null,
+  "last_checked": "2025-12-31T16:54:01.301871+00:00",
   "check_failures": 0,
-  "next_check_after": null
+  "next_check_after": null,
+  "is_crawlable": false,
+  "crawl_scope": "path",
+  "crawl_max_pages": 10000,
+  "crawl_max_depth": 10,
+  "crawl_state_path": null,
+  "total_pages_discovered": 0,
+  "total_pages_acquired": 0,
+  "last_crawl_started": null,
+  "last_crawl_completed": null
 }
