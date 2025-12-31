@@ -1,16 +1,13 @@
-"""Web page parser implementation using trafilatura."""
+"""Web page parser implementation using Playwright and trafilatura."""
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
-import requests
-from requests import Response, Session
-from requests.exceptions import RequestException
 import trafilatura
 try:  # pragma: no cover - optional dependency fallback
     from bs4 import BeautifulSoup
@@ -26,28 +23,26 @@ logger = logging.getLogger(__name__)
 
 _HTML_SUFFIXES = (".html", ".htm", ".xhtml")
 _HTML_MEDIA_TYPES = ("text/html", "application/xhtml+xml")
-_DEFAULT_USER_AGENT = "speculum-principum-web-parser/1.0"
-
-# Minimum content length to trigger rendering fallback
-_MIN_CONTENT_FOR_SUCCESS = 100
 
 
 @dataclass(slots=True)
 class WebParser:
     """Concrete :class:`DocumentParser` for HTML sources and URLs.
     
-    Supports optional JavaScript rendering via Playwright when static
-    extraction yields insufficient content. Enable with `enable_rendering=True`.
+    Uses Playwright browser rendering for all remote URL fetching to ensure
+    accurate extraction from JavaScript-rendered pages. Local HTML files are
+    parsed directly without browser rendering.
     """
 
     name: str = "web"
-    timeout: float = 10.0
+    timeout: int = 30000  # milliseconds for Playwright navigation
     delay_seconds: float = 0.0
     wait_callback: Callable[[ParseTarget], None] | None = None
-    user_agent: str = _DEFAULT_USER_AGENT
-    enable_rendering: bool = False
-    rendering_timeout: int = 30000  # milliseconds
-    _session: Session | None = field(default=None, init=False, repr=False)
+    user_agent: str = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/134.0.0.0 Safari/537.36"
+    )
 
     def detect(self, target: ParseTarget) -> bool:
         is_url = utils.is_http_url(target.source)
@@ -74,113 +69,62 @@ class WebParser:
         return document_to_markdown(document)
 
     def _extract_remote(self, target: ParseTarget) -> ParsedDocument:
-        self._apply_rate_limit(target)
-        response = self._fetch(target.source)
-        fetched_at = datetime.now(timezone.utc)
-        media_type = _clean_content_type(response.headers.get("Content-Type"))
-
-        document_target = ParseTarget(
-            source=target.source,
-            is_remote=True,
-            media_type=media_type,
-        )
-        checksum = utils.sha256_bytes(response.content)
-        document = ParsedDocument(target=document_target, checksum=checksum, parser_name=self.name)
-
-        document.metadata.update(
-            {
-                "status_code": response.status_code,
-                "fetched_at": fetched_at.isoformat(),
-                "url": target.source,
-                "final_url": response.url,
-                "content_type": media_type,
-                "encoding": response.encoding,
-                "content_length": _response_content_length(response),
-            }
-        )
-
-        # Try static extraction first
-        self._populate_segments(document, response.text, document_target)
-        
-        # Check if we need rendering fallback
-        if self.enable_rendering and self._needs_rendering_fallback(document, response.text):
-            self._try_rendering_fallback(document, target, fetched_at)
-        
-        return document
-
-    def _needs_rendering_fallback(self, document: ParsedDocument, html: str) -> bool:
-        """Determine if we should try JavaScript rendering."""
-        # If we got enough content, no need for rendering
-        extracted_chars = document.metadata.get("extracted_characters", 0)
-        if extracted_chars >= _MIN_CONTENT_FOR_SUCCESS:
-            return False
-        
-        # Check for SPA indicators
-        from .rendering import needs_rendering
-        extracted_text = "\n".join(document.segments) if document.segments else None
-        return needs_rendering(html, extracted_text)
-
-    def _try_rendering_fallback(
-        self, 
-        document: ParsedDocument, 
-        target: ParseTarget,
-        fetched_at: datetime,
-    ) -> None:
-        """Attempt to extract content using browser rendering."""
+        """Extract content from a remote URL using Playwright browser rendering."""
         from .rendering import render_page, RenderingError, is_playwright_available
         
-        if not is_playwright_available():
-            document.warnings.append(
-                "JavaScript rendering unavailable: Playwright not installed"
-            )
-            return
+        self._apply_rate_limit(target)
+        fetched_at = datetime.now(timezone.utc)
         
-        logger.info("Static extraction insufficient, trying browser rendering for %s", target.source)
+        if not is_playwright_available():
+            raise ParserError(
+                "Playwright is required for remote URL parsing. "
+                "Install with: pip install playwright && playwright install chromium"
+            )
+        
+        logger.info("Fetching %s with browser rendering", target.source)
         
         try:
             rendered = render_page(
                 target.source,
-                headless=True,
-                timeout=self.rendering_timeout,
                 user_agent=self.user_agent,
+                headless=True,
+                timeout=self.timeout,
             )
-            
-            # Update metadata with rendering info
-            document.metadata["rendered"] = True
-            document.metadata["rendered_at"] = datetime.now(timezone.utc).isoformat()
-            document.metadata["final_url"] = rendered.final_url
-            if rendered.title:
-                document.metadata["title"] = rendered.title
-            
-            # Update checksum to reflect rendered content
-            document.checksum = utils.sha256_bytes(rendered.html.encode("utf-8"))
-            
-            # Clear previous extraction and re-extract from rendered HTML
-            document.segments.clear()
-            document.warnings = [w for w in document.warnings if "No extractable" not in w and "empty extraction" not in w]
-            
-            # Re-populate segments from rendered HTML
-            rendered_target = ParseTarget(
-                source=rendered.final_url,
-                is_remote=True,
-                media_type="text/html",
-            )
-            self._populate_segments(document, rendered.html, rendered_target)
-            
-            if document.segments:
-                logger.info(
-                    "Browser rendering extracted %d characters from %s",
-                    document.metadata.get("extracted_characters", 0),
-                    target.source,
-                )
-            else:
-                document.warnings.append(
-                    "Browser rendering completed but extraction still yielded no content"
-                )
-                
         except RenderingError as e:
-            document.warnings.append(f"Browser rendering failed: {e}")
-            logger.warning("Rendering fallback failed for %s: %s", target.source, e)
+            raise ParserError(f"Failed to fetch URL '{target.source}': {e}") from e
+        
+        document_target = ParseTarget(
+            source=target.source,
+            is_remote=True,
+            media_type="text/html",
+        )
+        checksum = utils.sha256_bytes(rendered.html.encode("utf-8"))
+        document = ParsedDocument(target=document_target, checksum=checksum, parser_name=self.name)
+        
+        document.metadata.update(
+            {
+                "fetched_at": fetched_at.isoformat(),
+                "url": target.source,
+                "final_url": rendered.final_url,
+                "content_type": "text/html",
+                "content_length": rendered.content_length,
+                "rendered": True,
+            }
+        )
+        if rendered.title:
+            document.metadata["title"] = rendered.title
+        
+        # Extract text content from rendered HTML
+        self._populate_segments(document, rendered.html, document_target)
+        
+        if document.segments:
+            logger.info(
+                "Extracted %d characters from %s",
+                document.metadata.get("extracted_characters", 0),
+                target.source,
+            )
+        
+        return document
 
     def _extract_local(self, target: ParseTarget) -> ParsedDocument:
         path = self._require_local_file(target)
@@ -225,24 +169,6 @@ class WebParser:
         elif self.delay_seconds > 0:
             _sleep(self.delay_seconds)
 
-    def _fetch(self, url: str) -> Response:
-        session = self._ensure_session()
-        headers = {"User-Agent": self.user_agent}
-        try:
-            response = session.get(url, timeout=self.timeout, headers=headers)
-        except RequestException as exc:  # pragma: no cover - network failure path
-            raise ParserError(f"Failed to fetch URL '{url}': {exc}") from exc
-
-        if response.status_code >= 400:
-            raise ParserError(f"Received HTTP {response.status_code} for URL '{url}'")
-
-        return response
-
-    def _ensure_session(self) -> Session:
-        if self._session is None:
-            self._session = requests.Session()
-        return self._session
-
     @staticmethod
     def _require_local_file(target: ParseTarget) -> Path:
         if target.is_remote:
@@ -258,12 +184,6 @@ class WebParser:
         return path
 
 
-def _clean_content_type(value: str | None) -> str | None:
-    if not value:
-        return None
-    return value.split(";", 1)[0].strip().lower() or None
-
-
 def _decode_html(data: bytes) -> tuple[str, str]:
     for encoding in ("utf-8", "utf-16", "latin-1"):
         try:
@@ -271,13 +191,6 @@ def _decode_html(data: bytes) -> tuple[str, str]:
         except UnicodeDecodeError:
             continue
     return data.decode("utf-8", errors="ignore"), "unknown"
-
-
-def _response_content_length(response: Response) -> int:
-    header_value = response.headers.get("Content-Length")
-    if header_value and header_value.isdigit():
-        return int(header_value)
-    return len(response.content)
 
 
 def _sleep(seconds: float) -> None:

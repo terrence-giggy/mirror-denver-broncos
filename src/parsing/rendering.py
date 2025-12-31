@@ -56,11 +56,11 @@ def is_playwright_available() -> bool:
 def render_page(
     url: str,
     *,
+    user_agent: str,
     headless: bool = True,
     timeout: int = DEFAULT_NAVIGATION_TIMEOUT,
     wait_until: str = "networkidle",
     wait_after_load: int = 0,
-    user_agent: str | None = None,
 ) -> RenderedPage:
     """Render a page using Playwright and return the HTML content.
     
@@ -70,12 +70,12 @@ def render_page(
     
     Args:
         url: The URL to render.
+        user_agent: User agent string for the browser context.
         headless: Whether to run the browser in headless mode.
         timeout: Navigation timeout in milliseconds.
         wait_until: When to consider navigation complete.
             Options: "load", "domcontentloaded", "networkidle", "commit"
         wait_after_load: Additional milliseconds to wait after page load.
-        user_agent: Custom user agent string.
         
     Returns:
         RenderedPage with the rendered HTML content.
@@ -109,18 +109,10 @@ def render_page(
                 args=browser_args if browser_args else None,
             )
             
-            # Create context with optional user agent and stealth options
-            context_options = {}
-            
-            # Set realistic user agent if not provided
-            if not user_agent:
-                context_options["user_agent"] = (
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/134.0.0.0 Safari/537.36"
-                )
-            else:
-                context_options["user_agent"] = user_agent
+            # Create context with user agent and stealth options
+            context_options = {
+                "user_agent": user_agent,
+            }
             
             # Set realistic viewport
             context_options["viewport"] = {"width": 1920, "height": 1080}
@@ -230,6 +222,7 @@ def render_page(
 def render_and_extract_text(
     url: str,
     *,
+    user_agent: str,
     headless: bool = True,
     timeout: int = DEFAULT_NAVIGATION_TIMEOUT,
 ) -> tuple[str, RenderedPage]:
@@ -240,6 +233,7 @@ def render_and_extract_text(
     
     Args:
         url: The URL to render and extract.
+        user_agent: User agent string for the browser context.
         headless: Whether to run headless.
         timeout: Navigation timeout in milliseconds.
         
@@ -251,7 +245,7 @@ def render_and_extract_text(
     """
     import trafilatura
     
-    rendered = render_page(url, headless=headless, timeout=timeout)
+    rendered = render_page(url, user_agent=user_agent, headless=headless, timeout=timeout)
     
     extracted = trafilatura.extract(
         rendered.html,
