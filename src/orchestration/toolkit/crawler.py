@@ -753,7 +753,9 @@ def _register_fetch_tools(registry: ToolRegistry) -> None:
             name="fetch_page",
             description=(
                 "Fetch a web page content. Uses WebParser for extraction. "
-                "Includes politeness delay. Returns HTML and metadata."
+                "Includes politeness delay. Returns HTML and metadata. "
+                "Enable rendering for JavaScript-heavy sites. "
+                "Enable stealth to bypass headless browser detection."
             ),
             parameters={
                 "type": "object",
@@ -773,6 +775,10 @@ def _register_fetch_tools(registry: ToolRegistry) -> None:
                     "timeout_seconds": {
                         "type": "integer",
                         "description": "Request timeout. Default: 30.",
+                    },
+                    "enable_rendering": {
+                        "type": "boolean",
+                        "description": "Enable JavaScript rendering via Playwright. Default: false.",
                     },
                 },
                 "required": ["url"],
@@ -892,6 +898,7 @@ def _fetch_page_handler(arguments: Mapping[str, Any]) -> ToolResult:
 
     delay_seconds = arguments.get("delay_seconds", 1.0)
     timeout_seconds = arguments.get("timeout_seconds", 30)
+    enable_rendering = arguments.get("enable_rendering", False)
 
     # Apply politeness delay
     if delay_seconds > 0:
@@ -902,7 +909,9 @@ def _fetch_page_handler(arguments: Mapping[str, Any]) -> ToolResult:
         from src.parsing.web import WebParser
         from src.parsing.base import ParseTarget
 
-        parser = WebParser(enable_rendering=False)
+        parser = WebParser(
+            enable_rendering=enable_rendering,
+        )
         target = ParseTarget(source=url, is_remote=True)
         document = parser.extract(target)
         markdown = parser.to_markdown(document)
@@ -917,6 +926,7 @@ def _fetch_page_handler(arguments: Mapping[str, Any]) -> ToolResult:
                 "content_hash": _content_hash(markdown),
                 "title": document.metadata.get("title", ""),
                 "fetched_at": datetime.now(timezone.utc).isoformat(),
+                "rendered": document.metadata.get("rendered", False),
             },
         )
 
