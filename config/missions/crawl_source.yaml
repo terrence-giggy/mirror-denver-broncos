@@ -1,0 +1,160 @@
+# Mission to crawl all accessible pages under a source URL.
+
+id: crawl_source
+version: 1
+metadata:
+  owner: copilot-orchestrator
+  created_at: 2025-12-30
+  summary_tooling: site-crawler
+
+goal: |
+  Crawl all accessible pages under the given source URL and store their content.
+  
+  CRITICAL CONSTRAINT: Only crawl URLs that are UNDER the source URL.
+  - If source is a directory path, only crawl pages under that path
+  - If source is a host, only crawl pages on that exact host
+  - If source is a domain, only crawl pages on that domain (including subdomains)
+  
+  The `crawl_scope` parameter controls this behavior:
+  - "path": Only URLs under the source path (DEFAULT, most restrictive)
+  - "host": Only URLs on the same host
+  - "domain": URLs on any subdomain of the base domain
+  
+  This mission is designed for resumable execution:
+  1. Load or create CrawlState for the source
+  2. Fetch robots.txt for the source host (cache for session)
+  3. Process URLs from the frontier (up to max_pages_per_run)
+  4. For each URL:
+     a. Check robots.txt allows access
+     b. Fetch page content with politeness delay
+     c. Store content in sharded directory structure
+     d. Extract links from page
+     e. Filter links by scope and add to frontier
+     f. Update page registry with entry
+     g. Mark URL as visited
+  5. Save state after processing each page (resumable checkpoint)
+  6. Exit when frontier empty OR max_pages_per_run reached
+  
+  ALGORITHM:
+  ```
+  state = load_crawl_state(source_url, scope, max_pages, force_restart)
+  robots = fetch_robots_txt(source_url) if available
+  pages_processed = 0
+  
+  while pages_processed < max_pages_per_run:
+      urls = get_frontier_urls(source_url, count=1)
+      if not urls:
+          break  # Crawl complete
+      
+      url = urls[0]
+      
+      # Check robots.txt
+      if not check_robots_txt(url, robots):
+          mark_url_visited(source_url, url, success=False)
+          continue
+      
+      # Fetch page
+      result = fetch_page(url, delay_seconds=1.0)
+      
+      if not result.success:
+          update_page_registry(source_url, url, status="failed", error=result.error)
+          mark_url_visited(source_url, url, success=False)
+          continue
+      
+      # Store content
+      storage_result = store_page_content(source_url, url, result.content)
+      
+      # Extract and filter links
+      links_result = extract_links(result.html, url, source_url, scope)
+      add_to_frontier(source_url, links_result.in_scope_urls)
+      
+      # Update registry
+      update_page_registry(
+          source_url, url,
+          status="fetched",
+          content_hash=storage_result.content_hash,
+          content_path=storage_result.content_path,
+          title=result.title,
+          outgoing_links_count=links_result.total_count,
+          outgoing_links_in_scope=links_result.in_scope_count
+      )
+      
+      # Mark visited
+      mark_url_visited(source_url, url, success=True)
+      pages_processed += 1
+      
+      # Save state periodically
+      if pages_processed % 10 == 0:
+          save_crawl_state(source_url)
+  
+  # Final save
+  if frontier is empty:
+      save_crawl_state(source_url, status="completed")
+  else:
+      save_crawl_state(source_url, status="paused")
+  ```
+
+constraints:
+  - "NEVER fetch URLs outside the source URL scope"
+  - "Validate every discovered URL against scope before adding to frontier"
+  - "Respect robots.txt crawl restrictions - skip disallowed URLs"
+  - "Apply politeness delay (minimum 1 second) between requests to same host"
+  - "Maximum 1000 pages per workflow run (for chunking large sites)"
+  - "Save crawl state after every 10 pages for resume capability"
+  - "Always save CrawlState before workflow exit (even on error)"
+  - "Skip non-HTML content types (images, PDFs, etc.) unless explicitly required"
+  - "Normalize all URLs before comparison (lowercase host, strip fragments)"
+  - "Never add duplicate URLs to frontier (check visited_hashes)"
+
+success_criteria:
+  - All in-scope pages discovered and fetched (or marked failed/skipped)
+  - Content stored in sharded directory structure
+  - Page registry updated with all entries
+  - CrawlState accurately reflects progress
+  - No out-of-scope URLs fetched
+  - Crawl can be resumed from last checkpoint
+
+inputs:
+  source_url:
+    description: "The source URL defining the crawl boundary (required)"
+    required: true
+  crawl_scope:
+    description: "Scope constraint: path (default), host, or domain"
+    required: false
+    default: "path"
+  max_pages_per_run:
+    description: "Maximum pages to process this run (default: 1000)"
+    required: false
+    default: 1000
+  force_restart:
+    description: "Restart crawl from scratch, discarding existing state (default: false)"
+    required: false
+    default: false
+
+max_steps: 150
+allowed_tools:
+  # State management
+  - load_crawl_state
+  - save_crawl_state
+  - get_crawl_statistics
+  
+  # Frontier management
+  - get_frontier_urls
+  - add_to_frontier
+  - filter_urls_by_scope
+  
+  # Fetching and extraction
+  - check_robots_txt
+  - extract_links
+  - fetch_page
+  
+  # Storage
+  - store_page_content
+  - update_page_registry
+  - mark_url_visited
+  
+  # Source registry (for updating crawl metadata)
+  - get_source
+  - update_source
+
+requires_approval: false

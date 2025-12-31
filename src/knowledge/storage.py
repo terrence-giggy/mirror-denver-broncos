@@ -493,6 +493,21 @@ class SourceEntry:
     check_failures: int = 0  # Consecutive check failures
     next_check_after: datetime | None = None  # Backoff: don't check before this
 
+    # Site-wide crawl configuration
+    is_crawlable: bool = False  # Enable site-wide crawling
+    crawl_scope: str = "path"  # "path" | "host" | "domain"
+    crawl_max_pages: int = 10000  # Max pages to acquire
+    crawl_max_depth: int = 10  # Max link depth
+
+    # Crawl state reference
+    crawl_state_path: str | None = None  # Path to CrawlState file
+
+    # Crawl statistics
+    total_pages_discovered: int = 0
+    total_pages_acquired: int = 0
+    last_crawl_started: datetime | None = None
+    last_crawl_completed: datetime | None = None
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "url": self.url,
@@ -520,6 +535,17 @@ class SourceEntry:
             "last_checked": self.last_checked.isoformat() if self.last_checked else None,
             "check_failures": self.check_failures,
             "next_check_after": self.next_check_after.isoformat() if self.next_check_after else None,
+            # Crawl configuration
+            "is_crawlable": self.is_crawlable,
+            "crawl_scope": self.crawl_scope,
+            "crawl_max_pages": self.crawl_max_pages,
+            "crawl_max_depth": self.crawl_max_depth,
+            "crawl_state_path": self.crawl_state_path,
+            # Crawl statistics
+            "total_pages_discovered": self.total_pages_discovered,
+            "total_pages_acquired": self.total_pages_acquired,
+            "last_crawl_started": self.last_crawl_started.isoformat() if self.last_crawl_started else None,
+            "last_crawl_completed": self.last_crawl_completed.isoformat() if self.last_crawl_completed else None,
         }
 
     @classmethod
@@ -537,6 +563,15 @@ class SourceEntry:
         next_check_after = None
         if payload.get("next_check_after"):
             next_check_after = datetime.fromisoformat(payload["next_check_after"])
+        
+        # Parse optional datetime fields for crawling
+        last_crawl_started = None
+        if payload.get("last_crawl_started"):
+            last_crawl_started = datetime.fromisoformat(payload["last_crawl_started"])
+        
+        last_crawl_completed = None
+        if payload.get("last_crawl_completed"):
+            last_crawl_completed = datetime.fromisoformat(payload["last_crawl_completed"])
         
         return cls(
             url=payload["url"],
@@ -564,6 +599,17 @@ class SourceEntry:
             last_checked=last_checked,
             check_failures=payload.get("check_failures", 0),
             next_check_after=next_check_after,
+            # Crawl configuration (with defaults for backward compatibility)
+            is_crawlable=payload.get("is_crawlable", False),
+            crawl_scope=payload.get("crawl_scope", "path"),
+            crawl_max_pages=payload.get("crawl_max_pages", 10000),
+            crawl_max_depth=payload.get("crawl_max_depth", 10),
+            crawl_state_path=payload.get("crawl_state_path"),
+            # Crawl statistics
+            total_pages_discovered=payload.get("total_pages_discovered", 0),
+            total_pages_acquired=payload.get("total_pages_acquired", 0),
+            last_crawl_started=last_crawl_started,
+            last_crawl_completed=last_crawl_completed,
         )
 
     @property
