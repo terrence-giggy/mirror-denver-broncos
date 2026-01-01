@@ -248,7 +248,8 @@ class TestGetCategoryByName:
             {"category_name": ""},
         )
         assert not result.success
-        assert "should be non-empty" in result.error
+        # Error message can vary between "is too short" and "should be non-empty"
+        assert ("is too short" in result.error or "should be non-empty" in result.error)
 
 
 class TestFindDiscussionByTitle:
