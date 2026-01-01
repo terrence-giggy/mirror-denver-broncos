@@ -1,5 +1,7 @@
 # Crawler Agent Guide
 
+> ⚠️ **DEPRECATION NOTICE**: This agent is being replaced by the unified [Content Pipeline](content-pipeline.md). The Content Pipeline provides the same functionality with zero LLM cost and improved politeness controls. See the [migration guide](content-pipeline.md#migration-from-monitorcrawler-agents).
+
 ## Overview
 
 The Crawler Agent is a site-wide content acquisition agent that systematically discovers and downloads pages from registered sources within defined scope boundaries. It respects robots.txt, enforces politeness delays, and maintains persistent state for resumable multi-session crawls.
@@ -143,7 +145,8 @@ save_crawl_state
 The crawler runs via manual dispatch with configurable parameters:
 
 ```yaml
-# .github/workflows/4-op-crawl-source.yml
+# .github/workflows/content-monitor-acquire.yml
+# Note: This workflow replaces the old 4-op-crawl-source.yml
 on:
   workflow_dispatch:
     inputs:

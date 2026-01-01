@@ -1,19 +1,20 @@
-name: "2. Op: Assess Source"
+name: "Agent: Answer Questions"
 
-# Trigger when a new Discussion is created in the Sources category
 on:
-  discussion:
+  issues:
+    types: [labeled]
+  issue_comment:
     types: [created]
 
 permissions:
-  discussions: write
+  issues: write
   contents: read
 
 jobs:
-  assess-source-proposal:
-    # Only run for Discussions in the "Sources" category
-    if: |
-      github.event.discussion.category.name == 'Sources'
+  answer-question:
+    if: >
+      (github.event_name == 'issues' && github.event.label.name == 'question') ||
+      (github.event_name == 'issue_comment' && contains(github.event.issue.labels.*.name, 'question') && !contains(github.event.comment.body, '<!-- agent-response -->'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,12 +29,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: Assess Source Proposal
+      - name: Run Agent Mission
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python -m main agent run \
-            --mission assess_source \
-            --input discussion_number=${{ github.event.discussion.number }} \
+            --mission answer_question \
+            --input issue_number=${{ github.event.issue.number }} \
             --input repository=${{ github.repository }}

@@ -1,21 +1,19 @@
-name: "2. Op: Implement Source"
+name: "Content: AI Assessment"
 
-# Trigger when an Issue with source-approved label is created or assigned to copilot
+# Trigger when a new Discussion is created in the Sources category
 on:
-  issues:
-    types: [opened, labeled, assigned]
+  discussion:
+    types: [created]
 
 permissions:
-  issues: write
-  contents: write
   discussions: write
+  contents: read
 
 jobs:
-  implement-approved-source:
-    # Run when issue has source-approved label and is assigned to copilot
+  assess-source-proposal:
+    # Only run for Discussions in the "Sources" category
     if: |
-      contains(github.event.issue.labels.*.name, 'source-approved') &&
-      contains(github.event.issue.assignees.*.login, 'copilot')
+      github.event.discussion.category.name == 'Sources'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,12 +28,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: Implement Approved Source
+      - name: Assess Source Proposal
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python -m main agent run \
-            --mission implement_source \
-            --input issue_number=${{ github.event.issue.number }} \
+            --mission assess_source \
+            --input discussion_number=${{ github.event.discussion.number }} \
             --input repository=${{ github.repository }}

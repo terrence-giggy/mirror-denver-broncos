@@ -29,6 +29,9 @@ from src.cli.commands.github import (
 from src.cli.commands.parse import (
     register_commands as register_parse_commands,
 )
+from src.cli.commands.pipeline import (
+    register_commands as register_pipeline_commands,
+)
 from src.cli.commands.setup import (
     register_commands as register_setup_commands,
 )
@@ -57,6 +60,7 @@ def _build_command_parser() -> argparse.ArgumentParser:
     register_setup_commands(subparsers)
     register_source_commands(subparsers)
     register_sync_commands(subparsers)
+    register_pipeline_commands(subparsers)
     return parser
 
 

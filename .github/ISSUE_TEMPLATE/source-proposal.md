@@ -45,7 +45,7 @@ assignees: ''
 
 ---
 **Instructions:**
-This issue will automatically trigger the source curation workflow.
+This issue will automatically trigger the Content: AI Assessment workflow.
 The Source Curator Agent will:
 1. Verify the URL is accessible
 2. Calculate a credibility score based on domain characteristics

@@ -1,4 +1,4 @@
-name: "2. Op: Sync Discussions"
+name: "Content: Sync to GitHub Discussions"
 
 on:
   workflow_dispatch:

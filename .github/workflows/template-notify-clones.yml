@@ -1,4 +1,4 @@
-name: "3. Mgmt: Notify Downstream Repos"
+name: "Template: Notify Downstream Clones"
 
 on:
   release:

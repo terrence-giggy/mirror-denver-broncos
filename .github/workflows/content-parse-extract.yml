@@ -11,7 +11,7 @@
 # or manually add the 'parse-and-extract' label to any issue with a
 # document source specified.
 
-name: "2. Op: Parse and Extract"
+name: "Content: Parse & Extract Entities"
 
 on:
   issues:

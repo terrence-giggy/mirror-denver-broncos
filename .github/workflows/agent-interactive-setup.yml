@@ -1,4 +1,4 @@
-name: "2. Op: Setup Agent"
+name: "Agent: Interactive Setup"
 
 on:
   issue_comment:

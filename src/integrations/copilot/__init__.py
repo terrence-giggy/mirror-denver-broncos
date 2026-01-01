@@ -10,6 +10,7 @@ from .client import (
     CopilotClient,
     CopilotClientError,
     FunctionCall,
+    RateLimitError,
     ToolCall,
     Usage,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "CopilotClient",
     "CopilotClientError",
     "FunctionCall",
+    "RateLimitError",
     "ToolCall",
     "Usage",
 ]

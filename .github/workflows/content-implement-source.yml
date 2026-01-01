@@ -1,20 +1,21 @@
-name: "2. Op: Answer Question"
+name: "Content: Implement Approved Source"
 
+# Trigger when an Issue with source-approved label is created or assigned to copilot
 on:
   issues:
-    types: [labeled]
-  issue_comment:
-    types: [created]
+    types: [opened, labeled, assigned]
 
 permissions:
   issues: write
-  contents: read
+  contents: write
+  discussions: write
 
 jobs:
-  answer-question:
-    if: >
-      (github.event_name == 'issues' && github.event.label.name == 'question') ||
-      (github.event_name == 'issue_comment' && contains(github.event.issue.labels.*.name, 'question') && !contains(github.event.comment.body, '<!-- agent-response -->'))
+  implement-approved-source:
+    # Run when issue has source-approved label and is assigned to copilot
+    if: |
+      contains(github.event.issue.labels.*.name, 'source-approved') &&
+      contains(github.event.issue.assignees.*.login, 'copilot')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,11 +30,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: Run Agent Mission
+      - name: Implement Approved Source
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python -m main agent run \
-            --mission answer_question \
+            --mission implement_source \
             --input issue_number=${{ github.event.issue.number }} \
             --input repository=${{ github.repository }}

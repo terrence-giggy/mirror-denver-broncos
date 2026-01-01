@@ -1,4 +1,4 @@
-name: "2. Op: Curate Sources"
+name: "Content: Curate & Approve"
 
 # Trigger on Discussion comments for approval/rejection commands
 on:

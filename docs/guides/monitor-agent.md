@@ -1,5 +1,7 @@
 # Monitor Agent Guide
 
+> ⚠️ **DEPRECATION NOTICE**: This agent is being replaced by the unified [Content Pipeline](content-pipeline.md). The Content Pipeline provides the same functionality with zero LLM cost and improved politeness controls. See the [migration guide](content-pipeline.md#migration-from-monitorcrawler-agents).
+
 ## Overview
 
 The Monitor Agent is a lightweight change detector that monitors registered sources for content changes and queues them for acquisition by creating GitHub Issues. It operates on a scheduled basis (every 6 hours by default) and uses a bandwidth-efficient tiered detection strategy.
@@ -100,7 +102,8 @@ The monitor agent has access to these tools:
 The monitor agent runs via GitHub Actions on a 6-hour schedule:
 
 ```yaml
-# .github/workflows/3-op-monitor-sources.yml
+# .github/workflows/content-monitor-acquire.yml
+# Note: This workflow replaces the old 3-op-monitor-sources.yml
 on:
   schedule:
     - cron: "0 */6 * * *"  # Every 6 hours

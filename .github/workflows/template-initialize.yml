@@ -1,4 +1,4 @@
-name: "1. Setup: Initialize Repository"
+name: "Template: Initialize Clone"
 
 on:
   workflow_dispatch:
