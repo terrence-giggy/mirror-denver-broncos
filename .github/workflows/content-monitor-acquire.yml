@@ -115,11 +115,11 @@ jobs:
           fi
           
           # Add crawl options
-          if [ "${{ inputs.crawl_enabled }}" = "false" ]; then
-            ARGS="$ARGS --no-crawl"
-          fi
-          if [ -n "${{ inputs.max_pages_per_crawl }}" ]; then
-            ARGS="$ARGS --max-pages-per-crawl ${{ inputs.max_pages_per_crawl }}"
+          if [ "${{ inputs.crawl_enabled }}" != "false" ]; then
+            ARGS="$ARGS --crawl"
+            if [ -n "${{ inputs.max_pages_per_crawl }}" ]; then
+              ARGS="$ARGS --max-pages-per-crawl ${{ inputs.max_pages_per_crawl }}"
+            fi
           fi
           
           # Add JSON output for parsing
