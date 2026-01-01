@@ -24,7 +24,7 @@ assignees: ''
 
 ---
 **Instructions:**
-This issue will automatically trigger the parse-and-extract workflow which will assign it to GitHub Copilot.
+This issue will automatically trigger the Content: Parse & Extract Entities workflow which will assign it to GitHub Copilot.
 Copilot will:
 1. Parse the document from the provided source using `python -m main parse`
 2. Extract person names using `python -m main extract`
