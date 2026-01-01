@@ -1,0 +1,87 @@
+name: "Template: Notify Downstream Clones"
+
+on:
+  release:
+    types: [published]
+  
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - only show which repos would be notified'
+        required: false
+        type: boolean
+        default: false
+      org:
+        description: 'Organization to search (defaults to current repo org)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Notify downstream repositories
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          SYNC_SIGNATURE_SECRET: ${{ secrets.SYNC_SIGNATURE_SECRET }}
+        run: |
+          # Build command arguments
+          ARGS=(
+            "--upstream-repo" "${{ github.repository }}"
+            "--upstream-branch" "${{ github.event.release.target_commitish || 'main' }}"
+            "--release-tag" "${{ github.event.release.tag_name || 'manual' }}"
+            "--json"
+          )
+          
+          # Add target org if specified
+          if [ -n "${{ github.event.inputs.org }}" ]; then
+            ARGS+=("--org" "${{ github.event.inputs.org }}")
+          fi
+          
+          # Add dry-run flag if enabled
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            ARGS+=("--dry-run")
+          fi
+          
+          # Run notify command
+          python -m main notify-downstream "${ARGS[@]}"
+
+      - name: Create job summary
+        if: always()
+        run: |
+          echo "## 📢 Downstream Notification Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "**Triggered by:** Release ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Triggered by:** Manual dispatch" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Discovery Method:** Topic-based (\`speculum-downstream\`)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See workflow logs for detailed results." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Setup" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Downstream repositories are automatically discovered if they:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Have the \`speculum-downstream\` topic" >> $GITHUB_STEP_SUMMARY
+          echo "2. Were created from this template" >> $GITHUB_STEP_SUMMARY
+          echo "3. Are not forks" >> $GITHUB_STEP_SUMMARY
