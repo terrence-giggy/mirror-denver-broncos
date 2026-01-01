@@ -1,0 +1,77 @@
+name: "Template: Initialize Clone"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  setup-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Setup Command
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          python -m main setup --repo ${{ github.repository }}
+
+      - name: Validate Setup Configuration
+        id: validate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          python -m main validate-setup \
+            --repo "${{ github.repository }}" \
+            --json > /tmp/validation.json
+          
+          HAS_ISSUES=$(jq -r '.valid | if . then "false" else "true" end' /tmp/validation.json)
+          HAS_WARNINGS=$(jq -r 'if .warnings | length > 0 then "true" else "false" end' /tmp/validation.json)
+          
+          echo "has_issues=$HAS_ISSUES" >> $GITHUB_OUTPUT
+          echo "has_warnings=$HAS_WARNINGS" >> $GITHUB_OUTPUT
+          
+          # Display results
+          cat /tmp/validation.json
+
+      - name: Create job summary
+        if: always()
+        run: |
+          echo "## 🔧 Repository Setup" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.validate.outputs.has_issues }}" == "true" ]; then
+            echo "### ⚠️ Setup Complete with Issues" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Some configuration issues were detected. Please review the validation output above." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.validate.outputs.has_warnings }}" == "true" ]; then
+            echo "### ✅ Setup Complete with Warnings" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Setup completed successfully with some warnings. Check validation output for details." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ✅ Setup Complete" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All setup and validation checks passed successfully!" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "A setup issue has been created with a detailed checklist." >> $GITHUB_STEP_SUMMARY
+          echo "Navigate to the **Issues** tab to find **Project Configuration & Setup**." >> $GITHUB_STEP_SUMMARY
+
