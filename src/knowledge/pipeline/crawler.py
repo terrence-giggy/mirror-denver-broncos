@@ -257,15 +257,11 @@ def acquire_crawl(
             markdown = parser.to_markdown(document)
             
             # Store content
-            storage.store(
-                content=markdown,
-                source_url=url,
-                title=document.title,
-                metadata={
-                    "crawl_source": source.url,
-                    "acquired_at": datetime.now(timezone.utc).isoformat(),
-                },
-            )
+            document.metadata.update({
+                "crawl_source": source.url,
+                "acquired_at": datetime.now(timezone.utc).isoformat(),
+            })
+            storage.persist_document(document)
             
             page_hash = _content_hash(markdown)
             content_hashes.append(page_hash)
@@ -321,15 +317,18 @@ def acquire_crawl(
         aggregate_hash = _content_hash(combined)
     
     logger.info(
-        "Crawl complete for %s: %d pages this run, %d total visited",
+        "Crawl complete for %s: %d pages this run, %d total visited, %d failed",
         source.url,
         pages_this_run,
         state.visited_count,
+        state.failed_count,
     )
     
+    # Consider crawl successful only if we got at least one page this run
+    # (previous visits don't count for this acquisition attempt)
     return AcquisitionResult(
         source_url=source.url,
-        success=pages_this_run > 0 or state.visited_count > 0,
+        success=pages_this_run > 0,
         content_hash=aggregate_hash,
         pages_acquired=pages_this_run,
     )
