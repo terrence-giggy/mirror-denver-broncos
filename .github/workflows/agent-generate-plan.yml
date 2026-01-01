@@ -1,4 +1,4 @@
-name: "Agent: Generate Research Plan"
+name: "Agent: Generate Research Plan 🤖🔄"
 
 on:
   issues:
