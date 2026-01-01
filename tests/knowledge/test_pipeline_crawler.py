@@ -215,12 +215,25 @@ class TestAcquireSinglePage:
     
     def test_stores_content(self):
         """Content is stored via storage."""
+        from src.parsing.storage import ManifestEntry
+        
         source = MockSourceEntry(name="test", url="https://example.com")
         mock_storage = MagicMock()
-        mock_storage.store.return_value = MagicMock(path="/evidence/test.md")
+        
+        # Mock persist_document to return a ManifestEntry
+        mock_entry = ManifestEntry(
+            source="https://example.com",
+            checksum="abc123",
+            parser="web",
+            artifact_path="2025/example.com-abc123/index.md",
+            processed_at=datetime.now(timezone.utc),
+            status="completed",
+        )
+        mock_storage.persist_document.return_value = mock_entry
         
         mock_document = MagicMock()
         mock_document.title = "Test Title"
+        mock_document.metadata = {}
         
         with patch("src.knowledge.pipeline.crawler.WebParser") as mock_parser_cls:
             mock_parser = MagicMock()
@@ -230,11 +243,15 @@ class TestAcquireSinglePage:
             
             acquire_single_page(source, mock_storage, delay_seconds=0)
         
-        mock_storage.store.assert_called_once()
-        call_kwargs = mock_storage.store.call_args[1]
-        assert call_kwargs["content"] == "# Content"
-        assert call_kwargs["source_url"] == "https://example.com"
-        assert call_kwargs["title"] == "Test Title"
+        # Verify persist_document was called
+        mock_storage.persist_document.assert_called_once()
+        call_args = mock_storage.persist_document.call_args[0]
+        document = call_args[0]
+        
+        # Verify document has expected metadata
+        assert document.metadata["source_name"] == "test"
+        assert document.metadata["source_type"] == source.source_type
+        assert "acquired_at" in document.metadata
 
 
 class TestCrawlerIntegration:

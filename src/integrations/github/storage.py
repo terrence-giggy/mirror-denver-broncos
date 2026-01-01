@@ -28,6 +28,8 @@ from typing import Any
 
 from .files import commit_file
 from .issues import DEFAULT_API_URL
+from .sync import create_branch
+from .pull_requests import create_pull_request
 
 
 def is_github_actions() -> bool:
@@ -58,6 +60,7 @@ class GitHubStorageClient:
         repository: str,
         branch: str = "main",
         api_url: str = DEFAULT_API_URL,
+        pr_branch_prefix: str = "content-acquisition",
     ) -> None:
         """Initialize the GitHub storage client.
 
@@ -66,11 +69,15 @@ class GitHubStorageClient:
             repository: Repository in "owner/repo" format.
             branch: Target branch for commits.
             api_url: GitHub API base URL.
+            pr_branch_prefix: Prefix for PR branch names (e.g., "content-acquisition-20251231").
         """
         self.token = token
         self.repository = repository
         self.branch = branch
         self.api_url = api_url
+        self.pr_branch_prefix = pr_branch_prefix
+        self._pr_branch: str | None = None
+        self._pr_number: int | None = None
 
     def commit_file(
         self,
@@ -144,6 +151,122 @@ class GitHubStorageClient:
             branch=self.branch,
             api_url=self.api_url,
         )
+
+    def ensure_pr_branch(self, timestamp_suffix: str | None = None) -> str:
+        """Ensure a PR branch exists for content commits.
+
+        Args:
+            timestamp_suffix: Optional timestamp to append to branch name.
+
+        Returns:
+            Name of the PR branch.
+        """
+        if self._pr_branch:
+            return self._pr_branch
+
+        from datetime import datetime
+
+        if timestamp_suffix is None:
+            timestamp_suffix = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+
+        branch_name = f"{self.pr_branch_prefix}-{timestamp_suffix}"
+
+        # Create branch from base branch
+        create_branch(
+            repository=self.repository,
+            branch_name=branch_name,
+            from_branch=self.branch,
+            token=self.token,
+            api_url=self.api_url,
+        )
+
+        self._pr_branch = branch_name
+        return branch_name
+
+    def commit_to_pr_branch(
+        self,
+        path: str | Path,
+        content: str | bytes,
+        message: str,
+        timestamp_suffix: str | None = None,
+    ) -> dict[str, Any]:
+        """Commit a file to a PR branch instead of the main branch.
+
+        This is used for content acquisition to create a proper audit trail via PRs.
+
+        Args:
+            path: Relative path within the repository.
+            content: File content as string or bytes.
+            message: Commit message describing the change.
+            timestamp_suffix: Optional timestamp for branch name.
+
+        Returns:
+            Dictionary containing the GitHub API response with commit details.
+        """
+        pr_branch = self.ensure_pr_branch(timestamp_suffix)
+
+        # Normalize path
+        path_str = str(path)
+        if path_str.startswith("/"):
+            path_str = path_str[1:]
+
+        return commit_file(
+            token=self.token,
+            repository=self.repository,
+            path=path_str,
+            content=content,
+            message=message,
+            branch=pr_branch,
+            api_url=self.api_url,
+        )
+
+    def create_content_pr(
+        self,
+        title: str | None = None,
+        body: str | None = None,
+    ) -> tuple[int, str]:
+        """Create a pull request for the accumulated content commits.
+
+        Args:
+            title: PR title. Defaults to timestamp-based title.
+            body: PR description. Defaults to generic description.
+
+        Returns:
+            Tuple of (PR number, PR URL).
+
+        Raises:
+            RuntimeError: If no PR branch has been created yet.
+        """
+        if not self._pr_branch:
+            raise RuntimeError("No PR branch created. Call ensure_pr_branch() first.")
+
+        from datetime import datetime
+
+        if title is None:
+            timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+            title = f"Content Acquisition - {timestamp}"
+
+        if body is None:
+            body = (
+                "Automated content acquisition from monitored sources.\n\n"
+                "This PR contains newly acquired or updated content from external sources. "
+                "Review the changes to ensure content quality and relevance before merging."
+            )
+
+        pr_data = create_pull_request(
+            token=self.token,
+            repository=self.repository,
+            title=title,
+            body=body,
+            head=self._pr_branch,
+            base=self.branch,
+            api_url=self.api_url,
+        )
+
+        self._pr_number = pr_data["number"]
+        pr_url = pr_data["html_url"]
+
+        return self._pr_number, pr_url
 
     @classmethod
     def from_environment(cls) -> "GitHubStorageClient | None":

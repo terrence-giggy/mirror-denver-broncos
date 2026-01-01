@@ -24,11 +24,26 @@ class MockGitHubStorageClient:
     def __init__(self):
         self.committed_files: list[tuple[str, str, str]] = []  # (path, content, message)
         self.batch_commits: list[tuple[list, str]] = []  # (files, message)
+        self._pr_branch: str | None = None
 
     def commit_file(self, path: str, content: str | bytes, message: str) -> dict:
         if isinstance(content, bytes):
             content = content.decode("utf-8")
         self.committed_files.append((path, content, message))
+        return {"sha": "mock-sha-123", "commit": {"sha": "mock-commit-sha"}}
+
+    def commit_to_pr_branch(
+        self,
+        path: str,
+        content: str | bytes,
+        message: str,
+        timestamp_suffix: str | None = None,
+    ) -> dict:
+        """Mock commit_to_pr_branch for PR-based workflow."""
+        if isinstance(content, bytes):
+            content = content.decode("utf-8")
+        self.committed_files.append((path, content, message))
+        self._pr_branch = f"content-acquisition-{timestamp_suffix or 'test'}"
         return {"sha": "mock-sha-123", "commit": {"sha": "mock-commit-sha"}}
 
     def commit_files_batch(

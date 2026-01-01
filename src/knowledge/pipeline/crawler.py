@@ -127,17 +127,15 @@ def acquire_single_page(
         document = parser.extract(target)
         markdown = parser.to_markdown(document)
         
-        # Store content
-        result = storage.store(
-            content=markdown,
-            source_url=source.url,
-            title=document.title,
-            metadata={
-                "source_name": source.name,
-                "source_type": source.source_type,
-                "acquired_at": datetime.now(timezone.utc).isoformat(),
-            },
-        )
+        # Add source metadata to document
+        document.metadata.update({
+            "source_name": source.name,
+            "source_type": source.source_type,
+            "acquired_at": datetime.now(timezone.utc).isoformat(),
+        })
+        
+        # Store content using persist_document
+        entry = storage.persist_document(document)
         
         content_hash = _content_hash(markdown)
         
@@ -152,7 +150,7 @@ def acquire_single_page(
             source_url=source.url,
             success=True,
             content_hash=content_hash,
-            content_path=result.path if hasattr(result, "path") else None,
+            content_path=entry.artifact_path,
             pages_acquired=1,
         )
         
@@ -356,6 +354,7 @@ def run_crawler(
         CrawlerResult with acquisition outcomes.
     """
     from src import paths
+    from src.integrations.github.storage import get_github_storage_client
     
     result = CrawlerResult()
     
@@ -363,10 +362,16 @@ def run_crawler(
     evidence_root = config.evidence_root or paths.get_evidence_root()
     kb_root = config.kb_root or paths.get_knowledge_graph_root()
     
-    parse_storage = ParseStorage(root=evidence_root / "parsed")
+    # Get GitHub client for PR-based persistence in Actions
+    github_client = config.github_client or get_github_storage_client()
+    
+    parse_storage = ParseStorage(
+        root=evidence_root / "parsed",
+        github_client=github_client,
+    )
     crawl_storage = CrawlStateStorage(
         root=kb_root,
-        github_client=config.github_client,
+        github_client=github_client,
     )
     
     delay = config.politeness.crawler_delay_seconds
@@ -440,5 +445,21 @@ def run_crawler(
         len(result.failed),
         result.pages_total,
     )
+    
+    # Create PR for acquired content if using GitHub client
+    if github_client and github_client._pr_branch and len(result.successful) > 0:
+        try:
+            pr_number, pr_url = github_client.create_content_pr(
+                title=f"Content Acquisition - {len(result.successful)} sources acquired",
+                body=(
+                    f"Acquired content from {len(result.successful)} source(s):\n\n"
+                    + "\n".join(f"- {acq.source_url}" for acq in result.successful[:10])
+                    + ("\n- ..." if len(result.successful) > 10 else "")
+                    + f"\n\nTotal pages acquired: {result.pages_total}"
+                ),
+            )
+            logger.info("Created PR #%d for content acquisition: %s", pr_number, pr_url)
+        except Exception as e:
+            logger.error("Failed to create PR for content acquisition: %s", e)
     
     return result

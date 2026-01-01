@@ -275,7 +275,8 @@ class ParseStorage:
 
         if self._github_client:
             rel_path = self._get_relative_path(self.manifest_path)
-            self._github_client.commit_file(
+            # Use PR branch for content acquisition commits
+            self._github_client.commit_to_pr_branch(
                 path=rel_path,
                 content=content,
                 message="Update parsed document manifest",
