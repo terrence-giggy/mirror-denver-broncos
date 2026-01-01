@@ -1,0 +1,137 @@
+name: "Content: Monitor & Acquire"
+
+# Unified content pipeline for source monitoring and acquisition
+# Replaces the separate monitor (3-op-monitor-sources.yml) and crawler (4-op-crawl-source.yml) workflows
+# with a single, LLM-free, politeness-aware pipeline.
+on:
+  schedule:
+    # Run weekly on Sundays at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Pipeline mode"
+        required: false
+        type: choice
+        options:
+          - full      # Detect changes and acquire content
+          - check     # Detection only (no acquisition)
+          - acquire   # Acquisition only (for pending sources)
+        default: full
+      max_sources:
+        description: "Maximum sources to process per run"
+        required: false
+        type: number
+        default: 20
+      max_per_domain:
+        description: "Maximum sources per domain per run"
+        required: false
+        type: number
+        default: 3
+      min_interval:
+        description: "Minimum seconds between requests to same domain"
+        required: false
+        type: number
+        default: 5
+      dry_run:
+        description: "Show what would be done without making changes"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  content-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120  # 2 hours max
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Content Pipeline
+        id: pipeline
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          # Build command arguments
+          ARGS="pipeline run"
+          
+          # Set mode (default: full)
+          MODE="${{ inputs.mode || 'full' }}"
+          if [ "$MODE" = "check" ]; then
+            ARGS="pipeline check"
+          elif [ "$MODE" = "acquire" ]; then
+            ARGS="pipeline acquire"
+          fi
+          
+          # Add politeness options
+          ARGS="$ARGS --max-sources ${{ inputs.max_sources || 20 }}"
+          ARGS="$ARGS --max-per-domain ${{ inputs.max_per_domain || 3 }}"
+          ARGS="$ARGS --min-interval ${{ inputs.min_interval || 5 }}"
+          
+          # Add dry-run flag if specified
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          
+          # Add JSON output for parsing
+          ARGS="$ARGS --json"
+          
+          echo "Running: python main.py $ARGS"
+          python main.py $ARGS | tee pipeline_output.json
+          
+          # Parse output for summary
+          if [ -f pipeline_output.json ]; then
+            echo "sources_checked=$(jq -r '.monitor.sources_checked // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
+            echo "initial_needed=$(jq -r '.monitor.initial_needed // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
+            echo "updates_needed=$(jq -r '.monitor.updates_needed // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
+            echo "pages_acquired=$(jq -r '.total_pages_acquired // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
+            echo "duration=$(jq -r '.duration_seconds // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Generate Summary
+        run: |
+          echo "## Content Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Mode | ${{ inputs.mode || 'full' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Sources Checked | ${{ steps.pipeline.outputs.sources_checked }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Initial Needed | ${{ steps.pipeline.outputs.initial_needed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Updates Needed | ${{ steps.pipeline.outputs.updates_needed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Pages Acquired | ${{ steps.pipeline.outputs.pages_acquired }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Duration | ${{ steps.pipeline.outputs.duration }}s |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "> **Note:** This was a dry run. No changes were made." >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Commit pipeline updates
+        if: ${{ inputs.dry_run != 'true' }}
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(pipeline): update sources and content [skip ci]"
+          file_pattern: |
+            evidence/parsed/**
+            knowledge-graph/sources/*.json
+            knowledge-graph/crawls/**
+          skip_dirty_check: false
+          skip_fetch: false
+          skip_checkout: false
