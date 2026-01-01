@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from playwright.sync_api import Page
+
+WaitUntilEvent = Literal["commit", "domcontentloaded", "load", "networkidle"]
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,7 @@ def render_page(
     user_agent: str,
     headless: bool = True,
     timeout: int = DEFAULT_NAVIGATION_TIMEOUT,
-    wait_until: str = "networkidle",
+    wait_until: WaitUntilEvent = "networkidle",
     wait_after_load: int = 0,
 ) -> RenderedPage:
     """Render a page using Playwright and return the HTML content.
@@ -93,9 +95,7 @@ def render_page(
     
     try:
         with sync_playwright() as p:
-            # Configure browser launch arguments
             browser_args = []
-            # Anti-detection: disable automation flags and set realistic args
             browser_args.extend([
                 "--disable-blink-features=AutomationControlled",
                 "--disable-dev-shm-usage",
@@ -113,30 +113,24 @@ def render_page(
             # Create context with user agent and stealth options
             context_options = {
                 "user_agent": user_agent,
-            }
-            
-            # Set realistic viewport
-            context_options["viewport"] = {"width": 1920, "height": 1080}
-            
-            # Additional anti-detection context options
-            context_options["java_script_enabled"] = True
-            context_options["bypass_csp"] = False
-            context_options["ignore_https_errors"] = True
-            
-            # Add realistic browser headers to avoid detection
-            context_options["extra_http_headers"] = {
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Accept-Encoding": "gzip, deflate, br, zstd",
-                "Cache-Control": "max-age=0",
-                "Sec-Ch-Ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-                "Sec-Ch-Ua-Mobile": "?0",
-                "Sec-Ch-Ua-Platform": '"Windows"',
-                "Sec-Fetch-Dest": "document",
-                "Sec-Fetch-Mode": "navigate",
-                "Sec-Fetch-Site": "none",
-                "Sec-Fetch-User": "?1",
-                "Upgrade-Insecure-Requests": "1",
+                "viewport": {"width": 1920, "height": 1080},
+                "java_script_enabled": True,
+                "bypass_csp": False,
+                "ignore_https_errors": True,
+                "extra_http_headers": {
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Accept-Encoding": "gzip, deflate, br, zstd",
+                    "Cache-Control": "max-age=0",
+                    "Sec-Ch-Ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+                    "Sec-Ch-Ua-Mobile": "?0",
+                    "Sec-Ch-Ua-Platform": '"Windows"',
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "none",
+                    "Sec-Fetch-User": "?1",
+                    "Upgrade-Insecure-Requests": "1",
+                }
             }
             
             context = browser.new_context(**context_options)
