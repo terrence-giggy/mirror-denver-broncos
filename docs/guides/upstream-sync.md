@@ -103,7 +103,7 @@ Add the `speculum-downstream` topic for automatic discovery:
 
 Complete the automated setup:
 
-1. Go to **Actions** → **1. Setup: Initialize Repository**
+1. Go to **Actions** → **Template: Initialize Clone**
 2. Click **Run workflow**
 3. Review the validation results in the created issue
 4. Fix any reported issues
@@ -140,7 +140,7 @@ After creating your research repo from the template, configure the upstream sour
 
 If your repository was created using GitHub's "Use this template" feature, the upstream is detected automatically. Simply run the setup workflow:
 
-1. Go to **Actions** → **Initialize Repository**
+1. Go to **Actions** → **Template: Initialize Clone**
 2. Click **Run workflow**
 3. The `UPSTREAM_REPO` variable will be set automatically
 
@@ -190,7 +190,7 @@ For **public** upstream repos, only `GH_TOKEN` is needed.
 
 ### Manual Sync
 
-1. Go to **Actions** → **Sync from Upstream**
+1. Go to **Actions** → **Template: Sync from Upstream**
 2. Click **Run workflow**
 3. Fill in the options:
    - **upstream_repo**: Pre-filled from `UPSTREAM_REPO` variable
