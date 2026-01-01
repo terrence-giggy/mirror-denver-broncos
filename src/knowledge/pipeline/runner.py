@@ -160,6 +160,7 @@ def run_pipeline(
             registry=registry,
             scheduler=scheduler,
             dry_run=config.dry_run,
+            force_fresh=config.force_fresh,
         )
         
         # Collect sources needing acquisition
@@ -178,12 +179,18 @@ def run_pipeline(
     if config.mode in ("full", "acquire"):
         # If acquire-only mode, find sources that need acquisition
         if config.mode == "acquire" and not sources_to_acquire:
-            logger.info("Acquire mode: looking for pending sources...")
-            from .monitor import get_sources_pending_initial
-            
-            pending = get_sources_pending_initial(registry)
-            for source in pending[:config.politeness.max_sources_per_run]:
-                sources_to_acquire.append((source, None))
+            if config.force_fresh:
+                logger.info("Acquire mode with force fresh: acquiring all active sources...")
+                all_sources = list(registry.list_sources(status="active"))
+                for source in all_sources[:config.politeness.max_sources_per_run]:
+                    sources_to_acquire.append((source, None))
+            else:
+                logger.info("Acquire mode: looking for pending sources...")
+                from .monitor import get_sources_pending_initial
+                
+                pending = get_sources_pending_initial(registry)
+                for source in pending[:config.politeness.max_sources_per_run]:
+                    sources_to_acquire.append((source, None))
         
         if sources_to_acquire:
             logger.info("Running crawler phase for %d sources...", len(sources_to_acquire))

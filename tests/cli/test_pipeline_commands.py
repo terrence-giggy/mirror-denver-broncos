@@ -124,6 +124,7 @@ class TestPipelineRunCli:
             max_sources=20,
             max_per_domain=3,
             min_interval=5.0,
+            force_fresh=False,
             kb_root=tmp_path / "kb",
             evidence_root=tmp_path / "evidence",
         )
@@ -151,6 +152,7 @@ class TestPipelineRunCli:
             max_sources=20,
             max_per_domain=3,
             min_interval=5.0,
+            force_fresh=False,
             kb_root=tmp_path / "kb",
             evidence_root=tmp_path / "evidence",
         )
@@ -170,6 +172,7 @@ class TestPipelineRunCli:
             max_sources=20,
             max_per_domain=3,
             min_interval=5.0,
+            force_fresh=False,
             kb_root=tmp_path / "kb",
             evidence_root=tmp_path / "evidence",
         )
@@ -230,6 +233,7 @@ class TestPipelineAcquireCli:
             output_json=False,
             max_sources=10,
             source_url=None,
+            force_fresh=False,
             kb_root=tmp_path / "kb",
             evidence_root=tmp_path / "evidence",
         )

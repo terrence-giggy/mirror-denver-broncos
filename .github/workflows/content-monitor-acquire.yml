@@ -38,6 +38,11 @@ on:
         required: false
         type: boolean
         default: false
+      force_fresh:
+        description: "Force fresh acquisition (ignore existing content)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -90,6 +95,11 @@ jobs:
             ARGS="$ARGS --dry-run"
           fi
           
+          # Add force-fresh flag if specified
+          if [ "${{ inputs.force_fresh }}" = "true" ]; then
+            ARGS="$ARGS --force-fresh"
+          fi
+          
           # Add JSON output for parsing
           ARGS="$ARGS --json"
           
@@ -121,6 +131,10 @@ jobs:
           
           if [ "${{ inputs.dry_run }}" = "true" ]; then
             echo "> **Note:** This was a dry run. No changes were made." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ inputs.force_fresh }}" = "true" ]; then
+            echo "> **Note:** Forced fresh acquisition - all content was re-acquired." >> $GITHUB_STEP_SUMMARY
           fi
       
       - name: Commit pipeline updates

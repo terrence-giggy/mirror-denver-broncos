@@ -114,6 +114,7 @@ def run_monitor(
     registry: "SourceRegistry",
     scheduler: DomainScheduler,
     dry_run: bool = False,
+    force_fresh: bool = False,
 ) -> MonitorResult:
     """Run the monitor phase to detect sources needing acquisition.
     
@@ -127,12 +128,35 @@ def run_monitor(
         registry: The source registry.
         scheduler: Domain scheduler with politeness settings.
         dry_run: If True, don't update source metadata.
+        force_fresh: If True, treat all active sources as needing acquisition.
         
     Returns:
         MonitorResult with categorized sources.
     """
     result = MonitorResult()
     monitor = SourceMonitor(registry=registry)
+    
+    # Force fresh mode: treat all active sources as needing acquisition
+    if force_fresh:
+        all_sources = list(registry.list_sources(status="active"))
+        scheduler.add_sources(all_sources, action="initial")
+        logger.info("Force fresh mode: treating all %d active sources as needing acquisition", len(all_sources))
+        
+        # Process all sources through scheduler
+        for scheduled in scheduler.get_schedule():
+            source = scheduled.source
+            result.sources_checked += 1
+            result.initial_needed.append(source)
+            logger.info("Queued for fresh acquisition: %s", source.name)
+            
+            if not dry_run:
+                # Update last_checked timestamp
+                source.last_checked = datetime.now(timezone.utc)
+                registry.save_source(source)
+        
+        return result
+    
+    # Normal mode: selective acquisition based on status
     
     # Phase 1: Collect sources needing initial acquisition
     initial_sources = get_sources_pending_initial(registry)
