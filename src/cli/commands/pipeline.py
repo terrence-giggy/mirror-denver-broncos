@@ -88,6 +88,17 @@ def register_commands(subparsers: argparse._SubParsersAction[argparse.ArgumentPa
         action="store_true",
         help="Force fresh acquisition, ignoring existing content.",
     )
+    run_parser.add_argument(
+        "--no-crawl",
+        action="store_true",
+        help="Disable crawling, only acquire single pages.",
+    )
+    run_parser.add_argument(
+        "--max-pages-per-crawl",
+        type=int,
+        default=100,
+        help="Maximum pages to crawl per source (default: 100).",
+    )
     run_parser.set_defaults(func=pipeline_run_cli, pipeline_command="run")
 
     # pipeline check
@@ -133,6 +144,17 @@ def register_commands(subparsers: argparse._SubParsersAction[argparse.ArgumentPa
         "--force-fresh",
         action="store_true",
         help="Force fresh acquisition, ignoring existing content.",
+    )
+    acquire_parser.add_argument(
+        "--no-crawl",
+        action="store_true",
+        help="Disable crawling, only acquire single pages.",
+    )
+    acquire_parser.add_argument(
+        "--max-pages-per-crawl",
+        type=int,
+        default=100,
+        help="Maximum pages to crawl per source (default: 100).",
     )
     acquire_parser.set_defaults(func=pipeline_acquire_cli, pipeline_command="acquire")
 
@@ -197,6 +219,8 @@ def pipeline_run_cli(args: argparse.Namespace) -> int:
         politeness=politeness,
         kb_root=args.kb_root or paths.get_knowledge_graph_root(),
         evidence_root=args.evidence_root or paths.get_evidence_root(),
+        enable_crawling=not args.no_crawl,
+        max_pages_per_crawl=args.max_pages_per_crawl,
     )
 
     if not args.output_json:
@@ -311,6 +335,8 @@ def pipeline_acquire_cli(args: argparse.Namespace) -> int:
         politeness=politeness,
         kb_root=args.kb_root or paths.get_knowledge_graph_root(),
         evidence_root=args.evidence_root or paths.get_evidence_root(),
+        enable_crawling=not args.no_crawl,
+        max_pages_per_crawl=args.max_pages_per_crawl,
     )
 
     if not args.output_json:
