@@ -232,12 +232,12 @@ def acquire_crawl(
         if url is None:
             break
         
-        # Skip if already visited
+        # Normalize URL first to ensure consistent deduplication
+        url = normalize_url(url)
+        
+        # Skip if already visited (check AFTER normalization)
         if state.is_url_visited(url):
             continue
-        
-        # Normalize URL
-        url = normalize_url(url)
         
         # Check robots.txt
         if not robots.is_allowed(url):
@@ -275,9 +275,10 @@ def acquire_crawl(
                     source.crawl_scope,
                 )
                 
-                # Add to frontier
+                # Normalize and add to frontier (deduplication happens in add_to_frontier)
                 for link_url in in_scope:
-                    if state.add_to_frontier(link_url):
+                    normalized_link = normalize_url(link_url)
+                    if state.add_to_frontier(normalized_link):
                         state.in_scope_count += 1
                 
                 state.discovered_count += len(links)
