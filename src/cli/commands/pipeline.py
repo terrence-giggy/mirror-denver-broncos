@@ -83,6 +83,11 @@ def register_commands(subparsers: argparse._SubParsersAction[argparse.ArgumentPa
         default=5.0,
         help="Minimum seconds between requests to same domain (default: 5).",
     )
+    run_parser.add_argument(
+        "--force-fresh",
+        action="store_true",
+        help="Force fresh acquisition, ignoring existing content.",
+    )
     run_parser.set_defaults(func=pipeline_run_cli, pipeline_command="run")
 
     # pipeline check
@@ -123,6 +128,11 @@ def register_commands(subparsers: argparse._SubParsersAction[argparse.ArgumentPa
         "--source-url",
         type=str,
         help="Acquire a specific source by URL.",
+    )
+    acquire_parser.add_argument(
+        "--force-fresh",
+        action="store_true",
+        help="Force fresh acquisition, ignoring existing content.",
     )
     acquire_parser.set_defaults(func=pipeline_acquire_cli, pipeline_command="acquire")
 
@@ -183,6 +193,7 @@ def pipeline_run_cli(args: argparse.Namespace) -> int:
     config = PipelineConfig(
         mode="full",
         dry_run=args.dry_run,
+        force_fresh=args.force_fresh,
         politeness=politeness,
         kb_root=args.kb_root or paths.get_knowledge_graph_root(),
         evidence_root=args.evidence_root or paths.get_evidence_root(),
@@ -192,6 +203,8 @@ def pipeline_run_cli(args: argparse.Namespace) -> int:
         print("Starting content pipeline (mode=full)...")
         if args.dry_run:
             print("  [DRY RUN - no changes will be made]")
+        if args.force_fresh:
+            print("  [FORCE FRESH - ignoring existing content]")
         print(f"  Max sources: {args.max_sources}")
         print(f"  Max per domain: {args.max_per_domain}")
         print(f"  Min interval: {args.min_interval}s")
@@ -294,6 +307,7 @@ def pipeline_acquire_cli(args: argparse.Namespace) -> int:
     config = PipelineConfig(
         mode="acquire",
         dry_run=args.dry_run,
+        force_fresh=args.force_fresh,
         politeness=politeness,
         kb_root=args.kb_root or paths.get_knowledge_graph_root(),
         evidence_root=args.evidence_root or paths.get_evidence_root(),
@@ -303,6 +317,8 @@ def pipeline_acquire_cli(args: argparse.Namespace) -> int:
         print("Starting content pipeline (mode=acquire)...")
         if args.dry_run:
             print("  [DRY RUN - no changes will be made]")
+        if args.force_fresh:
+            print("  [FORCE FRESH - ignoring existing content]")
         if args.source_url:
             print(f"  Acquiring specific source: {args.source_url}")
         print()
