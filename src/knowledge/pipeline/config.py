@@ -78,6 +78,7 @@ class PipelineConfig:
     dry_run: bool = False
     create_issues: bool = False
     mode: str = "full"  # "full" | "check" | "acquire"
+    force_fresh: bool = False  # Force fresh acquisition, ignoring existing content
     github_client: object = None  # GitHubStorageClient
     
     def __post_init__(self) -> None:
