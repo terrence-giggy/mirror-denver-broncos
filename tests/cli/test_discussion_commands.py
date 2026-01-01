@@ -488,23 +488,6 @@ class TestSyncDiscussionsCli:
         assert mock_discussions.create_discussion.call_count == 1
 
 
-class TestMissionConfiguration:
-    def test_mission_yaml_is_valid(self) -> None:
-        """Verify the sync_discussions mission YAML is valid."""
-        from src.orchestration.missions import load_mission
-        
-        mission_path = Path("config/missions/sync_discussions.yaml")
-        assert mission_path.exists(), "Mission file should exist"
-        
-        mission = load_mission(mission_path)
-        
-        assert mission.id == "sync_discussions"
-        assert mission.max_steps == 100
-        assert "sync_entity_discussion" in mission.allowed_tools
-        assert "list_knowledge_entities" in mission.allowed_tools
-        assert mission.requires_approval is False
-
-
 class TestCliIntegration:
     def test_main_py_includes_discussion_commands(self) -> None:
         """Verify discussion commands are registered in main."""

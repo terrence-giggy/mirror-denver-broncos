@@ -69,6 +69,10 @@ class PipelineConfig:
             - "full": Run both detection and acquisition
             - "check": Detection only (monitor for changes)
             - "acquire": Acquisition only (process pending sources)
+        force_fresh: Force fresh acquisition, ignoring existing content.
+        enable_crawling: If True, use multi-page crawling for crawlable sources.
+            If False, all sources are acquired as single pages.
+        max_pages_per_crawl: Maximum pages to crawl per source in one run.
         github_client: Optional GitHub storage client for Actions environment.
     """
     
@@ -78,7 +82,9 @@ class PipelineConfig:
     dry_run: bool = False
     create_issues: bool = False
     mode: str = "full"  # "full" | "check" | "acquire"
-    force_fresh: bool = False  # Force fresh acquisition, ignoring existing content
+    force_fresh: bool = False
+    enable_crawling: bool = True
+    max_pages_per_crawl: int = 100
     github_client: object = None  # GitHubStorageClient
     
     def __post_init__(self) -> None:

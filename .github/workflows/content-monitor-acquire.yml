@@ -27,7 +27,7 @@ on:
         description: "Maximum sources per domain per run"
         required: false
         type: number
-        default: 3
+        default: 50
       min_interval:
         description: "Minimum seconds between requests to same domain"
         required: false
@@ -43,6 +43,16 @@ on:
         required: false
         type: boolean
         default: false
+      crawl_enabled:
+        description: "Enable crawling for sources marked as crawlable"
+        required: false
+        type: boolean
+        default: true
+      max_pages_per_crawl:
+        description: "Maximum pages to crawl per source"
+        required: false
+        type: number
+        default: 100
 
 permissions:
   contents: write
@@ -104,6 +114,14 @@ jobs:
             ARGS="$ARGS --force-fresh"
           fi
           
+          # Add crawl options
+          if [ "${{ inputs.crawl_enabled }}" = "false" ]; then
+            ARGS="$ARGS --no-crawl"
+          fi
+          if [ -n "${{ inputs.max_pages_per_crawl }}" ]; then
+            ARGS="$ARGS --max-pages-per-crawl ${{ inputs.max_pages_per_crawl }}"
+          fi
+          
           # Add JSON output for parsing
           ARGS="$ARGS --json"
           
@@ -143,6 +161,8 @@ jobs:
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Mode | ${{ inputs.mode || 'full' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Crawling Enabled | ${{ inputs.crawl_enabled != 'false' && '✅ Yes' || '❌ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Max Pages/Crawl | ${{ inputs.max_pages_per_crawl || 100 }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Sources Checked | ${{ steps.pipeline.outputs.sources_checked }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Initial Needed | ${{ steps.pipeline.outputs.initial_needed }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Updates Needed | ${{ steps.pipeline.outputs.updates_needed }} |" >> $GITHUB_STEP_SUMMARY
@@ -185,7 +205,11 @@ jobs:
           fi
           
           if [ "${{ inputs.force_fresh }}" = "true" ]; then
-            echo "> **Note:** Forced fresh acquisition - all content was re-acquired." >> $GITHUB_STEP_SUMMARY
+            echo "> **Note:** Forced fresh acquisition - all content was re-acquired and crawls restarted." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ inputs.crawl_enabled }}" = "false" ]; then
+            echo "> **Note:** Crawling was disabled - only single pages were acquired." >> $GITHUB_STEP_SUMMARY
           fi
       
       - name: Commit pipeline updates

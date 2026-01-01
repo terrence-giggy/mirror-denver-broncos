@@ -396,13 +396,18 @@ def run_crawler(
             continue
         
         # Decide: single page or crawl
-        if source.is_crawlable:
+        if config.enable_crawling and source.is_crawlable:
+            max_pages = min(
+                config.max_pages_per_crawl,
+                config.politeness.max_domain_requests_per_run,
+            )
             acq_result = acquire_crawl(
                 source=source,
                 storage=parse_storage,
                 crawl_storage=crawl_storage,
-                max_pages=min(100, config.politeness.max_domain_requests_per_run),
+                max_pages=max_pages,
                 delay_seconds=delay,
+                force_restart=config.force_fresh,
             )
         else:
             acq_result = acquire_single_page(
