@@ -68,6 +68,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
+      - name: Install Playwright browsers
+        run: |
+          playwright install chromium --with-deps
+          
       - name: Run Content Pipeline
         id: pipeline
         env:
@@ -104,7 +108,13 @@ jobs:
           ARGS="$ARGS --json"
           
           echo "Running: python main.py $ARGS"
-          python main.py $ARGS | tee pipeline_output.json
+          set +e  # Don't exit on error, capture it
+          python main.py $ARGS 2>&1 | tee pipeline_output.log
+          EXIT_CODE=$?
+          set -e
+          
+          # Extract JSON from output (last valid JSON object)
+          grep -o '{.*}' pipeline_output.log | tail -1 > pipeline_output.json || echo "{}" > pipeline_output.json
           
           # Parse output for summary
           if [ -f pipeline_output.json ]; then
@@ -113,9 +123,20 @@ jobs:
             echo "updates_needed=$(jq -r '.monitor.updates_needed // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
             echo "pages_acquired=$(jq -r '.total_pages_acquired // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
             echo "duration=$(jq -r '.duration_seconds // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
+            echo "monitor_errors=$(jq -r '.monitor.errors // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
+            echo "crawler_failed=$(jq -r '.crawler.failed // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
+            echo "crawler_successful=$(jq -r '.crawler.successful // 0' pipeline_output.json)" >> $GITHUB_OUTPUT
           fi
+          
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          
+          # Extract error messages (lines containing "error" or "Error" or "ERROR")
+          grep -iE "(error|failed|exception)" pipeline_output.log > errors.log || true
+          
+          exit $EXIT_CODE
       
       - name: Generate Summary
+        if: always()
         run: |
           echo "## Content Pipeline Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -128,6 +149,36 @@ jobs:
           echo "| Pages Acquired | ${{ steps.pipeline.outputs.pages_acquired }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Duration | ${{ steps.pipeline.outputs.duration }}s |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add error summary if there were issues
+          MONITOR_ERRORS=${{ steps.pipeline.outputs.monitor_errors || 0 }}
+          CRAWLER_FAILED=${{ steps.pipeline.outputs.crawler_failed || 0 }}
+          CRAWLER_SUCCESS=${{ steps.pipeline.outputs.crawler_successful || 0 }}
+          EXIT_CODE=${{ steps.pipeline.outputs.exit_code || 0 }}
+          
+          if [ "$MONITOR_ERRORS" -gt 0 ] || [ "$CRAWLER_FAILED" -gt 0 ] || [ "$EXIT_CODE" -ne 0 ]; then
+            echo "### ⚠️ Errors and Failures" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Category | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Monitor Errors | $MONITOR_ERRORS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Crawler Failed | $CRAWLER_FAILED |" >> $GITHUB_STEP_SUMMARY
+            echo "| Crawler Successful | $CRAWLER_SUCCESS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Exit Code | $EXIT_CODE |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Include error log excerpts
+            if [ -f errors.log ] && [ -s errors.log ]; then
+              echo "<details>" >> $GITHUB_STEP_SUMMARY
+              echo "<summary>Error Messages (click to expand)</summary>" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              head -50 errors.log >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "</details>" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
           
           if [ "${{ inputs.dry_run }}" = "true" ]; then
             echo "> **Note:** This was a dry run. No changes were made." >> $GITHUB_STEP_SUMMARY
