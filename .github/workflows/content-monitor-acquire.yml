@@ -224,6 +224,8 @@ jobs:
           skip_dirty_check: false
           skip_fetch: false
           skip_checkout: false
+          pull_options: '--rebase --autostash'
+          push_options: '--force-with-lease'
       
       - name: Fail workflow on pipeline error
         if: ${{ steps.pipeline.outputs.exit_code != '0' }}
