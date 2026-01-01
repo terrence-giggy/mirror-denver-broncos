@@ -1,0 +1,25 @@
+{
+  "source_url": "https://www.denverbroncos.com",
+  "source_hash": "0b899913b1fab003",
+  "scope": "path",
+  "status": "crawling",
+  "started_at": "2026-01-01T20:39:35.448523+00:00",
+  "last_activity": "2026-01-01T20:39:42.430582+00:00",
+  "completed_at": null,
+  "frontier": [],
+  "frontier_overflow_count": 0,
+  "visited_count": 1,
+  "visited_hashes": [
+    "12bf9ae76d11b9d503a00a97e87f0a3f8954b4942ea36a6806a6f9018f71795b"
+  ],
+  "discovered_count": 0,
+  "in_scope_count": 0,
+  "out_of_scope_count": 0,
+  "skipped_count": 0,
+  "failed_count": 1,
+  "max_pages": 10000,
+  "max_depth": 10,
+  "exclude_patterns": [],
+  "content_root": "crawls/0b899913b1fab003/content",
+  "registry_path": "crawls/0b899913b1fab003/registry.json"
+}
