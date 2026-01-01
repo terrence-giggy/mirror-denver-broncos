@@ -1,4 +1,4 @@
-name: "Agent: Interactive Setup"
+name: "Agent: Interactive Setup 🤖🔄"
 
 on:
   issue_comment:
