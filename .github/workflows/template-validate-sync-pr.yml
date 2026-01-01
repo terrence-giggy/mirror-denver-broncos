@@ -1,4 +1,4 @@
-name: "Template: Validate & Auto-Merge Sync PRs"
+name: "Template: Validate & Auto-Merge Sync PRs 🔧🔄"
 
 on:
   pull_request:
