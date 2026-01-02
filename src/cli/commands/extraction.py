@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from src.integrations.copilot import CopilotClient, CopilotClientError
+from src.integrations.github.storage import get_github_storage_client
 from src.knowledge.extraction import (
     process_document, 
     process_document_organizations,
@@ -97,7 +98,10 @@ def extract_cli(args: argparse.Namespace) -> int:
     try:
         config = load_parsing_config(args.config)
         storage = ParseStorage(config.output_root)
-        kb_storage = KnowledgeGraphStorage(args.kb_root)
+        
+        # Get GitHub storage client if running in GitHub Actions
+        github_client = get_github_storage_client()
+        kb_storage = KnowledgeGraphStorage(args.kb_root, github_client=github_client)
         
         # Initialize Copilot client
         # This will raise if token is missing
