@@ -99,3 +99,42 @@ def test_persist_document_writes_markdown_and_updates_manifest(tmp_path) -> None
     assert entry.metadata["segments_total"] == 1
     assert entry.status == "completed"
     assert storage.manifest().get(document.checksum) == entry
+
+
+def test_batch_mode_defers_manifest_writes(tmp_path) -> None:
+    """Test that batch mode defers manifest writes until flush."""
+    storage = ParseStorage(tmp_path / "artifacts")
+    
+    # Start batch mode
+    storage.begin_batch()
+    
+    # Create and persist multiple documents
+    for i in range(3):
+        target = ParseTarget(source=f"evidence/doc{i}.txt", media_type="text/plain")
+        document = ParsedDocument(
+            target=target,
+            checksum=f"{'e' * 63}{i}",
+            parser_name="text",
+        )
+        document.created_at = datetime(2025, 10, 22, 12, i, tzinfo=timezone.utc)
+        document.add_segment(f"Content of document {i}.")
+        
+        storage.persist_document(document)
+    
+    # Manifest file should not exist yet (deferred)
+    assert storage._manifest_dirty is True
+    
+    # Flush the manifest
+    storage.flush_manifest()
+    
+    # Now manifest file should exist
+    assert storage.manifest_path.exists()
+    assert storage._manifest_dirty is False
+    assert storage._defer_manifest_writes is False
+    
+    # Verify all entries are in manifest
+    reloaded = ParseStorage(tmp_path / "artifacts")
+    for i in range(3):
+        checksum = f"{'e' * 63}{i}"
+        assert reloaded.manifest().get(checksum) is not None
+        assert not reloaded.should_process(checksum)
