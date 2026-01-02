@@ -1,0 +1,38 @@
+name: "Extraction: Process Document 🧠"
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  process-extraction:
+    if: github.event.label.name == 'extraction-queue'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      - name: Run Extraction Mission
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          COPILOT_TOKEN: ${{ secrets.COPILOT_TOKEN }}
+        run: |
+          python main.py agent run \
+            --mission extract_document \
+            --input issue_number=${{ github.event.issue.number }} \
+            --input repository=${{ github.repository }}
