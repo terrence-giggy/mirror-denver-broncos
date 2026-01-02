@@ -1,8 +1,8 @@
 ---
-source: "https://www.denverbroncos.com/manifest.json"
-checksum: 1e950da8b13716c77992d9f91164641462dcc96c49a51c8ffb4b0e751aaf625f
+source: "https://www.denverbroncos.com/video/index"
+checksum: 54c391bb7863fd540133621e5a0388a8766fc916f5118003cb46d75f68964ea8
 parser: web
-processed_at: "2026-01-02T00:53:39.688407+00:00"
+processed_at: "2026-01-02T00:55:13.320472+00:00"
 is_remote: true
 segment_count: 1
 status: completed

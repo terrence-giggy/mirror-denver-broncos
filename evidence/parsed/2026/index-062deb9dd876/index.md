@@ -1,8 +1,8 @@
 ---
-source: "https://www.denverbroncos.com/manifest.json"
-checksum: 1e950da8b13716c77992d9f91164641462dcc96c49a51c8ffb4b0e751aaf625f
+source: "https://www.denverbroncos.com/cheerleaders/index"
+checksum: 062deb9dd876ad6a295a328e639010865ce9ff57b3b80c97251b8b3d87e5c4b5
 parser: web
-processed_at: "2026-01-02T00:53:39.688407+00:00"
+processed_at: "2026-01-02T00:57:53.267121+00:00"
 is_remote: true
 segment_count: 1
 status: completed

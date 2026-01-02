@@ -1,8 +1,8 @@
 ---
-source: "https://www.denverbroncos.com/manifest.json"
-checksum: 1e950da8b13716c77992d9f91164641462dcc96c49a51c8ffb4b0e751aaf625f
+source: "https://www.denverbroncos.com/tickets/index"
+checksum: 8ab5c163e40b06e8bc0693a36d977bf87ea780647d6dde1090ff623971c394f0
 parser: web
-processed_at: "2026-01-02T00:53:39.688407+00:00"
+processed_at: "2026-01-02T00:58:20.171288+00:00"
 is_remote: true
 segment_count: 1
 status: completed

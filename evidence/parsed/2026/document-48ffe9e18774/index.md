@@ -1,8 +1,8 @@
 ---
-source: "https://www.denverbroncos.com/manifest.json"
-checksum: 1e950da8b13716c77992d9f91164641462dcc96c49a51c8ffb4b0e751aaf625f
+source: "https://www.denverbroncos.com/team/history/"
+checksum: 48ffe9e18774ec5de623d567414e303f52362ddb78f44fb641653c5506f7240f
 parser: web
-processed_at: "2026-01-02T00:53:39.688407+00:00"
+processed_at: "2026-01-02T01:16:01.848750+00:00"
 is_remote: true
 segment_count: 1
 status: completed
