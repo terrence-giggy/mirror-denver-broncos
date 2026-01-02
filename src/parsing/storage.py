@@ -109,6 +109,9 @@ class ParseStorage:
         # Defer manifest writes for batching (GitHub API efficiency)
         self._defer_manifest_writes = False
         self._manifest_dirty = False
+        # Defer content file writes for batching (GitHub API efficiency)
+        self._defer_content_writes = False
+        self._pending_content_files: list[tuple[Path, str]] = []
         utils.ensure_directory(self.root)
         self._manifest = self._load_manifest()
 
@@ -134,24 +137,58 @@ class ParseStorage:
         return entry.status != "completed"
     
     def begin_batch(self) -> None:
-        """Start batching manifest writes to reduce GitHub API commits.
+        """Start batching manifest and content writes to reduce GitHub API commits.
         
-        Call this before processing multiple documents, then call flush_manifest()
+        Call this before processing multiple documents, then call flush_all()
         when done to write all changes in a single commit.
         """
         self._defer_manifest_writes = True
+        self._defer_content_writes = True
         self._manifest_dirty = False
+        self._pending_content_files = []
     
     def flush_manifest(self) -> None:
         """Write pending manifest changes if any exist.
         
         This should be called after begin_batch() and document processing to
         commit all accumulated manifest changes in a single write.
+        
+        Note: This only flushes the manifest file. For content files, use flush_all().
         """
         if self._manifest_dirty:
             self._write_manifest()
             self._manifest_dirty = False
         self._defer_manifest_writes = False
+    
+    def flush_all(self) -> None:
+        """Write all pending changes (content files + manifest).
+        
+        This commits all accumulated content files and the manifest in a single
+        batch commit when using GitHub client.
+        """
+        # Flush content files first
+        if self._pending_content_files:
+            if self._github_client:
+                # Batch commit all pending files
+                github_files = [
+                    (self._get_relative_path(path), content)
+                    for path, content in self._pending_content_files
+                ]
+                self._github_client.commit_files_batch(
+                    files=github_files,
+                    message=f"Add parsed content ({len(github_files)} files)",
+                )
+            else:
+                # Write to local filesystem
+                for path, content in self._pending_content_files:
+                    _write_atomic_text(path, content)
+            
+            self._pending_content_files = []
+        
+        self._defer_content_writes = False
+        
+        # Then flush manifest
+        self.flush_manifest()
 
     def record_entry(self, entry: ManifestEntry) -> None:
         self._manifest.upsert(entry)
@@ -170,15 +207,20 @@ class ParseStorage:
             processed_at=processed_at,
         )
 
-        for existing in artifact_dir.glob("*.md"):
-            if existing.name == "index.md":
-                continue
-            if existing.name.startswith(("page-", "segment-")):
-                existing.unlink(missing_ok=True)
+        # Clean up existing segment files (only for local filesystem)
+        if not self._github_client:
+            for existing in artifact_dir.glob("*.md"):
+                if existing.name == "index.md":
+                    continue
+                if existing.name.startswith(("page-", "segment-")):
+                    existing.unlink(missing_ok=True)
 
         page_unit = _determine_segment_unit(document)
         total_segments = len(document.segments)
         page_files: list[str] = []
+
+        # Collect all files to write (for batching with GitHub API)
+        files_to_write: list[tuple[Path, str]] = []
 
         for index, segment in enumerate(document.segments, start=1):
             normalized = segment.strip("\n")
@@ -202,7 +244,8 @@ class ParseStorage:
             page_doc.warnings = []
             page_doc.add_segment(normalized)
 
-            _write_atomic_text(page_path, document_to_markdown(page_doc))
+            page_content = document_to_markdown(page_doc)
+            files_to_write.append((page_path, page_content))
             page_files.append(page_filename)
 
         index_path = artifact_dir / "index.md"
@@ -229,7 +272,28 @@ class ParseStorage:
         elif document.is_empty():
             index_doc.add_segment("_No textual content was extracted from this document._")
 
-        _write_atomic_text(index_path, document_to_markdown(index_doc))
+        index_content = document_to_markdown(index_doc)
+        files_to_write.append((index_path, index_content))
+
+        # Write all files (local or GitHub)
+        if self._defer_content_writes:
+            # Accumulate files for batch commit
+            self._pending_content_files.extend(files_to_write)
+        elif self._github_client:
+            # Immediate batch write via GitHub API
+            github_files = [
+                (self._get_relative_path(path), content)
+                for path, content in files_to_write
+            ]
+            if github_files:
+                self._github_client.commit_files_batch(
+                    files=github_files,
+                    message=f"Add parsed content: {document.target.source[:80]}",
+                )
+        else:
+            # Write to local filesystem
+            for path, content in files_to_write:
+                _write_atomic_text(path, content)
 
         metadata = dict(document.metadata)
         metadata.update(
