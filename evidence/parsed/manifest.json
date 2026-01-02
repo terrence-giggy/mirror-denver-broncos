@@ -24,6 +24,30 @@
       "processed_at": "2026-01-02T01:48:54.644735+00:00",
       "source": "https://www.denverbroncos.com/",
       "status": "completed"
+    },
+    {
+      "artifact_path": "2026/manifest-json-1e950da8b137/index.md",
+      "checksum": "1e950da8b13716c77992d9f91164641462dcc96c49a51c8ffb4b0e751aaf625f",
+      "metadata": {
+        "acquired_at": "2026-01-02T01:48:58.449816+00:00",
+        "artifact_type": "page-directory",
+        "content_length": 428,
+        "content_type": "text/html",
+        "crawl_source": "https://www.denverbroncos.com",
+        "extracted_characters": 265,
+        "fetched_at": "2026-01-02T01:48:57.930307+00:00",
+        "final_url": "https://www.denverbroncos.com/manifest.json",
+        "page_unit": "segment",
+        "raw_html": "<html><head><meta name=\"color-scheme\" content=\"light dark\"><meta charset=\"utf-8\"></head><body><pre>{\"name\":\"denverbroncos.com\",\"short_name\":\"denverbroncos.com\",\"prefer_related_applications\":true,\"related_applications\":[],\"icons\":[{\"src\":\"https://static.clubs.nfl.com/broncos/y5xhdotilqynzh6oowfw\",\"sizes\":\"192x192 256x256 384x384 512x512\"}],\"display\":\"standalone\"}</pre><div class=\"json-formatter-container\"></div></body></html>",
+        "rendered": true,
+        "segments_total": 1,
+        "url": "https://www.denverbroncos.com/manifest.json",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+      },
+      "parser": "web",
+      "processed_at": "2026-01-02T01:48:58.447854+00:00",
+      "source": "https://www.denverbroncos.com/manifest.json",
+      "status": "completed"
     }
   ],
   "version": 1
