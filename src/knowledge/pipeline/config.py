@@ -73,6 +73,8 @@ class PipelineConfig:
         enable_crawling: If True, use multi-page crawling for crawlable sources.
             If False, all sources are acquired as single pages.
         max_pages_per_crawl: Maximum pages to crawl per source in one run.
+        rendering_timeout_ms: Timeout for browser rendering in milliseconds.
+            Default is 60000ms (60 seconds) to handle slow JavaScript-heavy pages.
         github_client: Optional GitHub storage client for Actions environment.
     """
     
@@ -85,6 +87,7 @@ class PipelineConfig:
     force_fresh: bool = False
     enable_crawling: bool = True
     max_pages_per_crawl: int = 100
+    rendering_timeout_ms: int = 60000  # Timeout for browser rendering in milliseconds
     github_client: object = None  # GitHubStorageClient
     
     def __post_init__(self) -> None:
