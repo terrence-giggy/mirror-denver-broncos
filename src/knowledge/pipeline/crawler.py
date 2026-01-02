@@ -103,6 +103,7 @@ def acquire_single_page(
     source: "SourceEntry",
     storage: ParseStorage,
     delay_seconds: float = 1.0,
+    config: PipelineConfig | None = None,
 ) -> AcquisitionResult:
     """Acquire content from a single-page source.
     
@@ -110,6 +111,7 @@ def acquire_single_page(
         source: The source to acquire.
         storage: Storage for parsed content.
         delay_seconds: Delay before fetching (politeness).
+        config: Pipeline configuration (optional, for timeout settings).
         
     Returns:
         AcquisitionResult with content hash and path.
@@ -121,7 +123,8 @@ def acquire_single_page(
         time.sleep(delay_seconds)
     
     try:
-        parser = WebParser()
+        timeout_ms = config.rendering_timeout_ms if config else 60000
+        parser = WebParser(timeout=timeout_ms)
         target = ParseTarget(source=source.url, is_remote=True)
         
         document = parser.extract(target)
@@ -177,6 +180,7 @@ def acquire_crawl(
     max_pages: int = 100,
     delay_seconds: float = 1.0,
     force_restart: bool = False,
+    config: PipelineConfig | None = None,
 ) -> AcquisitionResult:
     """Acquire content from a multi-page source via crawling.
     
@@ -187,6 +191,7 @@ def acquire_crawl(
         max_pages: Maximum pages to acquire this run.
         delay_seconds: Delay between page fetches.
         force_restart: If True, restart crawl from scratch.
+        config: Pipeline configuration (optional, for timeout settings).
         
     Returns:
         AcquisitionResult with aggregate statistics.
@@ -222,10 +227,12 @@ def acquire_crawl(
     # Load robots.txt
     robots = RobotsChecker(source.url)
     
-    # Initialize parser
-    parser = WebParser()
+    # Initialize parser with configured timeout
+    timeout_ms = config.rendering_timeout_ms if config else 60000
+    parser = WebParser(timeout=timeout_ms)
     pages_this_run = 0
     content_hashes: list[str] = []
+    errors: list[str] = []
     
     while state.frontier and pages_this_run < max_pages:
         url = state.pop_frontier()
@@ -298,7 +305,9 @@ def acquire_crawl(
         except Exception as e:
             state.failed_count += 1
             state.mark_url_visited(url)
-            logger.warning("Failed to crawl %s: %s", url, e)
+            error_msg = f"{type(e).__name__}: {e}"
+            errors.append(error_msg)
+            logger.error("Failed to crawl %s: %s", url, e, exc_info=True)
         
         # Periodic state save
         if pages_this_run % 10 == 0:
@@ -328,11 +337,17 @@ def acquire_crawl(
     
     # Consider crawl successful only if we got at least one page this run
     # (previous visits don't count for this acquisition attempt)
+    success = pages_this_run > 0
+    error = None
+    if not success and errors:
+        error = f"All pages failed. Errors: {'; '.join(errors[:3])}"
+    
     return AcquisitionResult(
         source_url=source.url,
-        success=pages_this_run > 0,
+        success=success,
         content_hash=aggregate_hash,
         pages_acquired=pages_this_run,
+        error=error,
     )
 
 
@@ -397,24 +412,34 @@ def run_crawler(
             continue
         
         # Decide: single page or crawl
-        if config.enable_crawling and source.is_crawlable:
-            max_pages = min(
-                config.max_pages_per_crawl,
-                config.politeness.max_domain_requests_per_run,
-            )
-            acq_result = acquire_crawl(
-                source=source,
-                storage=parse_storage,
-                crawl_storage=crawl_storage,
-                max_pages=max_pages,
-                delay_seconds=delay,
-                force_restart=config.force_fresh,
-            )
-        else:
-            acq_result = acquire_single_page(
-                source=source,
-                storage=parse_storage,
-                delay_seconds=delay,
+        try:
+            if config.enable_crawling and source.is_crawlable:
+                max_pages = min(
+                    config.max_pages_per_crawl,
+                    config.politeness.max_domain_requests_per_run,
+                )
+                acq_result = acquire_crawl(
+                    source=source,
+                    storage=parse_storage,
+                    crawl_storage=crawl_storage,
+                    max_pages=max_pages,
+                    delay_seconds=delay,
+                    force_restart=config.force_fresh,
+                    config=config,
+                )
+            else:
+                acq_result = acquire_single_page(
+                    source=source,
+                    storage=parse_storage,
+                    delay_seconds=delay,
+                    config=config,
+                )
+        except Exception as e:
+            logger.error("Acquisition failed for %s: %s", source.url, e, exc_info=True)
+            acq_result = AcquisitionResult(
+                source_url=source.url,
+                success=False,
+                error=f"{type(e).__name__}: {e}",
             )
         
         scheduler.record_request(domain)
