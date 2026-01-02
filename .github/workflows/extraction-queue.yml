@@ -1,4 +1,4 @@
-name: "Extraction: Queue Documents 📋"
+name: "Extraction: Queue Documents 📋🔄"
 
 on:
   push:
@@ -36,7 +36,7 @@ jobs:
         
       - name: Create Extraction Issues
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           python main.py extraction queue \
             --repository ${{ github.repository }} \
