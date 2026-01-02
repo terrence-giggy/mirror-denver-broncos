@@ -135,7 +135,7 @@ def extract_cli(args: argparse.Namespace) -> int:
     for checksum, entry in manifest.entries.items():
         if entry.status != "completed":
             continue
-        
+
         # If specific checksum requested, only process that document
         if args.checksum and checksum != args.checksum:
             continue
@@ -160,7 +160,7 @@ def extract_cli(args: argparse.Namespace) -> int:
 
     if not candidates:
         if args.checksum:
-            print(f"No document found with checksum: {args.checksum}", file=sys.stderr)
+            print(f"Document with checksum {args.checksum} not found or not completed", file=sys.stderr)
             return 1
         print(f"No documents found needing {entity_type} extraction.")
         return 0
