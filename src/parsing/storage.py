@@ -164,12 +164,12 @@ class ParseStorage:
         """Write all pending changes (content files + manifest).
         
         This commits all accumulated content files and the manifest in a single
-        batch commit when using GitHub client.
+        batch commit when using GitHub client. Uses PR branch if available.
         """
         # Flush content files first
         if self._pending_content_files:
             if self._github_client:
-                # Batch commit all pending files
+                # Batch commit all pending files to PR branch
                 github_files = [
                     (self._get_relative_path(path), content)
                     for path, content in self._pending_content_files
@@ -177,6 +177,7 @@ class ParseStorage:
                 self._github_client.commit_files_batch(
                     files=github_files,
                     message=f"Add parsed content ({len(github_files)} files)",
+                    use_pr_branch=True,
                 )
             else:
                 # Write to local filesystem
@@ -280,7 +281,7 @@ class ParseStorage:
             # Accumulate files for batch commit
             self._pending_content_files.extend(files_to_write)
         elif self._github_client:
-            # Immediate batch write via GitHub API
+            # Immediate batch write via GitHub API to PR branch
             github_files = [
                 (self._get_relative_path(path), content)
                 for path, content in files_to_write
@@ -289,6 +290,7 @@ class ParseStorage:
                 self._github_client.commit_files_batch(
                     files=github_files,
                     message=f"Add parsed content: {document.target.source[:80]}",
+                    use_pr_branch=True,
                 )
         else:
             # Write to local filesystem
