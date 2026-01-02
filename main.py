@@ -23,6 +23,9 @@ from src.cli.commands.discussions import (
 from src.cli.commands.extraction import (
     register_commands as register_extraction_commands,
 )
+from src.cli.commands.extraction_queue import (
+    register_commands as register_extraction_queue_commands,
+)
 from src.cli.commands.github import (
     register_commands as register_github_commands,
 )
@@ -56,6 +59,7 @@ def _build_command_parser() -> argparse.ArgumentParser:
     register_agent_commands(subparsers)
     register_parse_commands(subparsers)
     register_extraction_commands(subparsers)
+    register_extraction_queue_commands(subparsers)
     register_discussion_commands(subparsers)
     register_setup_commands(subparsers)
     register_source_commands(subparsers)

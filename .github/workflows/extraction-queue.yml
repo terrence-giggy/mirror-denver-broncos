@@ -1,0 +1,43 @@
+name: "Extraction: Queue Documents 📋"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'evidence/parsed/**'
+      - 'evidence/parsed/manifest.json'
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: "Create Issues for all documents (ignore existing)"
+        type: boolean
+        default: false
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  queue-documents:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      - name: Create Extraction Issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python main.py extraction queue \
+            --repository ${{ github.repository }} \
+            ${{ inputs.force_all == true && '--force' || '' }}
