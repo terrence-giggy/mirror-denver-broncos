@@ -1,0 +1,64 @@
+# Mission for extraction queue processing.
+
+id: extract_document
+version: 1
+metadata:
+  owner: copilot-orchestrator
+  created_at: 2026-01-02
+  summary_tooling: copilot-assignment
+
+goal: |
+  Extract knowledge entities from a queued document with intelligent filtering.
+  
+  This mission processes a single document from the extraction queue:
+  
+  1. **Read Document** - Load the document content from the artifact path specified in the Issue
+  
+  2. **Filter Assessment** - Determine if the document contains substantive, extractable content
+     - Skip if: navigation page, error page, boilerplate content, or duplicate
+     - If NOT substantive: Comment with clear reason, add 'extraction-skipped' label, close Issue
+     - If substantive: Proceed to extraction steps
+  
+  3. **Extract Entities** (if substantive) - Process in order, using prior results as hints:
+     a. People - Extract names of individuals
+     b. Organizations - Extract companies, agencies, institutions
+     c. Concepts - Extract key themes, definitions, ideas
+     d. Associations - Extract relationships between entities
+  
+  4. **Save Results** - Write all extracted entities to knowledge-graph/ directory
+  
+  5. **Commit Changes** - Commit all changes to a new branch and create PR (or push directly)
+  
+  6. **Report Summary** - Post comment with extraction statistics (number of each entity type)
+  
+  7. **Close Issue** - Close with 'extraction-complete' label if successful
+
+constraints:
+  - ALWAYS assess document value BEFORE extracting (filtering is critical)
+  - Skip navigation pages, error pages, boilerplate content
+  - Extract entities in the specified order (people → orgs → concepts → associations)
+  - Use previously extracted entities as hints for associations
+  - Commit all changes before closing Issue
+  - Explain skip decisions clearly in comments with specific reasons
+  - If extraction fails, add 'extraction-error' label and leave issue open
+
+success_criteria:
+  - Document assessed for extraction worthiness
+  - If skipped: Clear reason provided in comment, 'extraction-skipped' label added
+  - If extracted: All entity types processed and saved to knowledge-graph/
+  - Changes committed (via PR or direct push)
+  - Issue closed with summary comment and appropriate label
+  - No partial extractions (all or nothing)
+
+max_steps: 25
+allowed_tools:
+  - read_file
+  - create_file
+  - replace_string_in_file
+  - get_issue_details
+  - post_comment
+  - add_label
+  - close_issue
+  - run_in_terminal
+
+requires_approval: false
