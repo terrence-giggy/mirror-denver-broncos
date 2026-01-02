@@ -123,6 +123,10 @@ def acquire_single_page(
         time.sleep(delay_seconds)
     
     try:
+        # Use batch mode if config provided (for GitHub API efficiency)
+        if config and config.github_client:
+            storage.begin_batch()
+        
         timeout_ms = config.rendering_timeout_ms if config else 60000
         parser = WebParser(timeout=timeout_ms)
         target = ParseTarget(source=source.url, is_remote=True)
@@ -139,6 +143,10 @@ def acquire_single_page(
         
         # Store content using persist_document
         entry = storage.persist_document(document)
+        
+        # Flush manifest if in batch mode
+        if config and config.github_client:
+            storage.flush_manifest()
         
         content_hash = _content_hash(markdown)
         
@@ -230,6 +238,11 @@ def acquire_crawl(
     # Initialize parser with configured timeout
     timeout_ms = config.rendering_timeout_ms if config else 60000
     parser = WebParser(timeout=timeout_ms)
+    
+    # Enable batch mode for manifest writes (GitHub API efficiency)
+    if config and config.github_client:
+        storage.begin_batch()
+    
     pages_this_run = 0
     content_hashes: list[str] = []
     errors: list[str] = []
@@ -320,6 +333,10 @@ def acquire_crawl(
         state.mark_paused()
     
     crawl_storage.save_state(state)
+    
+    # Flush manifest writes (batches all document commits into one)
+    if config and config.github_client:
+        storage.flush_manifest()
     
     # Compute aggregate content hash
     aggregate_hash = None
