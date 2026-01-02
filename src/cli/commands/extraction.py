@@ -82,6 +82,11 @@ def register_commands(subparsers: argparse._SubParsersAction[argparse.ArgumentPa
         action="store_true",
         help="Extract detailed profiles for entities.",
     )
+    parser.add_argument(
+        "--checksum",
+        type=str,
+        help="Only process the document with this checksum.",
+    )
     parser.set_defaults(func=extract_cli, command="extract")
 
 
@@ -130,6 +135,10 @@ def extract_cli(args: argparse.Namespace) -> int:
     for checksum, entry in manifest.entries.items():
         if entry.status != "completed":
             continue
+        
+        # If specific checksum requested, only process that document
+        if args.checksum and checksum != args.checksum:
+            continue
             
         # Check if already extracted
         if not args.force:
@@ -150,6 +159,9 @@ def extract_cli(args: argparse.Namespace) -> int:
         candidates.append(entry)
 
     if not candidates:
+        if args.checksum:
+            print(f"No document found with checksum: {args.checksum}", file=sys.stderr)
+            return 1
         print(f"No documents found needing {entity_type} extraction.")
         return 0
 
