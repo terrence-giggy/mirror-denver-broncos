@@ -12,15 +12,37 @@ The extraction pipeline is a **Copilot-orchestrated queue system** that:
 4. **Saves results** to the knowledge graph
 5. **Provides an audit trail** via Issue comments and labels
 
+**Important:** All documents must enter through the **Source Approval Process**. Manual document submission is not permitted to ensure source authenticity and reliability.
+
 ## Architecture
 
 ```
-Content Pipeline → PR merged → Queue Workflow → Issues created
-                                                      ↓
-                              Copilot picks up Issues as available
-                                                      ↓
-                              Filter → Extract → Commit → Close Issue
+Source Proposal → AI Assessment → Human Approval → Source Registry
+                                                           ↓
+                                        Content Pipeline monitors source
+                                                           ↓
+                           Content Pipeline → PR merged → Queue Workflow → Issues created
+                                                                                 ↓
+                                                     Copilot picks up Issues as available
+                                                                                 ↓
+                                                     Filter → Extract → Commit → Close Issue
 ```
+
+### Source Approval Requirement
+
+**All sources must be approved before documents can be acquired and extracted.** This ensures:
+
+- **Authenticity**: Sources are verified for legitimacy
+- **Credibility**: AI assessment evaluates source authority
+- **Provenance**: Full tracking of where knowledge originated
+- **Quality**: Prevents spam, misinformation, or unreliable sources
+
+To add a new source:
+1. Create a [Source Proposal](../../.github/ISSUE_TEMPLATE/source-proposal.md) issue
+2. AI curator assesses credibility and relevance
+3. Human reviewer approves with `/approve-source` command
+4. Source is registered in the source registry
+5. Content Pipeline begins monitoring
 
 ### Workflow Chain
 
@@ -244,11 +266,18 @@ git push
 
 **Problem**: Issue labeled `extraction-queue` but Copilot doesn't pick it up.
 
-**Solutions**:
+**Root Cause**: GitHub's `labeled` webhook event only fires when a label is **added** to an existing issue, not when an issue is created with labels already applied.
+
+**Solution**: The queue CLI now creates issues in two steps:
+1. Create issue with `copilot-queue` label
+2. Add `extraction-queue` label in separate API call (triggers workflow)
+
+**If still not working**:
 - Check workflow logs: Actions → "Extraction: Process Document 🧠"
+- Verify `GH_TOKEN` secret is set in repository settings
 - Verify `COPILOT_TOKEN` secret is set in repository settings
 - Check Copilot availability (rate limits, quota)
-- Manually assign Copilot to the Issue
+- Manually add the `extraction-queue` label again to re-trigger
 
 ### Extraction Failed
 
