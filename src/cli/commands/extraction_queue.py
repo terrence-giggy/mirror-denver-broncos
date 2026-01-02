@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from src.integrations.github.issues import (
     GitHubIssueError,
     IssueOutcome,
+    add_labels,
     create_issue,
     resolve_repository,
     resolve_token,
@@ -243,13 +244,29 @@ def _create_extraction_issue(
 <!-- copilot:extraction-queue -->
 """
     
-    return create_issue(
+    # Step 1: Create issue with only copilot-queue label (for tracking)
+    outcome = create_issue(
         token=token,
         repository=repository,
         title=title,
         body=body,
-        labels=["extraction-queue", "copilot-queue"],
+        labels=["copilot-queue"],
     )
+    
+    # Step 2: Add extraction-queue label to trigger workflow
+    # This separate API call ensures the 'labeled' webhook event fires
+    try:
+        add_labels(
+            token=token,
+            repository=repository,
+            issue_number=outcome.number,
+            labels=["extraction-queue"],
+        )
+    except GitHubIssueError as exc:
+        # Log the error but still return the created issue
+        print(f"Warning: Failed to add extraction-queue label to issue #{outcome.number}: {exc}", file=sys.stderr)
+    
+    return outcome
 
 
 def queue_documents_for_extraction(
