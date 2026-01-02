@@ -1,0 +1,99 @@
+{
+  "source_checksum": "e3175c13ee6849484fe4b76692968544b71b5536cc0b2a9604b1f9c103acb4a3",
+  "associations": [
+    {
+      "source": "Jim Nantz",
+      "target": "CBS",
+      "relationship": "works_for",
+      "evidence": "Play-by-Play announcer for CBS broadcast",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Tony Romo",
+      "target": "CBS",
+      "relationship": "works_for",
+      "evidence": "Analyst for CBS broadcast",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Tracy Wolfson",
+      "target": "CBS",
+      "relationship": "works_for",
+      "evidence": "Sideline reporter for CBS",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Dave Logan",
+      "target": "KOA",
+      "relationship": "works_for",
+      "evidence": "Play-by-play announcer on KOA - 850 AM/94.1 FM",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Rick Lewis",
+      "target": "KOA",
+      "relationship": "works_for",
+      "evidence": "Analyst on KOA radio",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Susie Wargin",
+      "target": "KOA",
+      "relationship": "works_for",
+      "evidence": "Sideline reporter on KOA radio",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Larry Kahn",
+      "target": "Sports USA",
+      "relationship": "works_for",
+      "evidence": "Play-by-play announcer for Sports USA national broadcast",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Marvin Lewis",
+      "target": "Sports USA",
+      "relationship": "works_for",
+      "evidence": "Analyst for Sports USA national broadcast",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "Los Angeles Chargers",
+      "relationship": "plays_against",
+      "evidence": "The Broncos will host the Los Angeles Chargers in the 2025 regular-season finale",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "AFC playoffs",
+      "relationship": "participates_in",
+      "evidence": "The Broncos will look to clinch home-field advantage throughout the AFC playoffs",
+      "source_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-02T21:48:28.334751+00:00",
+  "metadata": {
+    "extraction_method": "manual"
+  }
+}

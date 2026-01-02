@@ -1,0 +1,22 @@
+{
+  "source_checksum": "e3175c13ee6849484fe4b76692968544b71b5536cc0b2a9604b1f9c103acb4a3",
+  "organizations": [
+    "Denver Broncos",
+    "Los Angeles Chargers",
+    "CBS",
+    "NFL",
+    "Paramount+",
+    "NFL+",
+    "NFL Sunday Ticket",
+    "YouTube",
+    "YouTube TV",
+    "NFL GamePass International",
+    "KOA",
+    "SiriusXM",
+    "Sports USA"
+  ],
+  "extracted_at": "2026-01-02T21:48:28.334751+00:00",
+  "metadata": {
+    "extraction_method": "manual"
+  }
+}
