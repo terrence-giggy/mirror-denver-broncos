@@ -59,10 +59,11 @@ To add a new source:
 
 3. **Extraction Processing** (`extraction-process.yml`)
    - Triggered when Issue labeled with `extraction-queue`
-   - Assigns to Copilot with `extract_document` mission
-   - Copilot processes the document
+   - Posts detailed extraction instructions as a comment
+   - Assigns the issue to GitHub Copilot
 
-4. **Copilot Execution** (automated)
+4. **Copilot Execution** (GitHub Copilot, automated)
+   - Picks up assigned issues automatically
    - Reads document content
    - Filters: Assesses if content is substantive
    - If skip: Comments reason, labels `extraction-skipped`, closes
@@ -273,10 +274,10 @@ git push
 2. Add `extraction-queue` label in separate API call (triggers workflow)
 
 **If still not working**:
-- Check workflow logs: Actions → "Extraction: Process Document 🧠"
+- Check workflow logs: Actions → "Extraction: Assign to Copilot 🧠"
 - Verify `GH_TOKEN` secret is set in repository settings
-- Verify `COPILOT_TOKEN` secret is set in repository settings
-- Check Copilot availability (rate limits, quota)
+- Verify Copilot is enabled for the repository
+- Check that issue was assigned to `copilot` (visible in assignees)
 - Manually add the `extraction-queue` label again to re-trigger
 
 ### Extraction Failed

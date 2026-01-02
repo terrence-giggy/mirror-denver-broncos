@@ -1,4 +1,4 @@
-name: "Extraction: Process Document 🧠"
+name: "Extraction: Assign to Copilot 🧠"
 
 on:
   issues:
@@ -10,7 +10,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  process-extraction:
+  assign-to-copilot:
     if: github.event.label.name == 'extraction-queue'
     runs-on: ubuntu-latest
     
@@ -27,12 +27,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
         
-      - name: Run Extraction Mission
+      - name: Assign Issue to Copilot
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          COPILOT_TOKEN: ${{ secrets.COPILOT_TOKEN }}
         run: |
-          python main.py agent run \
-            --mission extract_document \
-            --input issue_number=${{ github.event.issue.number }} \
-            --input repository=${{ github.repository }}
+          python main.py extraction assign \
+            --issue-number ${{ github.event.issue.number }} \
+            --repository ${{ github.repository }}
