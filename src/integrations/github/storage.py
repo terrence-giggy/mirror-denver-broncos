@@ -117,6 +117,7 @@ class GitHubStorageClient:
         self,
         files: list[tuple[str | Path, str | bytes]],
         message: str,
+        use_pr_branch: bool = False,
     ) -> dict[str, Any]:
         """Commit multiple files in a single commit using the Git Trees API.
 
@@ -126,6 +127,7 @@ class GitHubStorageClient:
         Args:
             files: List of (path, content) tuples. Paths should be relative to repo root.
             message: Commit message for the batch.
+            use_pr_branch: If True, commit to PR branch instead of default branch.
 
         Returns:
             Dictionary containing the GitHub API response with commit details.
@@ -143,12 +145,17 @@ class GitHubStorageClient:
                 path_str = path_str[1:]
             normalized_files.append((path_str, content))
 
+        # Determine target branch
+        target_branch = self.branch
+        if use_pr_branch:
+            target_branch = self.ensure_pr_branch()
+
         return commit_files_batch(
             token=self.token,
             repository=self.repository,
             files=normalized_files,
             message=message,
-            branch=self.branch,
+            branch=target_branch,
             api_url=self.api_url,
         )
 

@@ -3,9 +3,19 @@ name: "CI: Test Suite ✅🔄"
 on:
   pull_request:
     types: [opened, reopened, synchronize]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - '.github/workflows/ci-test.yml'
   push:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - '.github/workflows/ci-test.yml'
 
 permissions:
   contents: read
