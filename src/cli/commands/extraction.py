@@ -10,17 +10,15 @@ from pathlib import Path
 from src.integrations.copilot import CopilotClient, CopilotClientError
 from src.integrations.github.storage import get_github_storage_client
 from src.knowledge.extraction import (
-    process_document, 
-    process_document_organizations,
-    process_document_concepts,
-    PersonExtractor, 
-    OrganizationExtractor,
-    ConceptExtractor,
     AssociationExtractor,
+    ConceptExtractor,
+    OrganizationExtractor,
+    PersonExtractor,
     ProfileExtractor,
-    process_document, 
-    process_document_organizations,
+    process_document,
     process_document_associations,
+    process_document_concepts,
+    process_document_organizations,
     process_document_profiles,
 )
 from src.knowledge.storage import KnowledgeGraphStorage
