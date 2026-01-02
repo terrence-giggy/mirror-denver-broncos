@@ -60,6 +60,11 @@ def register_commands(subparsers: argparse._SubParsersAction[argparse.ArgumentPa
         help="Path to parsing configuration file.",
     )
     parser.add_argument(
+        "--checksum",
+        type=str,
+        help="Process only the document with this checksum.",
+    )
+    parser.add_argument(
         "--orgs",
         "--organizations",
         dest="extract_orgs",
@@ -129,6 +134,10 @@ def extract_cli(args: argparse.Namespace) -> int:
     
     for checksum, entry in manifest.entries.items():
         if entry.status != "completed":
+            continue
+        
+        # Filter by checksum if specified
+        if args.checksum and checksum != args.checksum:
             continue
             
         # Check if already extracted
