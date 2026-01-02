@@ -1,0 +1,52 @@
+{
+  "source_checksum": "1c17939eb309aefbce0f43e9c57c9ae1c10097a0559dd3557e4222629c7bb9f1",
+  "associations": [
+    {
+      "source": "Denver Broncos",
+      "target": "2025 NFL Playoffs",
+      "relationship": "participates_in",
+      "evidence": "your Denver Broncos have officially clinched at least one home game in the 2025 NFL Playoffs",
+      "source_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "AFC",
+      "relationship": "member_of",
+      "evidence": "AFC Wild Card Playoff Game and AFC Divisional Playoff game",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "AFC Wild Card Playoff Game",
+      "target": "2025 NFL Playoffs",
+      "relationship": "part_of",
+      "evidence": "potential AFC Wild Card Playoff Game",
+      "source_type": "Concept",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "AFC Divisional Playoff Game",
+      "target": "2025 NFL Playoffs",
+      "relationship": "part_of",
+      "evidence": "AFC Divisional Playoff game",
+      "source_type": "Concept",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "AFC Championship Game",
+      "target": "2025 NFL Playoffs",
+      "relationship": "part_of",
+      "evidence": "potential AFC Championship Game",
+      "source_type": "Concept",
+      "target_type": "Concept",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-02T22:07:50.830315+00:00",
+  "metadata": {}
+}
