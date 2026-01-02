@@ -4,7 +4,7 @@ This guide explains how to configure GitHub Copilot coding agent for automated e
 
 ## Required Repository Secrets
 
-The extraction workflow requires access to GitHub Models API for LLM-based entity extraction. This requires the `GH_TOKEN` repository secret to be injected into Copilot agent executions.
+The extraction workflow requires access to GitHub Models API for LLM-based entity extraction. This requires the `GH_TOKEN` repository secret to be configured for use by Copilot agents.
 
 ### Configuring Secrets for Copilot Agent
 
@@ -12,7 +12,7 @@ The extraction workflow requires access to GitHub Models API for LLM-based entit
 2. Navigate to **Copilot** → **Secrets**
 3. Add the `GH_TOKEN` secret to the list of secrets available to Copilot agents
 
-This allows the Copilot agent to use the token when calling:
+This allows the Copilot agent to authenticate with GitHub Models API when calling:
 - `python main.py extract --checksum <checksum>`
 - `python main.py extract --checksum <checksum> --orgs`
 - `python main.py extract --checksum <checksum> --concepts`
