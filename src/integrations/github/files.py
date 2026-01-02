@@ -253,12 +253,43 @@ def commit_files_batch(
     )
     new_commit_sha = commit_response["sha"]
 
-    # Step 6: Update the branch reference
-    api_request(
-        f"git/refs/heads/{branch}",
-        method="PATCH",
-        data={"sha": new_commit_sha},
-    )
+    # Step 6: Update the branch reference with retry on 'not a fast forward'
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # On retry, use force flag to handle concurrent updates
+            update_data = {"sha": new_commit_sha}
+            if attempt > 0:
+                update_data["force"] = True
+            
+            api_request(
+                f"git/refs/heads/{branch}",
+                method="PATCH",
+                data=update_data,
+            )
+            break  # Success, exit retry loop
+            
+        except GitHubIssueError as e:
+            if "not a fast forward" in str(e).lower() and attempt < max_retries - 1:
+                # Branch was updated between read and write, retry
+                # Refetch the latest commit and recreate our commit on top
+                ref_data = api_request(f"git/refs/heads/{branch}")
+                latest_commit_sha = ref_data["object"]["sha"]
+                
+                # Recreate commit with updated parent
+                commit_response = api_request(
+                    "git/commits",
+                    method="POST",
+                    data={
+                        "message": message,
+                        "tree": new_tree_sha,
+                        "parents": [latest_commit_sha],
+                    },
+                )
+                new_commit_sha = commit_response["sha"]
+                # Loop will retry the PATCH
+            else:
+                raise  # Re-raise if not a fast-forward error or out of retries
 
     return {
         "commit": commit_response,
