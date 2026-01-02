@@ -334,9 +334,9 @@ def acquire_crawl(
     
     crawl_storage.save_state(state)
     
-    # Flush manifest writes (batches all document commits into one)
+    # Flush all pending writes (content files + manifest) in one batch
     if config and config.github_client:
-        storage.flush_manifest()
+        storage.flush_all()
     
     # Compute aggregate content hash
     aggregate_hash = None
