@@ -13,7 +13,10 @@ from src.integrations.github.issues import (
     GitHubIssueError,
     IssueOutcome,
     add_labels,
+    assign_issue_to_copilot,
     create_issue,
+    fetch_issue,
+    post_comment,
     resolve_repository,
     resolve_token,
 )
@@ -116,6 +119,30 @@ def register_commands(subparsers: argparse._SubParsersAction[argparse.ArgumentPa
         help="Root directory for evidence. Defaults to evidence/.",
     )
     pending_parser.set_defaults(func=pending_cli)
+    
+    # Assign command - assign issue to Copilot
+    assign_parser = sub.add_parser(
+        "assign",
+        description="Assign extraction issue to GitHub Copilot.",
+        help="Assign extraction issue to GitHub Copilot.",
+    )
+    assign_parser.add_argument(
+        "--issue-number",
+        type=int,
+        required=True,
+        help="GitHub Issue number to assign.",
+    )
+    assign_parser.add_argument(
+        "--repository",
+        type=str,
+        help="GitHub repository in owner/repo format. Defaults to GITHUB_REPOSITORY env var or git remote.",
+    )
+    assign_parser.add_argument(
+        "--token",
+        type=str,
+        help="GitHub token. Defaults to GH_TOKEN or GITHUB_TOKEN env var.",
+    )
+    assign_parser.set_defaults(func=assign_cli)
 
 
 def _parse_checksum_from_issue_body(body: str | None) -> str | None:
@@ -435,5 +462,96 @@ def pending_cli(args: argparse.Namespace) -> int:
         
         return 0
     except (GitHubIssueError, FileNotFoundError, ValueError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+
+def assign_cli(args: argparse.Namespace) -> int:
+    """Execute the assign command to assign issue to Copilot."""
+    try:
+        repository = resolve_repository(args.repository)
+        token = resolve_token(args.token)
+        issue_number = args.issue_number
+        
+        # Fetch the issue to get its details
+        issue = fetch_issue(
+            token=token,
+            repository=repository,
+            issue_number=issue_number,
+        )
+        
+        # Extract checksum from issue body
+        checksum = _parse_checksum_from_issue_body(issue.get("body"))
+        if not checksum:
+            print(f"Error: Could not find checksum in issue #{issue_number}", file=sys.stderr)
+            return 1
+        
+        # Post instructions comment
+        instructions = f"""## Extraction Instructions
+
+Hello @copilot! Please extract knowledge entities from this document.
+
+### Process
+
+1. **Assess Document Quality**
+   - Read the document content from the artifact path above
+   - Determine if it contains substantive, extractable content
+   - Skip if: navigation page, error page, boilerplate, or duplicate content
+   - If NOT substantive: Comment with clear reason, add `extraction-skipped` label, and close this issue
+
+2. **Extract Entities** (if substantive)
+   
+   Run the following commands in order:
+   ```bash
+   # Extract people
+   python main.py extract --checksum {checksum}
+   
+   # Extract organizations
+   python main.py extract --checksum {checksum} --orgs
+   
+   # Extract concepts
+   python main.py extract --checksum {checksum} --concepts
+   
+   # Extract associations between entities
+   python main.py extract --checksum {checksum} --associations
+   ```
+
+3. **Commit Changes**
+   - All extracted entities should be saved to `knowledge-graph/` directory
+   - Commit all changes with a descriptive message
+
+4. **Report Summary**
+   - Comment with extraction statistics (count of each entity type extracted)
+   - Add `extraction-complete` label
+   - Close this issue
+
+### Important Notes
+
+- Always assess document quality BEFORE extracting
+- Explain skip decisions clearly with specific reasons
+- Extract entities in the specified order (people → orgs → concepts → associations)
+- If extraction fails, add `extraction-error` label and leave issue open
+
+Thank you! 🧠
+"""
+        
+        post_comment(
+            token=token,
+            repository=repository,
+            issue_number=issue_number,
+            body=instructions,
+        )
+        print(f"✓ Posted instructions to issue #{issue_number}")
+        
+        # Assign to Copilot
+        assign_issue_to_copilot(
+            token=token,
+            repository=repository,
+            issue_number=issue_number,
+        )
+        print(f"✓ Assigned issue #{issue_number} to GitHub Copilot")
+        
+        return 0
+    except (GitHubIssueError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
