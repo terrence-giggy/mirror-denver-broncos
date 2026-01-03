@@ -306,8 +306,9 @@ class ExtractionToolkit:
             return {"status": "error", "message": f"Document {checksum} not parsed (status: {entry.status})."}
 
         try:
-            # Read the parsed content
-            content = self.storage.read_parsed(checksum)
+            # Read the parsed content using the extraction helper
+            from src.knowledge.extraction import read_document_content
+            content = read_document_content(entry, self.storage)
             if not content or len(content.strip()) < 50:
                 return {
                     "status": "skip",
