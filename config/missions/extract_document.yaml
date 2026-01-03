@@ -8,57 +8,66 @@ metadata:
   summary_tooling: copilot-assignment
 
 goal: |
-  Extract knowledge entities from a queued document with intelligent filtering.
+  Extract knowledge entities from a queued document with LLM-based filtering and intelligent extraction.
   
   This mission processes a single document from the extraction queue:
   
-  1. **Read Document** - Load the document content from the artifact path specified in the Issue
+  1. **Read Document** - Use get_issue_details to find the checksum in the Issue body (look for <!-- checksum:abc123 -->)
   
-  2. **Filter Assessment** - Determine if the document contains substantive, extractable content
-     - Skip if: navigation page, error page, boilerplate content, or duplicate
-     - If NOT substantive: Comment with clear reason, add 'extraction-skipped' label, close Issue
+  2. **LLM Assessment** - Use assess_document_value tool to determine if document is worth extracting
+     - Tool uses gpt-4o-mini for cost-effective assessment
+     - If NOT substantive: Use mark_extraction_skipped, post comment with reason, add 'extraction-skipped' label, close Issue
      - If substantive: Proceed to extraction steps
   
-  3. **Extract Entities** (if substantive) - Process in order, using prior results as hints:
-     a. People - Extract names of individuals
-     b. Organizations - Extract companies, agencies, institutions
-     c. Concepts - Extract key themes, definitions, ideas
-     d. Associations - Extract relationships between entities
+  3. **Extract Entities** (if substantive) - Process in order using extraction tools:
+     a. extract_people_from_document - Extract names of individuals
+     b. extract_organizations_from_document - Extract companies, agencies, institutions
+     c. extract_concepts_from_document - Extract key themes, definitions, ideas
+     d. extract_associations_from_document - Extract relationships between entities
   
-  4. **Save Results** - Write all extracted entities to knowledge-graph/ directory
+  4. **Mark Complete** - Use mark_extraction_complete to update manifest
   
-  5. **Commit Changes** - Commit all changes to a new branch and create PR (or push directly)
+  5. **Create PR** (GitHub Actions only) - Use create_extraction_pull_request to commit changes
+     - Branch name: extraction/doc-{first-8-chars-of-checksum}
+     - PR title: "Extract entities from {source_url}"
+     - All changes are auto-committed via GitHubStorageClient during extraction
   
   6. **Report Summary** - Post comment with extraction statistics (number of each entity type)
   
   7. **Close Issue** - Close with 'extraction-complete' label if successful
 
 constraints:
-  - ALWAYS assess document value BEFORE extracting (filtering is critical)
-  - Skip navigation pages, error pages, boilerplate content
+  - ALWAYS use assess_document_value tool BEFORE extracting (no manual heuristics)
+  - Skip documents only based on LLM assessment results
   - Extract entities in the specified order (people → orgs → concepts → associations)
-  - Use previously extracted entities as hints for associations
-  - Commit all changes before closing Issue
-  - Explain skip decisions clearly in comments with specific reasons
+  - Use previously extracted entities as hints for associations (they're auto-loaded)
+  - All file writes happen automatically via extraction tools (no manual file operations needed)
+  - Explain skip decisions clearly in comments using LLM's reasoning
   - If extraction fails, add 'extraction-error' label and leave issue open
+  - In GitHub Actions, create_extraction_pull_request will handle branch/PR creation
 
 success_criteria:
-  - Document assessed for extraction worthiness
-  - If skipped: Clear reason provided in comment, 'extraction-skipped' label added
-  - If extracted: All entity types processed and saved to knowledge-graph/
-  - Changes committed (via PR or direct push)
+  - Document assessed using assess_document_value tool
+  - If skipped: LLM reason provided in comment, marked with mark_extraction_skipped, 'extraction-skipped' label added
+  - If extracted: All entity types processed via extraction tools and saved to knowledge-graph/
+  - Document marked complete with mark_extraction_complete
+  - PR created if in GitHub Actions (via create_extraction_pull_request)
   - Issue closed with summary comment and appropriate label
   - No partial extractions (all or nothing)
 
 max_steps: 25
 allowed_tools:
-  - read_file
-  - create_file
-  - replace_string_in_file
   - get_issue_details
+  - assess_document_value
+  - extract_people_from_document
+  - extract_organizations_from_document
+  - extract_concepts_from_document
+  - extract_associations_from_document
+  - mark_extraction_complete
+  - mark_extraction_skipped
+  - create_extraction_pull_request
   - post_comment
   - add_label
   - close_issue
-  - run_in_terminal
 
 requires_approval: false
