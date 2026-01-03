@@ -184,7 +184,11 @@ Extraction queue Issues are created automatically with:
 
 1. **Assess** - Determine if substantive content
    - Skip if: navigation, error, boilerplate, duplicate
-   - If skipping: Comment reason, label "extraction-skipped"
+   - If skipping: 
+     - Run: `python main.py extraction skip --checksum abc123... --reason "Your reason"`
+     - Comment with specific reason
+     - Label "extraction-skipped"
+     - Close issue
 
 2. **Extract** (if substantive):
    ```bash
@@ -192,12 +196,14 @@ Extraction queue Issues are created automatically with:
    python main.py extract --checksum abc123... --orgs
    python main.py extract --checksum abc123... --concepts
    python main.py extract --checksum abc123... --associations
+   python main.py extraction complete --checksum abc123...
    ```
 
-3. **Commit** - Save to knowledge-graph/
+3. **Report** - Comment summary, label "extraction-complete", close
 
-4. **Report** - Comment summary
 ```
+
+**Important**: Both the `extraction skip` and `extraction complete` commands update the parse manifest to prevent documents from being re-queued in future scans.
 
 ## Checksum Tracking
 
@@ -302,6 +308,28 @@ git push
 - If incorrect: Remove `extraction-skipped` label, add `extraction-queue` label
 - Workflow will re-trigger
 - If pattern: Adjust mission in `config/missions/extract_document.yaml`
+
+### Document Re-Queued After Being Skipped
+
+**Problem**: A document that was properly skipped keeps getting new extraction Issues created.
+
+**Root Cause**: The parse manifest wasn't updated to mark `extraction_skipped: true` in the document's metadata.
+
+**Solution**: 
+- Verify the PR from the Copilot agent updated `evidence/parsed/manifest.json`
+- The manifest entry should have:
+  ```json
+  {
+    "checksum": "abc123...",
+    "metadata": {
+      "extraction_skipped": true,
+      "skip_reason": "Navigation page with no substantive content"
+    }
+  }
+  ```
+- If missing, manually update the manifest or have Copilot re-process the issue with explicit instructions to update the manifest
+
+**Prevention**: The Copilot instructions now explicitly require updating the manifest when skipping documents. The queue logic filters out documents with `extraction_skipped: true` to prevent re-queuing.
 
 ## Configuration
 
