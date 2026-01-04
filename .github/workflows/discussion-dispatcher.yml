@@ -17,7 +17,7 @@ jobs:
     if: |
       github.event_name == 'discussion' &&
       github.event.discussion.category.name == 'Sources'
-    uses: ./.github/workflows/jobs/assess-source-job.yml
+    uses: ./.github/workflows/_job-assess-source.yml
     secrets:
       gh_token: ${{ secrets.GH_TOKEN }}
     with:
@@ -32,7 +32,7 @@ jobs:
       github.event.comment.user.type != 'Bot' &&
       !contains(github.event.comment.body, '<!-- agent-response -->') &&
       (contains(github.event.comment.body, '/approve-source') || contains(github.event.comment.body, '/reject-source'))
-    uses: ./.github/workflows/jobs/curate-source-job.yml
+    uses: ./.github/workflows/_job-curate-source.yml
     secrets:
       gh_token: ${{ secrets.GH_TOKEN }}
     with:
