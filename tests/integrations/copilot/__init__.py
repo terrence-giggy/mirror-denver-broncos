@@ -1,1 +1,0 @@
-"""Copilot integration tests."""
