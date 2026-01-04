@@ -352,20 +352,35 @@ Closes #{issue_number}
         return 0
         
     except RateLimitError as exc:
-        # Rate limit hit - return special exit code for workflow to handle
+        # Rate limit hit - swap label and post comment
         logger.warning(f"Rate limit encountered: {exc}")
         
         try:
+            # Swap labels: extraction-queue → extraction-rate-limited
+            remove_label(
+                token=token,
+                repository=repository,
+                issue_number=issue_number,
+                label="extraction-queue",
+            )
+            add_labels(
+                token=token,
+                repository=repository,
+                issue_number=issue_number,
+                labels=["extraction-rate-limited"],
+            )
+            
             post_comment(
                 token=token,
                 repository=repository,
                 issue_number=issue_number,
-                body=f"⏸️ Rate limit encountered during extraction. Will retry automatically.\n\nError: {exc}",
+                body="⏸️ Rate limit encountered. Will retry automatically in 30 minutes.",
             )
+            logger.info("Successfully updated labels and posted rate limit comment")
         except Exception as comment_exc:
-            logger.warning(f"Failed to post rate limit comment: {comment_exc}")
+            logger.warning(f"Failed to update labels/post comment: {comment_exc}")
         
-        return 2  # Special exit code for rate limits
+        return 0  # Return success since we handled it gracefully
         
     except GitHubIssueError as exc:
         logger.error(f"GitHub API error: {exc}")
@@ -376,11 +391,12 @@ Closes #{issue_number}
         logger.exception(f"Unexpected error during extraction: {exc}")
         
         try:
-            post_comment(
+            # Swap labels: extraction-queue → extraction-error
+            remove_label(
                 token=token,
                 repository=repository,
                 issue_number=issue_number,
-                body=f"❌ Extraction failed with unexpected error:\n\n```\n{exc}\n```\n\nCheck workflow logs for details.",
+                label="extraction-queue",
             )
             add_labels(
                 token=token,
@@ -388,8 +404,16 @@ Closes #{issue_number}
                 issue_number=issue_number,
                 labels=["extraction-error"],
             )
+            
+            post_comment(
+                token=token,
+                repository=repository,
+                issue_number=issue_number,
+                body=f"❌ Extraction failed. Check workflow logs for details.",
+            )
+            logger.info("Successfully updated labels and posted error comment")
         except Exception as comment_exc:
-            logger.warning(f"Failed to post error comment: {comment_exc}")
+            logger.warning(f"Failed to update labels/post comment: {comment_exc}")
         
         return 1
 
