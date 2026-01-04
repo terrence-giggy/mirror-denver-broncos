@@ -7,7 +7,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from src.integrations.copilot import CopilotClient, CopilotClientError
+from src.integrations.github.models import GitHubModelsClient, GitHubModelsError
 from src.knowledge.extraction import (
     process_document, 
     process_document_organizations,
@@ -124,7 +124,7 @@ def extract_cli(args: argparse.Namespace) -> int:
             process_func = process_document
             entity_type = "people"
         
-    except (FileNotFoundError, ValueError, CopilotClientError) as exc:
+    except (FileNotFoundError, ValueError, GitHubModelsError) as exc:
         print(f"Initialization error: {exc}", file=sys.stderr)
         return 1
 
