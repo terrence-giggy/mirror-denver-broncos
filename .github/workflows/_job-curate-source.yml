@@ -1,0 +1,61 @@
+name: "Curate Source Job"
+
+on:
+  workflow_call:
+    inputs:
+      discussion_number:
+        description: 'Discussion number'
+        required: true
+        type: string
+      repository:
+        description: 'Repository name'
+        required: true
+        type: string
+      comment_body:
+        description: 'Comment body'
+        required: true
+        type: string
+      comment_author:
+        description: 'Comment author'
+        required: true
+        type: string
+    secrets:
+      gh_token:
+        description: 'GitHub token'
+        required: true
+
+permissions:
+  issues: write
+  contents: write
+  discussions: write
+
+jobs:
+  process-source-command:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Process Source Command
+        env:
+          GITHUB_TOKEN: ${{ secrets.gh_token }}
+          GITHUB_REPOSITORY: ${{ inputs.repository }}
+          COMMENT_BODY: ${{ inputs.comment_body }}
+          COMMENT_AUTHOR: ${{ inputs.comment_author }}
+        run: |
+          python -m main agent run \
+            --mission curate_sources \
+            --input discussion_number=${{ inputs.discussion_number }} \
+            --input repository=${{ inputs.repository }} \
+            --input comment_body="$COMMENT_BODY" \
+            --input comment_author="$COMMENT_AUTHOR"
