@@ -8,7 +8,7 @@ import re
 import sys
 from typing import Any
 
-from src.integrations.copilot.client import RateLimitError
+from src.integrations.github.models import RateLimitError
 from src.integrations.github.issues import (
     GitHubIssueError,
     add_labels,
