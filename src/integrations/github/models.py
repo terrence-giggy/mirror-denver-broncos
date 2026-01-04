@@ -70,11 +70,11 @@ class Usage:
     total_tokens: int
 
 
-class CopilotClientError(Exception):
+class GitHubModelsError(Exception):
     """Error communicating with GitHub Models API."""
 
 
-class RateLimitError(CopilotClientError):
+class RateLimitError(GitHubModelsError):
     """Rate limit exceeded - request can be retried after delay."""
     
     def __init__(self, message: str, retry_after: float | None = None):
@@ -82,14 +82,14 @@ class RateLimitError(CopilotClientError):
         self.retry_after = retry_after
 
 
-class CopilotClient:
+class GitHubModelsClient:
     """Client for GitHub Models API (OpenAI-compatible endpoint).
     
     This client interfaces with GitHub's Models API for LLM chat completions
     with function calling support, used by the agent planner for reasoning.
     """
 
-    DEFAULT_API_URL = "https://models.inference.ai.azure.com"
+    DEFAULT_API_URL = "https://models.github.ai"
     DEFAULT_MODEL = "gpt-4o"  # GitHub Copilot tuned GPT-4o variant with 128k context
     DEFAULT_MAX_OUTPUT_TOKENS = 4000  # Max completion tokens
     DEFAULT_TEMPERATURE = 0.7
@@ -105,6 +105,7 @@ class CopilotClient:
         *,
         api_key: str | None = None,
         api_url: str | None = None,
+        organization: str | None = None,
         model: str | None = None,
         max_tokens: int | None = None,
         temperature: float | None = None,
@@ -117,8 +118,9 @@ class CopilotClient:
         
         Args:
             api_key: GitHub token with Models API access. Defaults to GITHUB_TOKEN env var.
-            api_url: Base URL for the API. Defaults to Azure OpenAI endpoint.
-            model: Default model to use. Defaults to gpt-4o-mini.
+            api_url: Base URL for the API. Defaults to models.github.ai.
+            organization: GitHub organization name for attributed requests. Defaults to GITHUB_REPOSITORY owner.
+            model: Default model to use. Defaults to gpt-4o.
             max_tokens: Default maximum tokens for completions.
             temperature: Default sampling temperature (0.0-1.0).
             timeout: Request timeout in seconds.
@@ -128,10 +130,17 @@ class CopilotClient:
         """
         self.api_key = api_key or os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
         if not self.api_key:
-            raise CopilotClientError(
+            raise GitHubModelsError(
                 "GitHub token required. Set GH_TOKEN or GITHUB_TOKEN environment variable "
                 "or pass api_key parameter."
             )
+        
+        # Extract organization from GITHUB_REPOSITORY if not provided
+        if organization is None:
+            repo = os.environ.get("GITHUB_REPOSITORY", "")
+            if "/" in repo:
+                organization = repo.split("/")[0]
+        self.organization = organization
         
         self.api_url = (api_url or self.DEFAULT_API_URL).rstrip("/")
         self.model = model or self.DEFAULT_MODEL
@@ -166,9 +175,13 @@ class CopilotClient:
             ChatCompletionResponse with the model's response.
             
         Raises:
-            CopilotClientError: If the API request fails.
+            GitHubModelsError: If the API request fails.
         """
-        url = f"{self.api_url}/chat/completions"
+        # Use organization-attributed endpoint if organization is set
+        if self.organization:
+            url = f"{self.api_url}/orgs/{self.organization}/inference/chat/completions"
+        else:
+            url = f"{self.api_url}/inference/chat/completions"
         
         payload: dict[str, Any] = {
             "model": model or self.model,
@@ -184,6 +197,8 @@ class CopilotClient:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
         }
         
         return self._request_with_retry(url, payload, headers)
@@ -206,7 +221,7 @@ class CopilotClient:
             
         Raises:
             RateLimitError: If rate limit exceeded and retries exhausted.
-            CopilotClientError: For other API errors.
+            GitHubModelsError: For other API errors.
         """
         last_exception: Exception | None = None
         backoff = self.initial_backoff
@@ -224,7 +239,7 @@ class CopilotClient:
                 try:
                     data = response.json()
                 except json.JSONDecodeError as exc:
-                    raise CopilotClientError(f"Invalid JSON response: {exc}") from exc
+                    raise GitHubModelsError(f"Invalid JSON response: {exc}") from exc
                 
                 return self._parse_response(data)
                 
@@ -260,12 +275,12 @@ class CopilotClient:
                 
                 # Non-rate-limit error - don't retry
                 error_msg = self._build_error_message(exc)
-                raise CopilotClientError(error_msg) from exc
+                raise GitHubModelsError(error_msg) from exc
         
         # Should not reach here, but handle edge case
         if last_exception:
-            raise CopilotClientError(f"Request failed after retries: {last_exception}") from last_exception
-        raise CopilotClientError("Request failed unexpectedly")
+            raise GitHubModelsError(f"Request failed after retries: {last_exception}") from last_exception
+        raise GitHubModelsError("Request failed unexpectedly")
 
     def _parse_retry_after(self, response: requests.Response) -> float | None:
         """Parse Retry-After header from response.

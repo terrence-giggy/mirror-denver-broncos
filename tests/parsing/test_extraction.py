@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from src.integrations.copilot import CopilotClient, ChatCompletionResponse, Choice, ChatMessage
+from src.integrations.github.models import GitHubModelsClient, ChatCompletionResponse, Choice, ChatMessage
 from src.knowledge.storage import KnowledgeGraphStorage, ExtractedPeople
 from src.knowledge.extraction import PersonExtractor, process_document
 from src.parsing.storage import ManifestEntry, ParseStorage
@@ -15,7 +15,7 @@ from src.parsing.storage import ManifestEntry, ParseStorage
 
 @pytest.fixture
 def mock_client():
-    client = Mock(spec=CopilotClient)
+    client = Mock(spec=GitHubModelsClient)
     return client
 
 

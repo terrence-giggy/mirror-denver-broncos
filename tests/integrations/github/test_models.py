@@ -1,4 +1,4 @@
-"""Tests for the CopilotClient GitHub Models API integration."""
+"""Tests for the GitHubModelsClient GitHub Models API integration."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ from unittest.mock import MagicMock, patch, call
 
 import pytest
 
-from src.integrations.copilot.client import (
+from src.integrations.github.models import (
     ChatCompletionResponse,
     ChatMessage,
     Choice,
-    CopilotClient,
-    CopilotClientError,
+    GitHubModelsClient,
+    GitHubModelsError,
     FunctionCall,
     RateLimitError,
     ToolCall,
@@ -21,28 +21,28 @@ from src.integrations.copilot.client import (
 
 
 def test_copilot_client_requires_api_key():
-    """CopilotClient raises error if no API key is provided."""
+    """GitHubModelsClient raises error if no API key is provided."""
     with patch.dict("os.environ", {}, clear=True):
-        with pytest.raises(CopilotClientError, match="GitHub token required"):
-            CopilotClient()
+        with pytest.raises(GitHubModelsError, match="GitHub token required"):
+            GitHubModelsClient()
 
 
 def test_copilot_client_uses_env_token():
-    """CopilotClient reads GITHUB_TOKEN from environment."""
+    """GitHubModelsClient reads GITHUB_TOKEN from environment."""
     with patch.dict("os.environ", {"GITHUB_TOKEN": "test_token", "GH_TOKEN": ""}, clear=True):
-        client = CopilotClient()
+        client = GitHubModelsClient()
         assert client.api_key == "test_token"
 
 
 def test_copilot_client_explicit_token():
-    """CopilotClient accepts explicit API key parameter."""
-    client = CopilotClient(api_key="explicit_token")
+    """GitHubModelsClient accepts explicit API key parameter."""
+    client = GitHubModelsClient(api_key="explicit_token")
     assert client.api_key == "explicit_token"
 
 
 def test_copilot_client_defaults():
-    """CopilotClient sets appropriate defaults."""
-    client = CopilotClient(api_key="test")
+    """GitHubModelsClient sets appropriate defaults."""
+    client = GitHubModelsClient(api_key="test")
     assert client.model == "gpt-4o"
     assert client.max_tokens == 4000
     assert client.temperature == 0.7
@@ -50,8 +50,8 @@ def test_copilot_client_defaults():
 
 
 def test_copilot_client_custom_values():
-    """CopilotClient accepts custom configuration."""
-    client = CopilotClient(
+    """GitHubModelsClient accepts custom configuration."""
+    client = GitHubModelsClient(
         api_key="test",
         model="gpt-4o",
         max_tokens=8000,
@@ -65,7 +65,7 @@ def test_copilot_client_custom_values():
 
 
 def test_chat_completion_simple_message():
-    """CopilotClient can handle a simple chat completion."""
+    """GitHubModelsClient can handle a simple chat completion."""
     mock_response = {
         "id": "chatcmpl-123",
         "model": "gpt-4o-mini",
@@ -90,7 +90,7 @@ def test_chat_completion_simple_message():
         mock_post.return_value.json.return_value = mock_response
         mock_post.return_value.raise_for_status = MagicMock()
         
-        client = CopilotClient(api_key="test")
+        client = GitHubModelsClient(api_key="test")
         response = client.chat_completion([
             {"role": "user", "content": "Hello"}
         ])
@@ -104,7 +104,7 @@ def test_chat_completion_simple_message():
 
 
 def test_chat_completion_with_tool_call():
-    """CopilotClient parses tool/function calls correctly."""
+    """GitHubModelsClient parses tool/function calls correctly."""
     mock_response = {
         "id": "chatcmpl-456",
         "model": "gpt-4o-mini",
@@ -134,7 +134,7 @@ def test_chat_completion_with_tool_call():
         mock_post.return_value.json.return_value = mock_response
         mock_post.return_value.raise_for_status = MagicMock()
         
-        client = CopilotClient(api_key="test")
+        client = GitHubModelsClient(api_key="test")
         response = client.chat_completion(
             messages=[{"role": "user", "content": "Get issue 42"}],
             tools=[{
@@ -165,7 +165,7 @@ def test_chat_completion_with_tool_call():
 
 
 def test_chat_completion_sends_correct_payload():
-    """CopilotClient sends properly formatted request."""
+    """GitHubModelsClient sends properly formatted request."""
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
             "id": "test",
@@ -174,7 +174,7 @@ def test_chat_completion_sends_correct_payload():
         }
         mock_post.return_value.raise_for_status = MagicMock()
         
-        client = CopilotClient(api_key="test_token", model="gpt-4o")
+        client = GitHubModelsClient(api_key="test_token", model="gpt-4o")
         
         tools = [{
             "type": "function",
@@ -205,7 +205,7 @@ def test_chat_completion_sends_correct_payload():
 
 
 def test_chat_completion_handles_http_error():
-    """CopilotClient raises error on HTTP failure."""
+    """GitHubModelsClient raises error on HTTP failure."""
     import requests
     
     with patch("requests.post") as mock_post:
@@ -213,29 +213,29 @@ def test_chat_completion_handles_http_error():
         mock_response.raise_for_status.side_effect = requests.RequestException("HTTP 401")
         mock_post.return_value = mock_response
         
-        client = CopilotClient(api_key="test")
+        client = GitHubModelsClient(api_key="test")
         
-        with pytest.raises(CopilotClientError, match="GitHub Models API request failed"):
+        with pytest.raises(GitHubModelsError, match="GitHub Models API request failed"):
             client.chat_completion([{"role": "user", "content": "test"}])
 
 
 def test_chat_completion_handles_json_decode_error():
-    """CopilotClient raises error on invalid JSON response."""
+    """GitHubModelsClient raises error on invalid JSON response."""
     with patch("requests.post") as mock_post:
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
         mock_response.json.side_effect = json.JSONDecodeError("bad", "", 0)
         mock_post.return_value = mock_response
         
-        client = CopilotClient(api_key="test")
+        client = GitHubModelsClient(api_key="test")
         
-        with pytest.raises(CopilotClientError, match="Invalid JSON response"):
+        with pytest.raises(GitHubModelsError, match="Invalid JSON response"):
             client.chat_completion([{"role": "user", "content": "test"}])
 
 
 def test_parse_response_handles_missing_fields():
-    """CopilotClient handles API responses with missing optional fields."""
-    client = CopilotClient(api_key="test")
+    """GitHubModelsClient handles API responses with missing optional fields."""
+    client = GitHubModelsClient(api_key="test")
     
     # Minimal response
     minimal_response = {
@@ -262,16 +262,16 @@ def test_parse_response_handles_missing_fields():
 
 
 def test_copilot_client_retry_defaults():
-    """CopilotClient has sensible retry defaults."""
-    client = CopilotClient(api_key="test")
+    """GitHubModelsClient has sensible retry defaults."""
+    client = GitHubModelsClient(api_key="test")
     assert client.max_retries == 5
     assert client.initial_backoff == 2.0
     assert client.max_backoff == 120.0
 
 
 def test_copilot_client_custom_retry_config():
-    """CopilotClient accepts custom retry configuration."""
-    client = CopilotClient(
+    """GitHubModelsClient accepts custom retry configuration."""
+    client = GitHubModelsClient(
         api_key="test",
         max_retries=3,
         initial_backoff=1.0,
@@ -283,13 +283,13 @@ def test_copilot_client_custom_retry_config():
 
 
 def test_copilot_client_zero_retries():
-    """CopilotClient can be configured with zero retries."""
-    client = CopilotClient(api_key="test", max_retries=0)
+    """GitHubModelsClient can be configured with zero retries."""
+    client = GitHubModelsClient(api_key="test", max_retries=0)
     assert client.max_retries == 0
 
 
 def test_rate_limit_retry_success_after_one_retry():
-    """CopilotClient retries on 429 and succeeds on second attempt."""
+    """GitHubModelsClient retries on 429 and succeeds on second attempt."""
     import requests
     
     mock_response_success = {
@@ -314,7 +314,7 @@ def test_rate_limit_retry_success_after_one_retry():
     with patch("requests.post") as mock_post, patch("time.sleep") as mock_sleep:
         mock_post.side_effect = [rate_limit_response, success_response]
         
-        client = CopilotClient(api_key="test", max_retries=3, initial_backoff=1.0)
+        client = GitHubModelsClient(api_key="test", max_retries=3, initial_backoff=1.0)
         result = client.chat_completion([{"role": "user", "content": "test"}])
         
         assert result.choices[0].message.content == "Success"
@@ -323,7 +323,7 @@ def test_rate_limit_retry_success_after_one_retry():
 
 
 def test_rate_limit_exhausted_retries():
-    """CopilotClient raises RateLimitError after exhausting retries."""
+    """GitHubModelsClient raises RateLimitError after exhausting retries."""
     import requests
     
     rate_limit_response = MagicMock()
@@ -337,7 +337,7 @@ def test_rate_limit_exhausted_retries():
     with patch("requests.post") as mock_post, patch("time.sleep"):
         mock_post.return_value = rate_limit_response
         
-        client = CopilotClient(api_key="test", max_retries=2, initial_backoff=0.1)
+        client = GitHubModelsClient(api_key="test", max_retries=2, initial_backoff=0.1)
         
         with pytest.raises(RateLimitError, match="Rate limit exceeded after 3 attempts"):
             client.chat_completion([{"role": "user", "content": "test"}])
@@ -347,7 +347,7 @@ def test_rate_limit_exhausted_retries():
 
 
 def test_rate_limit_exponential_backoff():
-    """CopilotClient uses exponential backoff between retries."""
+    """GitHubModelsClient uses exponential backoff between retries."""
     import requests
     
     mock_response_success = {
@@ -372,7 +372,7 @@ def test_rate_limit_exponential_backoff():
         # Fail twice, succeed on third
         mock_post.side_effect = [rate_limit_response, rate_limit_response, success_response]
         
-        client = CopilotClient(api_key="test", max_retries=3, initial_backoff=2.0)
+        client = GitHubModelsClient(api_key="test", max_retries=3, initial_backoff=2.0)
         result = client.chat_completion([{"role": "user", "content": "test"}])
         
         assert result.choices[0].message.content == "Success"
@@ -384,7 +384,7 @@ def test_rate_limit_exponential_backoff():
 
 
 def test_rate_limit_respects_retry_after_header():
-    """CopilotClient uses Retry-After header when present."""
+    """GitHubModelsClient uses Retry-After header when present."""
     import requests
     
     mock_response_success = {
@@ -408,7 +408,7 @@ def test_rate_limit_respects_retry_after_header():
     with patch("requests.post") as mock_post, patch("time.sleep") as mock_sleep:
         mock_post.side_effect = [rate_limit_response, success_response]
         
-        client = CopilotClient(api_key="test", max_retries=2, initial_backoff=2.0)
+        client = GitHubModelsClient(api_key="test", max_retries=2, initial_backoff=2.0)
         result = client.chat_completion([{"role": "user", "content": "test"}])
         
         assert result.choices[0].message.content == "Success"
@@ -416,7 +416,7 @@ def test_rate_limit_respects_retry_after_header():
 
 
 def test_rate_limit_caps_wait_at_max_backoff():
-    """CopilotClient caps wait time at max_backoff."""
+    """GitHubModelsClient caps wait time at max_backoff."""
     import requests
     
     mock_response_success = {
@@ -441,7 +441,7 @@ def test_rate_limit_caps_wait_at_max_backoff():
         mock_post.side_effect = [rate_limit_response, success_response]
         
         # max_backoff of 60 seconds
-        client = CopilotClient(api_key="test", max_retries=2, max_backoff=60.0)
+        client = GitHubModelsClient(api_key="test", max_retries=2, max_backoff=60.0)
         result = client.chat_completion([{"role": "user", "content": "test"}])
         
         assert result.choices[0].message.content == "Success"
@@ -450,7 +450,7 @@ def test_rate_limit_caps_wait_at_max_backoff():
 
 
 def test_rate_limit_parses_wait_from_message():
-    """CopilotClient extracts wait time from error message body."""
+    """GitHubModelsClient extracts wait time from error message body."""
     import requests
     
     mock_response_success = {
@@ -476,7 +476,7 @@ def test_rate_limit_parses_wait_from_message():
     with patch("requests.post") as mock_post, patch("time.sleep") as mock_sleep:
         mock_post.side_effect = [rate_limit_response, success_response]
         
-        client = CopilotClient(api_key="test", max_retries=2)
+        client = GitHubModelsClient(api_key="test", max_retries=2)
         result = client.chat_completion([{"role": "user", "content": "test"}])
         
         assert result.choices[0].message.content == "Success"
@@ -484,7 +484,7 @@ def test_rate_limit_parses_wait_from_message():
 
 
 def test_non_rate_limit_error_not_retried():
-    """CopilotClient does not retry non-429 errors."""
+    """GitHubModelsClient does not retry non-429 errors."""
     import requests
     
     error_response = MagicMock()
@@ -498,9 +498,9 @@ def test_non_rate_limit_error_not_retried():
     with patch("requests.post") as mock_post, patch("time.sleep") as mock_sleep:
         mock_post.return_value = error_response
         
-        client = CopilotClient(api_key="test", max_retries=3)
+        client = GitHubModelsClient(api_key="test", max_retries=3)
         
-        with pytest.raises(CopilotClientError, match="GitHub Models API request failed"):
+        with pytest.raises(GitHubModelsError, match="GitHub Models API request failed"):
             client.chat_completion([{"role": "user", "content": "test"}])
         
         # Should NOT retry - only one attempt
@@ -523,7 +523,7 @@ def test_rate_limit_error_has_retry_after():
     with patch("requests.post") as mock_post, patch("time.sleep"):
         mock_post.return_value = rate_limit_response
         
-        client = CopilotClient(api_key="test", max_retries=0)
+        client = GitHubModelsClient(api_key="test", max_retries=0)
         
         with pytest.raises(RateLimitError) as exc_info:
             client.chat_completion([{"role": "user", "content": "test"}])

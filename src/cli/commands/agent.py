@@ -17,7 +17,7 @@ from src.orchestration.llm import LLMPlanner
 from src.orchestration.safety import SafetyValidator
 from src.orchestration.tools import ToolRegistry
 from src.orchestration.types import ExecutionContext, MissionStatus, AgentStep, ToolResult
-from src.integrations.copilot import CopilotClient
+from src.integrations.github.models import GitHubModelsClient
 from src.integrations.github.issues import (
     DEFAULT_API_URL,
     GitHubIssueError,
@@ -526,13 +526,13 @@ def run_mission_cli(args: argparse.Namespace) -> int:
         print(f"Using configured model: {planner_model}")
 
     try:
-        copilot_client = CopilotClient(model=planner_model)
+        models_client = GitHubModelsClient(model=planner_model)
         planner = LLMPlanner(
-            copilot_client=copilot_client,
+            models_client=models_client,
             tool_registry=registry,
         )
-        planner_model = copilot_client.model  # Get actual model used
-        print(f"Using LLM planner with model: {copilot_client.model}")
+        planner_model = models_client.model  # Get actual model used
+        print(f"Using LLM planner with model: {models_client.model}")
     except Exception as e:
         print(f"error: Failed to initialize LLM planner: {e}", file=sys.stderr)
         print("Tip: Set GITHUB_TOKEN environment variable with GitHub Models API access", file=sys.stderr)

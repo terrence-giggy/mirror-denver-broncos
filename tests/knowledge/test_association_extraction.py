@@ -4,14 +4,14 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock
 
 import pytest
-from src.integrations.copilot import CopilotClient
+from src.integrations.github.models import GitHubModelsClient
 from src.knowledge.extraction import AssociationExtractor
 from src.knowledge.storage import EntityAssociation, KnowledgeGraphStorage
 
 
 @pytest.fixture
 def mock_client():
-    client = MagicMock(spec=CopilotClient)
+    client = MagicMock(spec=GitHubModelsClient)
     return client
 
 

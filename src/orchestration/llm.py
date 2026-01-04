@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any, Dict, List
 
-from src.integrations.copilot import CopilotClient, CopilotClientError
+from src.integrations.github.models import GitHubModelsClient, GitHubModelsError
 
 from .planner import Planner
 from .types import AgentState, Thought, ThoughtType, ToolCall
@@ -29,20 +29,20 @@ class LLMPlanner(Planner):
     def __init__(
         self,
         *,
-        copilot_client: CopilotClient,
+        models_client: GitHubModelsClient,
         tool_registry: ToolRegistry,
         max_tokens: int = 4000,
         temperature: float = 0.7,
     ):
-        """Initialize LLM planner with Copilot client.
+        """Initialize LLM planner with GitHub Models client.
 
         Args:
-            copilot_client: GitHub Models API client for LLM calls.
+            models_client: GitHub Models API client for LLM calls.
             tool_registry: Registry of available tools for function calling.
             max_tokens: Token limit per LLM call.
             temperature: Sampling temperature (0.0-1.0).
         """
-        self._copilot = copilot_client
+        self._models_client = models_client
         self._tool_registry = tool_registry
         self._max_tokens = max_tokens
         self._temperature = temperature
@@ -85,13 +85,13 @@ class LLMPlanner(Planner):
         # Retry loop for when LLM responds without a tool call or finish signal
         for attempt in range(self.MAX_CLARIFICATION_RETRIES + 1):
             try:
-                response = self._copilot.chat_completion(
+                response = self._models_client.chat_completion(
                     messages=messages,
                     tools=tools if tools else None,
                     max_tokens=self._max_tokens,
                     temperature=self._temperature,
                 )
-            except CopilotClientError as exc:
+            except GitHubModelsError as exc:
                 raise LLMPlannerError(f"LLM call failed: {exc}") from exc
 
             try:

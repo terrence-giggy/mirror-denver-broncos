@@ -8,13 +8,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.integrations.copilot.client import (
+from src.integrations.github.models import (
     ChatCompletionResponse,
     ChatMessage,
     Choice,
-    CopilotClient,
+    GitHubModelsClient,
     FunctionCall,
-    ToolCall as CopilotToolCall,
+    ToolCall as GitHubModelsToolCall,
 )
 from src.orchestration.agent import AgentRuntime, MissionEvaluator, EvaluationResult
 from src.orchestration.llm import LLMPlanner
@@ -39,9 +39,9 @@ class SimpleEvaluator:
 
 
 @pytest.fixture
-def mock_copilot_client():
-    """Mock CopilotClient for integration tests."""
-    return MagicMock(spec=CopilotClient)
+def mock_models_client():
+    """Mock GitHubModelsClient for integration tests."""
+    return MagicMock(spec=GitHubModelsClient)
 
 
 @pytest.fixture
@@ -95,7 +95,7 @@ def tool_registry():
     return registry
 
 
-def test_llm_planner_executes_simple_mission(mock_copilot_client, tool_registry):
+def test_llm_planner_executes_simple_mission(mock_models_client, tool_registry):
     """LLM planner successfully executes a simple 2-step mission."""
     
     # Mission: get issue details, then add label
@@ -118,7 +118,7 @@ def test_llm_planner_executes_simple_mission(mock_copilot_client, tool_registry)
                     role="assistant",
                     content="I'll fetch the issue details first",
                     tool_calls=(
-                        CopilotToolCall(
+                        GitHubModelsToolCall(
                             id="call_1",
                             type="function",
                             function=FunctionCall(
@@ -142,7 +142,7 @@ def test_llm_planner_executes_simple_mission(mock_copilot_client, tool_registry)
                     role="assistant",
                     content="Based on the issue body, I'll add kb-extraction label",
                     tool_calls=(
-                        CopilotToolCall(
+                        GitHubModelsToolCall(
                             id="call_2",
                             type="function",
                             function=FunctionCall(
@@ -171,11 +171,11 @@ def test_llm_planner_executes_simple_mission(mock_copilot_client, tool_registry)
         ),
     )
     
-    mock_copilot_client.chat_completion.side_effect = [response1, response2, response3]
+    mock_models_client.chat_completion.side_effect = [response1, response2, response3]
     
     # Create planner and runtime
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -207,7 +207,7 @@ def test_llm_planner_executes_simple_mission(mock_copilot_client, tool_registry)
     assert outcome.steps[1].result.success
 
 
-def test_llm_planner_handles_tool_errors(mock_copilot_client, tool_registry):
+def test_llm_planner_handles_tool_errors(mock_models_client, tool_registry):
     """LLM planner adapts when a tool execution fails."""
     
     mission = Mission(
@@ -239,7 +239,7 @@ def test_llm_planner_handles_tool_errors(mock_copilot_client, tool_registry):
                     role="assistant",
                     content="Attempting action",
                     tool_calls=(
-                        CopilotToolCall(
+                        GitHubModelsToolCall(
                             id="call_1",
                             type="function",
                             function=FunctionCall(
@@ -268,7 +268,7 @@ def test_llm_planner_handles_tool_errors(mock_copilot_client, tool_registry):
         ),
     )
     
-    mock_copilot_client.chat_completion.side_effect = [response1, response2]
+    mock_models_client.chat_completion.side_effect = [response1, response2]
     
     # Use an evaluator that doesn't mark complete after failed steps
     class ErrorHandlingEvaluator:
@@ -277,7 +277,7 @@ def test_llm_planner_handles_tool_errors(mock_copilot_client, tool_registry):
             return EvaluationResult(complete=False, reason=None)
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=failing_registry,
     )
     
@@ -298,7 +298,7 @@ def test_llm_planner_handles_tool_errors(mock_copilot_client, tool_registry):
     assert "error" in outcome.steps[0].result.error.lower()
 
 
-def test_llm_planner_respects_max_steps(mock_copilot_client, tool_registry):
+def test_llm_planner_respects_max_steps(mock_models_client, tool_registry):
     """LLM planner stops at max_steps limit."""
     
     mission = Mission(
@@ -318,7 +318,7 @@ def test_llm_planner_respects_max_steps(mock_copilot_client, tool_registry):
                     role="assistant",
                     content="Fetching issue",
                     tool_calls=(
-                        CopilotToolCall(
+                        GitHubModelsToolCall(
                             id="call_x",
                             type="function",
                             function=FunctionCall(
@@ -332,10 +332,10 @@ def test_llm_planner_respects_max_steps(mock_copilot_client, tool_registry):
         ),
     )
     
-    mock_copilot_client.chat_completion.return_value = response
+    mock_models_client.chat_completion.return_value = response
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -353,7 +353,7 @@ def test_llm_planner_respects_max_steps(mock_copilot_client, tool_registry):
     assert outcome.status == MissionStatus.SUCCEEDED  # Evaluator marks complete at max
 
 
-def test_llm_planner_provides_context_to_llm(mock_copilot_client, tool_registry):
+def test_llm_planner_provides_context_to_llm(mock_models_client, tool_registry):
     """LLM planner includes mission context in prompts."""
     
     mission = Mission(
@@ -379,10 +379,10 @@ def test_llm_planner_provides_context_to_llm(mock_copilot_client, tool_registry)
         ),
     )
     
-    mock_copilot_client.chat_completion.return_value = response
+    mock_models_client.chat_completion.return_value = response
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -396,8 +396,8 @@ def test_llm_planner_provides_context_to_llm(mock_copilot_client, tool_registry)
     runtime.execute_mission(mission, ExecutionContext(inputs={"test": "value"}))
     
     # Verify LLM was called with proper context
-    assert mock_copilot_client.chat_completion.called
-    call_kwargs = mock_copilot_client.chat_completion.call_args[1]
+    assert mock_models_client.chat_completion.called
+    call_kwargs = mock_models_client.chat_completion.call_args[1]
     
     messages = call_kwargs["messages"]
     system_msg = messages[0]
@@ -414,7 +414,7 @@ def test_llm_planner_provides_context_to_llm(mock_copilot_client, tool_registry)
     assert "test" in user_msg["content"] or "value" in user_msg["content"]
 
 
-def test_llm_planner_conversation_history_persists(mock_copilot_client, tool_registry):
+def test_llm_planner_conversation_history_persists(mock_models_client, tool_registry):
     """LLM planner maintains conversation history across steps."""
     
     mission = Mission(
@@ -434,7 +434,7 @@ def test_llm_planner_conversation_history_persists(mock_copilot_client, tool_reg
                         role="assistant",
                         content=f"Step {i}" if i < 2 else "FINISH: All steps completed",
                         tool_calls=(
-                            CopilotToolCall(
+                            GitHubModelsToolCall(
                                 id=f"call_{i}",
                                 type="function",
                                 function=FunctionCall(
@@ -450,7 +450,7 @@ def test_llm_planner_conversation_history_persists(mock_copilot_client, tool_reg
         for i in range(3)
     ]
     
-    mock_copilot_client.chat_completion.side_effect = responses
+    mock_models_client.chat_completion.side_effect = responses
     
     # Use evaluator that never marks complete so all 3 steps execute
     class NeverCompleteEvaluator:
@@ -458,7 +458,7 @@ def test_llm_planner_conversation_history_persists(mock_copilot_client, tool_reg
             return EvaluationResult(complete=False, reason=None)
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -472,7 +472,7 @@ def test_llm_planner_conversation_history_persists(mock_copilot_client, tool_reg
     runtime.execute_mission(mission, ExecutionContext())
     
     # Verify conversation history grew with each call
-    calls = mock_copilot_client.chat_completion.call_args_list
+    calls = mock_models_client.chat_completion.call_args_list
     
     # First call: system + user
     assert len(calls[0][1]["messages"]) == 2

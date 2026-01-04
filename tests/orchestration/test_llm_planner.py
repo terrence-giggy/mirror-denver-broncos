@@ -7,13 +7,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.integrations.copilot.client import (
+from src.integrations.github.models import (
     ChatCompletionResponse,
     ChatMessage,
     Choice,
-    CopilotClient,
+    GitHubModelsClient,
     FunctionCall,
-    ToolCall as CopilotToolCall,
+    ToolCall as GitHubModelsToolCall,
 )
 from src.orchestration.llm import LLMPlanner, LLMPlannerError
 from src.orchestration.missions import Mission
@@ -29,9 +29,9 @@ from src.orchestration.types import (
 
 
 @pytest.fixture
-def mock_copilot_client():
-    """Mock CopilotClient for testing."""
-    return MagicMock(spec=CopilotClient)
+def mock_models_client():
+    """Mock GitHubModelsClient for testing."""
+    return MagicMock(spec=GitHubModelsClient)
 
 
 @pytest.fixture
@@ -90,24 +90,24 @@ def simple_mission():
     )
 
 
-def test_llm_planner_initialization(mock_copilot_client, tool_registry):
+def test_llm_planner_initialization(mock_models_client, tool_registry):
     """LLMPlanner initializes with required components."""
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
-    assert planner._copilot == mock_copilot_client
+    assert planner._models_client == mock_models_client
     assert planner._tool_registry == tool_registry
     assert planner._max_tokens == 4000
     assert planner._temperature == 0.7
     assert planner._conversation_history == []
 
 
-def test_llm_planner_custom_params(mock_copilot_client, tool_registry):
+def test_llm_planner_custom_params(mock_models_client, tool_registry):
     """LLMPlanner accepts custom parameters."""
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
         max_tokens=2000,
         temperature=0.5,
@@ -117,7 +117,7 @@ def test_llm_planner_custom_params(mock_copilot_client, tool_registry):
     assert planner._temperature == 0.5
 
 
-def test_plan_next_first_step(mock_copilot_client, tool_registry, simple_mission):
+def test_plan_next_first_step(mock_models_client, tool_registry, simple_mission):
     """LLMPlanner generates appropriate prompt for first step."""
     # Mock LLM response suggesting a tool call
     mock_response = ChatCompletionResponse(
@@ -130,7 +130,7 @@ def test_plan_next_first_step(mock_copilot_client, tool_registry, simple_mission
                     role="assistant",
                     content="Let me fetch the issue details first",
                     tool_calls=(
-                        CopilotToolCall(
+                        GitHubModelsToolCall(
                             id="call_123",
                             type="function",
                             function=FunctionCall(
@@ -144,10 +144,10 @@ def test_plan_next_first_step(mock_copilot_client, tool_registry, simple_mission
         ),
     )
     
-    mock_copilot_client.chat_completion.return_value = mock_response
+    mock_models_client.chat_completion.return_value = mock_response
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -166,8 +166,8 @@ def test_plan_next_first_step(mock_copilot_client, tool_registry, simple_mission
     assert thought.tool_call.arguments == {"issue_number": 42}
     
     # Verify LLM was called with appropriate context
-    assert mock_copilot_client.chat_completion.called
-    call_kwargs = mock_copilot_client.chat_completion.call_args[1]
+    assert mock_models_client.chat_completion.called
+    call_kwargs = mock_models_client.chat_completion.call_args[1]
     
     messages = call_kwargs["messages"]
     assert len(messages) == 2  # system + user
@@ -177,7 +177,7 @@ def test_plan_next_first_step(mock_copilot_client, tool_registry, simple_mission
     assert "Begin mission" in messages[1]["content"]
 
 
-def test_plan_next_with_history(mock_copilot_client, tool_registry, simple_mission):
+def test_plan_next_with_history(mock_models_client, tool_registry, simple_mission):
     """LLMPlanner includes execution history in prompts."""
     # Mock LLM response suggesting finish
     mock_response = ChatCompletionResponse(
@@ -195,10 +195,10 @@ def test_plan_next_with_history(mock_copilot_client, tool_registry, simple_missi
         ),
     )
     
-    mock_copilot_client.chat_completion.return_value = mock_response
+    mock_models_client.chat_completion.return_value = mock_response
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -227,14 +227,14 @@ def test_plan_next_with_history(mock_copilot_client, tool_registry, simple_missi
     assert "complete" in thought.content.lower()
     
     # Verify history was included in prompt
-    call_kwargs = mock_copilot_client.chat_completion.call_args[1]
+    call_kwargs = mock_models_client.chat_completion.call_args[1]
     messages = call_kwargs["messages"]
     user_message = [m for m in messages if m["role"] == "user"][-1]
     assert "Progress so far" in user_message["content"]
     assert "get_issue_details" in user_message["content"]
 
 
-def test_plan_next_validates_tool_allowed(mock_copilot_client, tool_registry):
+def test_plan_next_validates_tool_allowed(mock_models_client, tool_registry):
     """LLMPlanner rejects tools not allowed by mission."""
     # Create mission that only allows one tool
     restricted_mission = Mission(
@@ -255,7 +255,7 @@ def test_plan_next_validates_tool_allowed(mock_copilot_client, tool_registry):
                     role="assistant",
                     content="Adding label",
                     tool_calls=(
-                        CopilotToolCall(
+                        GitHubModelsToolCall(
                             id="call_456",
                             type="function",
                             function=FunctionCall(
@@ -269,10 +269,10 @@ def test_plan_next_validates_tool_allowed(mock_copilot_client, tool_registry):
         ),
     )
     
-    mock_copilot_client.chat_completion.return_value = mock_response
+    mock_models_client.chat_completion.return_value = mock_response
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -286,7 +286,7 @@ def test_plan_next_validates_tool_allowed(mock_copilot_client, tool_registry):
         planner.plan_next(state)
 
 
-def test_plan_next_handles_invalid_json_arguments(mock_copilot_client, tool_registry, simple_mission):
+def test_plan_next_handles_invalid_json_arguments(mock_models_client, tool_registry, simple_mission):
     """LLMPlanner raises error on malformed tool arguments."""
     # Mock LLM response with invalid JSON
     mock_response = ChatCompletionResponse(
@@ -299,7 +299,7 @@ def test_plan_next_handles_invalid_json_arguments(mock_copilot_client, tool_regi
                     role="assistant",
                     content="",
                     tool_calls=(
-                        CopilotToolCall(
+                        GitHubModelsToolCall(
                             id="call_789",
                             type="function",
                             function=FunctionCall(
@@ -313,10 +313,10 @@ def test_plan_next_handles_invalid_json_arguments(mock_copilot_client, tool_regi
         ),
     )
     
-    mock_copilot_client.chat_completion.return_value = mock_response
+    mock_models_client.chat_completion.return_value = mock_response
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -330,7 +330,7 @@ def test_plan_next_handles_invalid_json_arguments(mock_copilot_client, tool_regi
         planner.plan_next(state)
 
 
-def test_plan_next_handles_empty_response(mock_copilot_client, tool_registry, simple_mission):
+def test_plan_next_handles_empty_response(mock_models_client, tool_registry, simple_mission):
     """LLMPlanner raises error when LLM returns no choices."""
     mock_response = ChatCompletionResponse(
         id="test",
@@ -338,10 +338,10 @@ def test_plan_next_handles_empty_response(mock_copilot_client, tool_registry, si
         choices=tuple(),  # Empty choices
     )
     
-    mock_copilot_client.chat_completion.return_value = mock_response
+    mock_models_client.chat_completion.return_value = mock_response
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -358,7 +358,7 @@ def test_plan_next_handles_empty_response(mock_copilot_client, tool_registry, si
 def test_build_system_prompt_includes_mission_context(tool_registry, simple_mission):
     """System prompt includes mission goal, constraints, and criteria."""
     planner = LLMPlanner(
-        copilot_client=MagicMock(spec=CopilotClient),
+        models_client=MagicMock(spec=GitHubModelsClient),
         tool_registry=tool_registry,
     )
     
@@ -379,7 +379,7 @@ def test_build_system_prompt_includes_mission_context(tool_registry, simple_miss
     assert "10 steps" in prompt
 
 
-def test_conversation_history_tracks_interactions(mock_copilot_client, tool_registry, simple_mission):
+def test_conversation_history_tracks_interactions(mock_models_client, tool_registry, simple_mission):
     """LLMPlanner maintains conversation history across calls."""
     # First call - tool action
     response1 = ChatCompletionResponse(
@@ -392,7 +392,7 @@ def test_conversation_history_tracks_interactions(mock_copilot_client, tool_regi
                     role="assistant",
                     content="Fetching issue",
                     tool_calls=(
-                        CopilotToolCall(
+                        GitHubModelsToolCall(
                             id="call_001",
                             type="function",
                             function=FunctionCall(
@@ -422,10 +422,10 @@ def test_conversation_history_tracks_interactions(mock_copilot_client, tool_regi
         ),
     )
     
-    mock_copilot_client.chat_completion.side_effect = [response1, response2]
+    mock_models_client.chat_completion.side_effect = [response1, response2]
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -455,7 +455,7 @@ def test_conversation_history_tracks_interactions(mock_copilot_client, tool_regi
     assert len(planner._conversation_history) == 4  # 2 user + 2 assistant
 
 
-def test_plan_next_rejects_ambiguous_finish(mock_copilot_client, tool_registry, simple_mission):
+def test_plan_next_rejects_ambiguous_finish(mock_models_client, tool_registry, simple_mission):
     """LLMPlanner raises error after retries when LLM never provides tool call or explicit finish."""
     # Response without tool call and without explicit completion signal
     mock_response = ChatCompletionResponse(
@@ -473,10 +473,10 @@ def test_plan_next_rejects_ambiguous_finish(mock_copilot_client, tool_registry, 
         ),
     )
     
-    mock_copilot_client.chat_completion.return_value = mock_response
+    mock_models_client.chat_completion.return_value = mock_response
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -490,10 +490,10 @@ def test_plan_next_rejects_ambiguous_finish(mock_copilot_client, tool_registry, 
         planner.plan_next(state)
     
     # Verify retries happened (initial + MAX_CLARIFICATION_RETRIES)
-    assert mock_copilot_client.chat_completion.call_count == 3
+    assert mock_models_client.chat_completion.call_count == 3
 
 
-def test_plan_next_retries_and_succeeds(mock_copilot_client, tool_registry, simple_mission):
+def test_plan_next_retries_and_succeeds(mock_models_client, tool_registry, simple_mission):
     """LLMPlanner retries when LLM responds without action, then succeeds on retry."""
     # First response - ambiguous (no tool call, no finish marker)
     ambiguous_response = ChatCompletionResponse(
@@ -522,7 +522,7 @@ def test_plan_next_retries_and_succeeds(mock_copilot_client, tool_registry, simp
                     role="assistant",
                     content="Fetching issue details",
                     tool_calls=(
-                        CopilotToolCall(
+                        GitHubModelsToolCall(
                             id="call_001",
                             type="function",
                             function=FunctionCall(
@@ -536,10 +536,10 @@ def test_plan_next_retries_and_succeeds(mock_copilot_client, tool_registry, simp
         ),
     )
     
-    mock_copilot_client.chat_completion.side_effect = [ambiguous_response, tool_response]
+    mock_models_client.chat_completion.side_effect = [ambiguous_response, tool_response]
     
     planner = LLMPlanner(
-        copilot_client=mock_copilot_client,
+        models_client=mock_models_client,
         tool_registry=tool_registry,
     )
     
@@ -554,7 +554,7 @@ def test_plan_next_retries_and_succeeds(mock_copilot_client, tool_registry, simp
     # Should succeed on retry
     assert thought.type == ThoughtType.ACTION
     assert thought.tool_call.name == "get_issue_details"
-    assert mock_copilot_client.chat_completion.call_count == 2
+    assert mock_models_client.chat_completion.call_count == 2
 
 
 def test_get_openai_tool_schemas_format(tool_registry):

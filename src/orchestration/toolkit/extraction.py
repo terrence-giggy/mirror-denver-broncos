@@ -6,7 +6,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
-from src.integrations.copilot import CopilotClient
+from src.integrations.github.models import GitHubModelsClient
 from src.integrations.github.issues import resolve_repository, resolve_token
 from src.integrations.github.pull_requests import create_pull_request
 from src.integrations.github.storage import commit_file
@@ -53,10 +53,10 @@ class ExtractionToolkit:
         
         # Client will be initialized on first use or we can try now
         # Ideally we share the client but for now we create a new one
-        self.client = CopilotClient()
+        self.client = GitHubModelsClient()
         
         # Create a mini model client for simple tasks (cheaper)
-        self.mini_client = CopilotClient(model="gpt-4o-mini")
+        self.mini_client = GitHubModelsClient(model="gpt-4o-mini")
         
         self.extractor = PersonExtractor(self.client)
         self.org_extractor = OrganizationExtractor(self.client)
