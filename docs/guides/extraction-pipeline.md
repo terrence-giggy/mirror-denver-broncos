@@ -55,7 +55,7 @@ To add a new source:
    - Triggered when PR merges to main
    - Scans manifest for new documents
    - Creates GitHub Issue for each document needing extraction
-   - Labels Issues with `extraction-queue` and `copilot-queue`
+   - Labels Issues with `extraction-queue`
 
 3. **Extraction Processing** (`extraction-process.yml`)
    - Triggered when Issue labeled with `extraction-queue`
@@ -76,7 +76,6 @@ To add a new source:
 | Label | Purpose |
 |-------|---------|
 | `extraction-queue` | Document queued for extraction (triggers workflow) |
-| `copilot-queue` | Ready for Copilot pickup |
 | `extraction-complete` | Successfully extracted and saved |
 | `extraction-skipped` | Filtered out (non-substantive content) |
 | `extraction-error` | Failed extraction, needs investigation |
@@ -276,8 +275,7 @@ git push
 **Root Cause**: GitHub's `labeled` webhook event only fires when a label is **added** to an existing issue, not when an issue is created with labels already applied.
 
 **Solution**: The queue CLI now creates issues in two steps:
-1. Create issue with `copilot-queue` label
-2. Add `extraction-queue` label in separate API call (triggers workflow)
+1. Add `extraction-queue` label in separate API call (triggers workflow)
 
 **If still not working**:
 - Check workflow logs: Actions → "Extraction: Assign to Copilot 🧠"

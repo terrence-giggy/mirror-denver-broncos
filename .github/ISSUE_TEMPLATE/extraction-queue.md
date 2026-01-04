@@ -2,7 +2,7 @@
 name: Extraction Queue (Auto-Generated)
 about: Document queued for knowledge extraction (created automatically)
 title: "Extract: [Document Title]"
-labels: ["extraction-queue", "copilot-queue"]
+labels: ["extraction-queue"]
 assignees: ''
 ---
 
@@ -16,25 +16,21 @@ assignees: ''
 
 <!-- checksum:{{ checksum }} -->
 
-## Extraction Instructions
+## Automatic Processing
 
-@copilot Please process this document:
+This issue will be processed automatically by the extraction workflow.
 
-1. **Assess** - Read the document and determine if it contains substantive content
-   - Skip if: navigation page, error page, boilerplate, or duplicate content
-   - If skipping: Comment with reason and close with "extraction-skipped" label
+The workflow will:
+1. ✅ Assess if content is substantive (using LLM)
+2. ✅ Extract entities if substantive (people, orgs, concepts, associations)
+3. ✅ Create a PR with changes
+4. ✅ Close this issue with results
 
-2. **Extract** (if substantive) - Run extractions in order:
-   ```bash
-   python main.py extract --checksum {{ checksum }}
-   python main.py extract --checksum {{ checksum }} --orgs
-   python main.py extract --checksum {{ checksum }} --concepts
-   python main.py extract --checksum {{ checksum }} --associations
-   ```
+**If rate limited:** Issue will be labeled `extraction-rate-limited` and retried in 30 minutes.
 
-3. **Commit** - Save changes to knowledge-graph/
+**If extraction fails:** Issue will be labeled `extraction-error` for manual review.
 
-4. **Report** - Comment with summary of extracted entities
+No manual intervention needed - just wait for the workflow to complete.
 
 ---
 <!-- copilot:extraction-queue -->

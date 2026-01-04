@@ -321,27 +321,14 @@ No manual intervention needed - just wait for the workflow to complete.
 <!-- copilot:extraction-queue -->
 """
     
-    # Step 1: Create issue with only copilot-queue label (for tracking)
+    # Create issue with extraction-queue label to trigger workflow
     outcome = create_issue(
         token=token,
         repository=repository,
         title=title,
         body=body,
-        labels=["copilot-queue"],
+        labels=["extraction-queue"],
     )
-    
-    # Step 2: Add extraction-queue label to trigger workflow
-    # This separate API call ensures the 'labeled' webhook event fires
-    try:
-        add_labels(
-            token=token,
-            repository=repository,
-            issue_number=outcome.number,
-            labels=["extraction-queue"],
-        )
-    except GitHubIssueError as exc:
-        # Log the error but still return the created issue
-        print(f"Warning: Failed to add extraction-queue label to issue #{outcome.number}: {exc}", file=sys.stderr)
     
     return outcome
 
