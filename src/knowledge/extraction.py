@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import List
 
-from src.integrations.copilot import CopilotClient, CopilotClientError
+from src.integrations.github.models import GitHubModelsClient, GitHubModelsError
 from src.knowledge.storage import EntityAssociation, EntityProfile, KnowledgeGraphStorage
 from src.parsing.base import ParsedDocument
 from src.parsing.storage import ManifestEntry, ParseStorage
@@ -25,7 +25,7 @@ class ExtractionError(RuntimeError):
 class BaseExtractor:
     """Base class for entity extraction using LLM."""
 
-    def __init__(self, client: CopilotClient) -> None:
+    def __init__(self, client: GitHubModelsClient) -> None:
         self.client = client
 
     def extract(self, text: str) -> List[str]:
