@@ -37,44 +37,12 @@ jobs:
         run: pip install -r requirements.txt
       
       - name: Run Direct Extraction
-        id: extract
-        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set +e  # Don't exit on error
           python main.py extraction-direct \
             --issue-number ${{ github.event.issue.number }} \
-            --repository ${{ github.repository }} \
-            2>&1 | tee extraction.log
-          EXIT_CODE=$?
-          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
-          exit $EXIT_CODE
-      
-      - name: Handle Rate Limit Errors
-        if: steps.extract.outputs.exit_code == '2'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue edit ${{ github.event.issue.number }} \
-            --remove-label "extraction-queue" \
-            --add-label "extraction-rate-limited"
-          
-          gh issue comment ${{ github.event.issue.number }} \
-            --body "⏸️ Rate limit encountered. Will retry automatically in 30 minutes."
-      
-      - name: Handle Other Errors
-        if: failure() && steps.extract.outputs.exit_code != '2'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue edit ${{ github.event.issue.number }} \
-            --remove-label "extraction-queue" \
-            --add-label "extraction-error"
-          
-          # Post error comment with log excerpt
-          echo "❌ Extraction failed. Check workflow logs for details." | \
-            gh issue comment ${{ github.event.issue.number }} --body-file -
+            --repository ${{ github.repository }}
   
   # Interactive setup agent
   setup-agent:
@@ -83,13 +51,31 @@ jobs:
       contains(github.event.issue.labels.*.name, 'setup') &&
       github.event.comment.user.type != 'Bot' &&
       !contains(github.event.comment.body, '<!-- agent-response -->')
-    uses: ./.github/workflows/_job-setup-agent.yml
-    secrets:
-      gh_token: ${{ secrets.GH_TOKEN }}
-    with:
-      issue_number: ${{ github.event.issue.number }}
-      repository: ${{ github.repository }}
-      comment_body: ${{ github.event.comment.body }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Setup Mission
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          python -m main agent run \
+            --mission setup_repo \
+            --input issue_number=${{ github.event.issue.number }} \
+            --input repository=${{ github.repository }} \
+            --input comment_body="$COMMENT_BODY"
   
   # Implement approved source
   implement-source:
@@ -97,21 +83,56 @@ jobs:
       github.event_name == 'issues' &&
       contains(github.event.issue.labels.*.name, 'source-approved') &&
       contains(github.event.issue.assignees.*.login, 'copilot')
-    uses: ./.github/workflows/_job-implement-source.yml
-    secrets:
-      gh_token: ${{ secrets.GH_TOKEN }}
-    with:
-      issue_number: ${{ github.event.issue.number }}
-      repository: ${{ github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Implement Approved Source
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python -m main agent run \
+            --mission implement_source \
+            --input issue_number=${{ github.event.issue.number }} \
+            --input repository=${{ github.repository }}
   
   # Answer questions
   answer-question:
     if: |
       (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'question') ||
       (github.event_name == 'issue_comment' && contains(github.event.issue.labels.*.name, 'question') && !contains(github.event.comment.body, '<!-- agent-response -->'))
-    uses: ./.github/workflows/_job-answer-question.yml
-    secrets:
-      gh_token: ${{ secrets.GH_TOKEN }}
-    with:
-      issue_number: ${{ github.event.issue.number }}
-      repository: ${{ github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Agent Mission
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          python -m main agent run \
+            --mission answer_question \
+            --input issue_number=${{ github.event.issue.number }} \
+            --input repository=${{ github.repository }}
