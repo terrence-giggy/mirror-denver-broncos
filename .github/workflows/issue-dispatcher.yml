@@ -83,7 +83,7 @@ jobs:
       contains(github.event.issue.labels.*.name, 'setup') &&
       github.event.comment.user.type != 'Bot' &&
       !contains(github.event.comment.body, '<!-- agent-response -->')
-    uses: ./.github/workflows/jobs/setup-agent-job.yml
+    uses: ./.github/workflows/_job-setup-agent.yml
     secrets:
       gh_token: ${{ secrets.GH_TOKEN }}
     with:
@@ -97,7 +97,19 @@ jobs:
       github.event_name == 'issues' &&
       contains(github.event.issue.labels.*.name, 'source-approved') &&
       contains(github.event.issue.assignees.*.login, 'copilot')
-    uses: ./.github/workflows/jobs/implement-source-job.yml
+    uses: ./.github/workflows/_job-implement-source.yml
+    secrets:
+      gh_token: ${{ secrets.GH_TOKEN }}
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      repository: ${{ github.repository }}
+  
+  # Answer questions
+  answer-question:
+    if: |
+      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'question') ||
+      (github.event_name == 'issue_comment' && contains(github.event.issue.labels.*.name, 'question') && !contains(github.event.comment.body, '<!-- agent-response -->'))
+    uses: ./.github/workflows/_job-answer-question.yml
     secrets:
       gh_token: ${{ secrets.GH_TOKEN }}
     with:
