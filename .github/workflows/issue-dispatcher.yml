@@ -1,0 +1,105 @@
+name: "Issue Dispatcher 🎯"
+
+on:
+  issues:
+    types: [opened, labeled, assigned]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  # Inline extraction job with concurrency control
+  extraction:
+    if: github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'extraction-queue'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    # CRITICAL: Limit concurrency to avoid rate limit bursts
+    concurrency:
+      group: extraction-processing
+      cancel-in-progress: false  # Queue them, don't cancel
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Run Direct Extraction
+        id: extract
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e  # Don't exit on error
+          python main.py extraction-direct \
+            --issue-number ${{ github.event.issue.number }} \
+            --repository ${{ github.repository }} \
+            2>&1 | tee extraction.log
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $EXIT_CODE
+      
+      - name: Handle Rate Limit Errors
+        if: steps.extract.outputs.exit_code == '2'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue edit ${{ github.event.issue.number }} \
+            --remove-label "extraction-queue" \
+            --add-label "extraction-rate-limited"
+          
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "⏸️ Rate limit encountered. Will retry automatically in 30 minutes."
+      
+      - name: Handle Other Errors
+        if: failure() && steps.extract.outputs.exit_code != '2'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue edit ${{ github.event.issue.number }} \
+            --remove-label "extraction-queue" \
+            --add-label "extraction-error"
+          
+          # Post error comment with log excerpt
+          echo "❌ Extraction failed. Check workflow logs for details." | \
+            gh issue comment ${{ github.event.issue.number }} --body-file -
+  
+  # Interactive setup agent
+  setup-agent:
+    if: |
+      github.event_name == 'issue_comment' &&
+      contains(github.event.issue.labels.*.name, 'setup') &&
+      github.event.comment.user.type != 'Bot' &&
+      !contains(github.event.comment.body, '<!-- agent-response -->')
+    uses: ./.github/workflows/jobs/setup-agent-job.yml
+    secrets:
+      gh_token: ${{ secrets.GH_TOKEN }}
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      repository: ${{ github.repository }}
+      comment_body: ${{ github.event.comment.body }}
+  
+  # Implement approved source
+  implement-source:
+    if: |
+      github.event_name == 'issues' &&
+      contains(github.event.issue.labels.*.name, 'source-approved') &&
+      contains(github.event.issue.assignees.*.login, 'copilot')
+    uses: ./.github/workflows/jobs/implement-source-job.yml
+    secrets:
+      gh_token: ${{ secrets.GH_TOKEN }}
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      repository: ${{ github.repository }}
