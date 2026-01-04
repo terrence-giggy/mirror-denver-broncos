@@ -17,12 +17,30 @@ jobs:
     if: |
       github.event_name == 'discussion' &&
       github.event.discussion.category.name == 'Sources'
-    uses: ./.github/workflows/_job-assess-source.yml
-    secrets:
-      gh_token: ${{ secrets.GH_TOKEN }}
-    with:
-      discussion_number: ${{ github.event.discussion.number }}
-      repository: ${{ github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Assess Source Proposal
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python -m main agent run \
+            --mission assess_source \
+            --input discussion_number=${{ github.event.discussion.number }} \
+            --input repository=${{ github.repository }}
   
   # Curate and approve/reject sources
   curate-source:
@@ -32,11 +50,31 @@ jobs:
       github.event.comment.user.type != 'Bot' &&
       !contains(github.event.comment.body, '<!-- agent-response -->') &&
       (contains(github.event.comment.body, '/approve-source') || contains(github.event.comment.body, '/reject-source'))
-    uses: ./.github/workflows/_job-curate-source.yml
-    secrets:
-      gh_token: ${{ secrets.GH_TOKEN }}
-    with:
-      discussion_number: ${{ github.event.discussion.number }}
-      repository: ${{ github.repository }}
-      comment_body: ${{ github.event.comment.body }}
-      comment_author: ${{ github.event.comment.user.login }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Process Source Command
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+        run: |
+          python -m main agent run \
+            --mission curate_sources \
+            --input discussion_number=${{ github.event.discussion.number }} \
+            --input repository=${{ github.repository }} \
+            --input comment_body="$COMMENT_BODY" \
+            --input comment_author="$COMMENT_AUTHOR"
