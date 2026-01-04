@@ -1,0 +1,52 @@
+{
+  "source_checksum": "8c6e6a44c8faa999853c6e17eee320d83f53e1ccbe400c06b3b2e5ad732bbc98",
+  "associations": [
+    {
+      "source": "Alex Singleton",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "inside linebacker Alex Singleton talks about the mindset of the Broncos",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 0.9
+    },
+    {
+      "source": "Adam Trautman",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "tight end Adam Trautman discusses the importance of home-field advantage",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 0.9
+    },
+    {
+      "source": "Bo Nix",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "quarterback Bo Nix talks about the team's focus heading into Week 18",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 0.9
+    },
+    {
+      "source": "Pat Surtain II",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "cornerback Pat Surtain II discusses how they're preparing",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 0.9
+    },
+    {
+      "source": "Trey Lance",
+      "target": "Los Angeles Chargers",
+      "relationship": "Member of",
+      "evidence": "preparing to face quarterback Trey Lance",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 0.8
+    }
+  ],
+  "extracted_at": "2026-01-04T22:45:53.565397+00:00",
+  "metadata": {}
+}
