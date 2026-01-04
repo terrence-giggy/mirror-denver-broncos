@@ -1,0 +1,42 @@
+name: "Discussion Dispatcher 💬"
+
+on:
+  discussion:
+    types: [created]
+  discussion_comment:
+    types: [created]
+
+permissions:
+  discussions: write
+  issues: write
+  contents: write
+
+jobs:
+  # AI assessment of source proposals
+  assess-source:
+    if: |
+      github.event_name == 'discussion' &&
+      github.event.discussion.category.name == 'Sources'
+    uses: ./.github/workflows/jobs/assess-source-job.yml
+    secrets:
+      gh_token: ${{ secrets.GH_TOKEN }}
+    with:
+      discussion_number: ${{ github.event.discussion.number }}
+      repository: ${{ github.repository }}
+  
+  # Curate and approve/reject sources
+  curate-source:
+    if: |
+      github.event_name == 'discussion_comment' &&
+      github.event.discussion.category.name == 'Sources' &&
+      github.event.comment.user.type != 'Bot' &&
+      !contains(github.event.comment.body, '<!-- agent-response -->') &&
+      (contains(github.event.comment.body, '/approve-source') || contains(github.event.comment.body, '/reject-source'))
+    uses: ./.github/workflows/jobs/curate-source-job.yml
+    secrets:
+      gh_token: ${{ secrets.GH_TOKEN }}
+    with:
+      discussion_number: ${{ github.event.discussion.number }}
+      repository: ${{ github.repository }}
+      comment_body: ${{ github.event.comment.body }}
+      comment_author: ${{ github.event.comment.user.login }}

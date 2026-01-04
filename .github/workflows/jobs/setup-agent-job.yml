@@ -1,0 +1,54 @@
+name: "Setup Agent Job"
+
+on:
+  workflow_call:
+    inputs:
+      issue_number:
+        description: 'Issue number'
+        required: true
+        type: string
+      repository:
+        description: 'Repository name'
+        required: true
+        type: string
+      comment_body:
+        description: 'Comment body'
+        required: true
+        type: string
+    secrets:
+      gh_token:
+        description: 'GitHub token'
+        required: true
+
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  run-setup-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Setup Mission
+        env:
+          GITHUB_TOKEN: ${{ secrets.gh_token }}
+          COMMENT_BODY: ${{ inputs.comment_body }}
+        run: |
+          python -m main agent run \
+            --mission setup_repo \
+            --input issue_number=${{ inputs.issue_number }} \
+            --input repository=${{ inputs.repository }} \
+            --input comment_body="$COMMENT_BODY"

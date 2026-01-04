@@ -1,24 +1,27 @@
-name: "Extraction: Process Queue"
+name: "Issue Dispatcher 🎯"
 
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled, assigned]
+  issue_comment:
+    types: [created]
 
 permissions:
   issues: write
   contents: write
   pull-requests: write
 
-# CRITICAL: Limit concurrency to avoid rate limit bursts
-concurrency:
-  group: extraction-processing
-  cancel-in-progress: false  # Queue them, don't cancel
-
 jobs:
-  extract:
-    if: github.event.label.name == 'extraction-queue'
+  # Inline extraction job with concurrency control
+  extraction:
+    if: github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'extraction-queue'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    
+    # CRITICAL: Limit concurrency to avoid rate limit bursts
+    concurrency:
+      group: extraction-processing
+      cancel-in-progress: false  # Queue them, don't cancel
     
     steps:
       - name: Checkout repository
@@ -72,3 +75,31 @@ jobs:
           # Post error comment with log excerpt
           echo "❌ Extraction failed. Check workflow logs for details." | \
             gh issue comment ${{ github.event.issue.number }} --body-file -
+  
+  # Interactive setup agent
+  setup-agent:
+    if: |
+      github.event_name == 'issue_comment' &&
+      contains(github.event.issue.labels.*.name, 'setup') &&
+      github.event.comment.user.type != 'Bot' &&
+      !contains(github.event.comment.body, '<!-- agent-response -->')
+    uses: ./.github/workflows/jobs/setup-agent-job.yml
+    secrets:
+      gh_token: ${{ secrets.GH_TOKEN }}
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      repository: ${{ github.repository }}
+      comment_body: ${{ github.event.comment.body }}
+  
+  # Implement approved source
+  implement-source:
+    if: |
+      github.event_name == 'issues' &&
+      contains(github.event.issue.labels.*.name, 'source-approved') &&
+      contains(github.event.issue.assignees.*.login, 'copilot')
+    uses: ./.github/workflows/jobs/implement-source-job.yml
+    secrets:
+      gh_token: ${{ secrets.GH_TOKEN }}
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      repository: ${{ github.repository }}
