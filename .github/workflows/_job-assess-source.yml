@@ -1,0 +1,48 @@
+name: "Assess Source Job"
+
+on:
+  workflow_call:
+    inputs:
+      discussion_number:
+        description: 'Discussion number'
+        required: true
+        type: string
+      repository:
+        description: 'Repository name'
+        required: true
+        type: string
+    secrets:
+      gh_token:
+        description: 'GitHub token'
+        required: true
+
+permissions:
+  discussions: write
+  contents: read
+
+jobs:
+  assess-source-proposal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Assess Source Proposal
+        env:
+          GITHUB_TOKEN: ${{ secrets.gh_token }}
+          GITHUB_REPOSITORY: ${{ inputs.repository }}
+        run: |
+          python -m main agent run \
+            --mission assess_source \
+            --input discussion_number=${{ inputs.discussion_number }} \
+            --input repository=${{ inputs.repository }}
