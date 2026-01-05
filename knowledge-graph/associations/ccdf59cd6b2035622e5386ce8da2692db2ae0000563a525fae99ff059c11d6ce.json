@@ -1,0 +1,34 @@
+{
+  "source_checksum": "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce",
+  "associations": [
+    {
+      "source": "Joe Lombardi",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "Offensive Coordinator Joe Lombardi looks ahead to the Broncos' Week 18 matchup",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Vance Joseph",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "Defensive Coordinator Vance Joseph talks about the key to creating turnovers",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "Los Angeles Chargers",
+      "relationship": "Opposed to",
+      "evidence": "Broncos' Week 18 matchup vs. the Los Angeles Chargers",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-05T02:21:11.159949+00:00",
+  "metadata": {}
+}
