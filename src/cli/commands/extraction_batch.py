@@ -163,14 +163,28 @@ def extract_batch(
         EXIT_ERROR (1): Unexpected error occurred
     """
     logger.info(f"Starting batch extraction (batch_size={batch_size})")
+    logger.info(f"Repository: {repository}")
+    logger.info(f"Running in GitHub Actions: {os.environ.get('GITHUB_ACTIONS') == 'true'}")
     
     try:
         # Load parsing config and storage
+        logger.info("Loading parsing configuration...")
         config = load_parsing_config(None)
+        logger.info(f"Evidence root: {config.output_root}")
+        
+        logger.info("Initializing GitHub storage client...")
         github_client = get_github_storage_client()
+        if github_client:
+            logger.info(f"GitHub client initialized (branch: {github_client.branch})")
+        else:
+            logger.info("No GitHub client (running locally)")
+        
+        logger.info("Initializing ParseStorage...")
         storage = ParseStorage(config.output_root, github_client=github_client)
+        logger.info(f"Manifest path: {storage.manifest_path}")
         
         # Query pending documents
+        logger.info(f"Querying pending documents (limit={batch_size})...")
         pending_docs = get_pending_documents(storage, limit=batch_size)
         
         if not pending_docs:
@@ -178,15 +192,22 @@ def extract_batch(
             return EXIT_SUCCESS
         
         logger.info(f"Found {len(pending_docs)} pending documents")
+        for idx, doc in enumerate(pending_docs, 1):
+            logger.info(f"  {idx}. {doc.source[:80]}... ({doc.checksum[:12]})")
         
         # Initialize extraction toolkit
+        logger.info("Initializing extraction toolkit...")
         toolkit = ExtractionToolkit()
+        logger.info("Toolkit ready (using gpt-4o for extraction, gpt-4o-mini for assessment)")
         
         # Get workflow run ID if available
         run_id = os.environ.get("GITHUB_RUN_ID", "local")
+        logger.info(f"Workflow run ID: {run_id}")
         
         # Begin batch mode to defer commits
+        logger.info("Enabling batch mode (commits deferred until flush)...")
         storage.begin_batch()
+        logger.info("Batch mode enabled")
         
         # Track documents processed in this batch
         processed_count = 0
@@ -236,21 +257,33 @@ def extract_batch(
                 logger.info(f"    Extracting people...")
                 people_result = toolkit._extract_people({"checksum": checksum})
                 results["people"] = people_result
+                if isinstance(people_result, dict):
+                    count = people_result.get("extracted_count", 0)
+                    logger.info(f"      → {count} people extracted")
                 
                 # Extract organizations
                 logger.info(f"    Extracting organizations...")
                 orgs_result = toolkit._extract_organizations({"checksum": checksum})
                 results["organizations"] = orgs_result
+                if isinstance(orgs_result, dict):
+                    count = orgs_result.get("extracted_count", 0)
+                    logger.info(f"      → {count} organizations extracted")
                 
                 # Extract concepts
                 logger.info(f"    Extracting concepts...")
                 concepts_result = toolkit._extract_concepts({"checksum": checksum})
                 results["concepts"] = concepts_result
+                if isinstance(concepts_result, dict):
+                    count = concepts_result.get("extracted_count", 0)
+                    logger.info(f"      → {count} concepts extracted")
                 
                 # Extract associations
                 logger.info(f"    Extracting associations...")
                 assocs_result = toolkit._extract_associations({"checksum": checksum})
                 results["associations"] = assocs_result
+                if isinstance(assocs_result, dict):
+                    count = assocs_result.get("extracted_count", 0)
+                    logger.info(f"      → {count} associations extracted")
                 
                 # Step 3: Mark as complete
                 logger.info(f"  Marking extraction as complete...")
@@ -274,16 +307,23 @@ def extract_batch(
                 
                 # Flush what we have so far
                 logger.info(f"Flushing {processed_count + skipped_count} document updates before exiting...")
+                logger.info("Committing pending files and manifest to GitHub...")
                 storage.flush_all()
+                logger.info("Flush complete - progress saved")
                 
                 logger.info(f"Batch processing paused due to rate limit. Processed: {processed_count}, Skipped: {skipped_count}")
                 return EXIT_RATE_LIMITED
         
         # Step 4: Flush all changes in single commit
         logger.info(f"Flushing all changes ({processed_count + skipped_count} document updates)...")
+        if github_client:
+            logger.info(f"Committing to branch: {github_client.branch}")
+        logger.info("Writing pending content files and manifest...")
         storage.flush_all()
+        logger.info("All changes committed successfully")
         
         logger.info(f"Batch extraction complete. Processed: {processed_count}, Skipped: {skipped_count}")
+        logger.info(f"Total entities extracted from {processed_count} documents")
         return EXIT_SUCCESS
         
     except GitHubIssueError as exc:
