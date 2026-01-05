@@ -62,12 +62,15 @@ jobs:
           echo "Remote branches:"
           git ls-remote --heads origin | grep extraction || echo "  (no extraction branches)"
           
+          # Fetch all branches
+          git fetch origin main
+          
           # Check if extraction/queue branch exists remotely
           if ! git ls-remote --heads origin extraction/queue | grep extraction/queue; then
             echo ""
-            echo "=== Creating new extraction/queue branch ==="
-            git checkout -b extraction/queue
-            echo "Created local branch: extraction/queue"
+            echo "=== Creating new extraction/queue branch from main ==="
+            git checkout -b extraction/queue origin/main
+            echo "Created local branch: extraction/queue from origin/main"
             git push origin extraction/queue
             echo "Pushed to remote: origin/extraction/queue"
           else
@@ -77,6 +80,23 @@ jobs:
             echo "Fetched latest from origin/extraction/queue"
             git checkout -b extraction/queue origin/extraction/queue
             echo "Checked out local branch tracking origin/extraction/queue"
+            
+            # Check if branch needs to be updated from main
+            echo ""
+            echo "Checking if branch needs update from main..."
+            git fetch origin main
+            
+            BEHIND=$(git rev-list --count extraction/queue..origin/main)
+            echo "Commits behind origin/main: $BEHIND"
+            
+            if [ "$BEHIND" -gt 0 ]; then
+              echo "Branch is behind main, merging latest changes..."
+              git merge origin/main --no-edit -m "Merge latest changes from main"
+              git push origin extraction/queue
+              echo "Branch updated and pushed"
+            else
+              echo "Branch is up to date with main"
+            fi
           fi
           
           echo ""
@@ -97,7 +117,12 @@ jobs:
           echo "Batch size: ${{ inputs.batch_size || 10 }}"
           echo "Repository: ${{ github.repository }}"
           echo "Current branch: $(git branch --show-current)"
-          echo "Target commit branch (GITHUB_REF_NAME): $GITHUB_REF_NAME"
+          echo "GITHUB_REF_NAME environment variable: $GITHUB_REF_NAME"
+          echo ""
+          
+          # Verify environment is correctly set for Python
+          export GITHUB_REF_NAME=extraction/queue
+          echo "Explicitly set GITHUB_REF_NAME to: $GITHUB_REF_NAME"
           echo ""
           
           python main.py extraction-batch run \
@@ -170,7 +195,12 @@ jobs:
                 --head extraction/queue
               echo "PR created successfully"
             else
-              echo "WARNING: No commits to create PR with"
+              echo ""
+              echo "⚠️ No commits to create PR with - branch is up to date with main"
+              echo "This is normal if:"
+              echo "  1. Main was recently updated with these commits (e.g., via sync PR)"
+              echo "  2. The extraction hasn't created any new commits yet"
+              echo "Skipping PR creation."
             fi
           else
             echo "PR #$PR_NUMBER already exists"
