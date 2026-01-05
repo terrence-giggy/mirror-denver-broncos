@@ -5,57 +5,66 @@
       "source": "Alex Singleton",
       "target": "Denver Broncos",
       "relationship": "Related to",
-      "evidence": "Inside linebacker Alex Singleton talks about the mindset of the Broncos as they prepare for their Week 18 matchup.",
+      "evidence": "inside linebacker Alex Singleton talks about the mindset of the Broncos",
       "source_type": "Person",
       "target_type": "Organization",
-      "confidence": 0.9
+      "confidence": 1.0
     },
     {
       "source": "Alex Singleton",
       "target": "Los Angeles Chargers",
       "relationship": "Preparing for",
-      "evidence": "Inside linebacker Alex Singleton talks about the mindset of the Broncos as they prepare for their Week 18 matchup vs. the Los Angeles Chargers.",
+      "evidence": "Alex Singleton talks about the mindset of the Broncos as they prepare for their Week 18 matchup vs. the Los Angeles Chargers",
       "source_type": "Person",
       "target_type": "Organization",
-      "confidence": 0.9
+      "confidence": 1.0
     },
     {
       "source": "Adam Trautman",
-      "target": "home-field advantage",
-      "relationship": "Discusses importance of",
-      "evidence": "Tight end Adam Trautman discusses the importance of home-field advantage in the playoffs.",
+      "target": "Denver Broncos",
+      "relationship": "Related to",
+      "evidence": "tight end Adam Trautman discusses the importance of home-field advantage in the playoffs",
       "source_type": "Person",
-      "target_type": "Concept",
-      "confidence": 0.9
+      "target_type": "Organization",
+      "confidence": 1.0
     },
     {
       "source": "Bo Nix",
-      "target": "team's focus",
-      "relationship": "Discusses",
-      "evidence": "Quarterback Bo Nix talks about the team's focus heading into Week 18.",
+      "target": "Denver Broncos",
+      "relationship": "Related to",
+      "evidence": "quarterback Bo Nix talks about the team's focus heading into Week 18",
       "source_type": "Person",
-      "target_type": "Concept",
-      "confidence": 0.9
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Pat Surtain II",
+      "target": "Denver Broncos",
+      "relationship": "Related to",
+      "evidence": "cornerback Pat Surtain II discusses how they're preparing to face quarterback Trey Lance",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
     },
     {
       "source": "Pat Surtain II",
       "target": "Trey Lance",
       "relationship": "Preparing to face",
-      "evidence": "Cornerback Pat Surtain II discusses how they're preparing to face quarterback Trey Lance.",
+      "evidence": "cornerback Pat Surtain II discusses how they're preparing to face quarterback Trey Lance",
       "source_type": "Person",
       "target_type": "Person",
-      "confidence": 0.9
+      "confidence": 1.0
     },
     {
       "source": "Denver Broncos Cheerleaders",
       "target": "Denver Broncos",
-      "relationship": "Part of",
-      "evidence": "Stay connected with the Denver Broncos Cheerleaders and learn more about auditions, performances, and team news.",
+      "relationship": "Member of",
+      "evidence": "Stay connected with the Denver Broncos Cheerleaders and learn more about auditions, performances, and team news",
       "source_type": "Organization",
       "target_type": "Organization",
-      "confidence": 0.9
+      "confidence": 1.0
     }
   ],
-  "extracted_at": "2026-01-05T03:19:05.192910+00:00",
+  "extracted_at": "2026-01-05T04:33:07.159721+00:00",
   "metadata": {}
 }
