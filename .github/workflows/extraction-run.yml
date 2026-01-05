@@ -57,6 +57,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
+          # Configure git identity for merge commits
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
           echo "=== Checking extraction/queue branch ==="
           echo "Current branch: $(git branch --show-current)"
           echo "Remote branches:"
