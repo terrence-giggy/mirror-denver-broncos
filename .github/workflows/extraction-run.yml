@@ -89,6 +89,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: extraction/queue  # Override to commit to extraction/queue branch
         run: |
           set +e  # Don't exit on non-zero
           
@@ -96,6 +97,7 @@ jobs:
           echo "Batch size: ${{ inputs.batch_size || 10 }}"
           echo "Repository: ${{ github.repository }}"
           echo "Current branch: $(git branch --show-current)"
+          echo "Target commit branch (GITHUB_REF_NAME): $GITHUB_REF_NAME"
           echo ""
           
           python main.py extraction-batch run \
@@ -126,20 +128,41 @@ jobs:
         run: |
           echo "=== Checking for PR ==="
           
+          # Fetch latest from remote to ensure we have current state
+          echo "Fetching latest from origin/extraction/queue..."
+          git fetch origin extraction/queue
+          
+          # Compare local and remote
+          echo ""
+          echo "Branch comparison:"
+          echo "  Local branch: $(git branch --show-current)"
+          echo "  Local HEAD: $(git rev-parse HEAD)"
+          echo "  Remote HEAD: $(git rev-parse origin/extraction/queue)"
+          
+          # Check for commits between main and extraction/queue ON REMOTE
+          echo ""
+          echo "Checking commits between origin/main and origin/extraction/queue..."
+          REMOTE_COMMITS=$(git log origin/main..origin/extraction/queue --oneline | wc -l)
+          echo "Commits on origin/extraction/queue ahead of origin/main: $REMOTE_COMMITS"
+          
+          if [ "$REMOTE_COMMITS" -gt 0 ]; then
+            echo "Sample commits:"
+            git log origin/main..origin/extraction/queue --oneline -5
+          fi
+          
           # Check if PR already exists
+          echo ""
           PR_NUMBER=$(gh pr list --head extraction/queue --json number -q '.[0].number')
           
           if [ -z "$PR_NUMBER" ]; then
             echo "No PR found for extraction/queue branch"
-            echo ""
-            echo "=== Creating PR ==="
-            echo "Branch: extraction/queue -> main"
             
-            # Check for commits
-            COMMITS=$(git log origin/main..extraction/queue --oneline | wc -l)
-            echo "Commits ahead of main: $COMMITS"
-            
-            if [ "$COMMITS" -gt 0 ]; then
+            if [ "$REMOTE_COMMITS" -gt 0 ]; then
+              echo ""
+              echo "=== Creating PR ==="
+              echo "Branch: extraction/queue -> main"
+              echo "Commits to include: $REMOTE_COMMITS"
+              
               gh pr create \
                 --title "Entity Extractions (Batch)" \
                 --body "Automated entity extraction from documents in evidence/parsed/. This PR accumulates extractions across multiple workflow runs and auto-merges when all pending documents are processed." \
