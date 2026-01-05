@@ -1,4 +1,4 @@
-name: "Template: Sync from Upstream 🔧🔄⚙️"
+name: "Template: Sync from Upstream 🔧⚙️"
 
 on:
   workflow_dispatch:

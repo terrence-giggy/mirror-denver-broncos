@@ -1,4 +1,4 @@
-name: "Discussion Dispatcher 💬"
+name: "Discussion Dispatcher 💬🔄"
 
 on:
   discussion:

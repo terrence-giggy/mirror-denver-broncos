@@ -309,8 +309,25 @@ Closes #{issue_number}
                 logger.info(f"Created PR: {pr_result.get('pr_url')}")
             elif pr_result.get("status") == "skip":
                 logger.info(f"Skipped PR creation: {pr_result.get('message')}")
+            elif pr_result.get("status") == "error":
+                # PR creation failed - this is a critical error in Actions context
+                error_msg = pr_result.get('message', 'Unknown error')
+                logger.error(f"PR creation failed: {error_msg}")
+                post_comment(
+                    token=token,
+                    repository=repository,
+                    issue_number=issue_number,
+                    body=f"❌ Failed to create pull request: {error_msg}\n\nChanges may have been committed but PR creation failed.",
+                )
+                add_labels(
+                    token=token,
+                    repository=repository,
+                    issue_number=issue_number,
+                    labels=["extraction-error"],
+                )
+                return 1  # Fail the job
             else:
-                logger.warning(f"PR creation result: {pr_result}")
+                logger.warning(f"Unexpected PR creation result: {pr_result}")
         
         # Step 7: Post completion comment
         comment_body = _format_extraction_stats(results)

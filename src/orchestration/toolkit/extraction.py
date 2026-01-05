@@ -488,8 +488,8 @@ Return ONLY a JSON object with:
         
         try:
             # Get GitHub credentials from environment
-            token = resolve_token()
-            repository = resolve_repository()
+            token = resolve_token(explicit_token=None)
+            repository = resolve_repository(explicit_repo=None)
             
             if not token or not repository:
                 return {
