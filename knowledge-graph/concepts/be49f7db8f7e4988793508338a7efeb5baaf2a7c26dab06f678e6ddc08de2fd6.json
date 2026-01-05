@@ -5,7 +5,7 @@
     "Los Angeles Chargers",
     "Denver Broncos",
     "AFC West Standings",
-    "Win-Loss Record",
+    "Win-Loss-Tie Record",
     "Winning Percentage (PCT)",
     "Kansas City Chiefs",
     "Las Vegas Raiders",
@@ -15,6 +15,6 @@
     "Kansas City Chiefs Record: 6-10",
     "Las Vegas Raiders Record: 2-14"
   ],
-  "extracted_at": "2026-01-05T03:19:20.350055+00:00",
+  "extracted_at": "2026-01-05T04:33:23.702694+00:00",
   "metadata": {}
 }
