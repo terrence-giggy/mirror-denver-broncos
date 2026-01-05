@@ -67,7 +67,7 @@
     {
       "source": "Pat Surtain II",
       "target": "Trey Lance",
-      "relationship": "Preparing to face",
+      "relationship": "Related to",
       "evidence": "cornerback Pat Surtain II discusses how they're preparing to face quarterback Trey Lance",
       "source_type": "Person",
       "target_type": "Person",
@@ -101,6 +101,6 @@
       "confidence": 0.9
     }
   ],
-  "extracted_at": "2026-01-05T02:20:26.360081+00:00",
+  "extracted_at": "2026-01-05T02:45:55.567057+00:00",
   "metadata": {}
 }
