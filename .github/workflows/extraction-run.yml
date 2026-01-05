@@ -91,7 +91,7 @@ jobs:
             
             if [ "$BEHIND" -gt 0 ]; then
               echo "Branch is behind main, merging latest changes..."
-              git merge origin/main --no-edit -m "Merge latest changes from main"
+              git merge origin/main --allow-unrelated-histories --no-edit -m "Merge latest changes from main"
               git push origin extraction/queue
               echo "Branch updated and pushed"
             else
