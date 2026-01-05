@@ -1,0 +1,25 @@
+{
+  "source_checksum": "ef86262cc8da145d6ad5c18f2f2daddb6d93903ba0425b0569461d67e5a24208",
+  "associations": [
+    {
+      "source": "Sean Payton",
+      "target": "Denver Broncos",
+      "relationship": "Head Coach of",
+      "evidence": "\"Head Coach Sean Payton said.\"",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "Los Angeles Chargers",
+      "relationship": "Opponent of",
+      "evidence": "The Broncos will host the Los Angeles Chargers in the 2025 regular-season finale.",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-05T02:20:54.048284+00:00",
+  "metadata": {}
+}
