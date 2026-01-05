@@ -57,14 +57,31 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          # Check if extraction/queue branch exists
+          echo "=== Checking extraction/queue branch ==="
+          echo "Current branch: $(git branch --show-current)"
+          echo "Remote branches:"
+          git ls-remote --heads origin | grep extraction || echo "  (no extraction branches)"
+          
+          # Check if extraction/queue branch exists remotely
           if ! git ls-remote --heads origin extraction/queue | grep extraction/queue; then
-            echo "Creating extraction/queue branch from main"
+            echo ""
+            echo "=== Creating new extraction/queue branch ==="
             git checkout -b extraction/queue
+            echo "Created local branch: extraction/queue"
             git push origin extraction/queue
+            echo "Pushed to remote: origin/extraction/queue"
           else
-            echo "Branch extraction/queue already exists"
+            echo ""
+            echo "=== Checking out existing extraction/queue branch ==="
+            git fetch origin extraction/queue
+            echo "Fetched latest from origin/extraction/queue"
+            git checkout -b extraction/queue origin/extraction/queue
+            echo "Checked out local branch tracking origin/extraction/queue"
           fi
+          
+          echo ""
+          echo "Current branch: $(git branch --show-current)"
+          echo "Latest commit: $(git log -1 --oneline)"
       
       - name: Run batch extraction
         id: extraction
@@ -75,6 +92,12 @@ jobs:
         run: |
           set +e  # Don't exit on non-zero
           
+          echo "=== Starting batch extraction ==="
+          echo "Batch size: ${{ inputs.batch_size || 10 }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Current branch: $(git branch --show-current)"
+          echo ""
+          
           python main.py extraction-batch run \
             --batch-size ${{ inputs.batch_size || 10 }} \
             --repository ${{ github.repository }} \
@@ -83,6 +106,17 @@ jobs:
           EXIT_CODE=$?
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
           
+          echo ""
+          echo "=== Extraction complete ==="
+          echo "Exit code: $EXIT_CODE"
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            echo "Status: SUCCESS"
+          elif [ "$EXIT_CODE" -eq 42 ]; then
+            echo "Status: RATE LIMITED (will retry)"
+          else
+            echo "Status: ERROR"
+          fi
+          
           exit $EXIT_CODE
       
       - name: Ensure PR exists
@@ -90,18 +124,34 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
+          echo "=== Checking for PR ==="
+          
           # Check if PR already exists
           PR_NUMBER=$(gh pr list --head extraction/queue --json number -q '.[0].number')
           
           if [ -z "$PR_NUMBER" ]; then
-            echo "No PR found, creating one..."
-            gh pr create \
-              --title "Entity Extractions (Batch)" \
-              --body "Automated entity extraction from documents in evidence/parsed/. This PR accumulates extractions across multiple workflow runs and auto-merges when all pending documents are processed." \
-              --base main \
-              --head extraction/queue
+            echo "No PR found for extraction/queue branch"
+            echo ""
+            echo "=== Creating PR ==="
+            echo "Branch: extraction/queue -> main"
+            
+            # Check for commits
+            COMMITS=$(git log origin/main..extraction/queue --oneline | wc -l)
+            echo "Commits ahead of main: $COMMITS"
+            
+            if [ "$COMMITS" -gt 0 ]; then
+              gh pr create \
+                --title "Entity Extractions (Batch)" \
+                --body "Automated entity extraction from documents in evidence/parsed/. This PR accumulates extractions across multiple workflow runs and auto-merges when all pending documents are processed." \
+                --base main \
+                --head extraction/queue
+              echo "PR created successfully"
+            else
+              echo "WARNING: No commits to create PR with"
+            fi
           else
             echo "PR #$PR_NUMBER already exists"
+            gh pr view $PR_NUMBER --json title,url -q '.title + " - " + .url'
           fi
       
       - name: Handle rate limit
@@ -122,9 +172,16 @@ jobs:
         if: steps.extraction.outputs.exit_code == '0'
         id: pending
         run: |
+          echo "=== Checking pending documents ==="
           PENDING=$(python main.py extraction-batch pending --count-only)
           echo "pending_count=$PENDING" >> $GITHUB_OUTPUT
           echo "Pending documents: $PENDING"
+          
+          if [ "$PENDING" -eq 0 ]; then
+            echo "✓ All documents processed - ready for auto-merge"
+          else
+            echo "⧗ $PENDING documents still pending - keeping PR open"
+          fi
       
       - name: Auto-merge PR if clean
         if: steps.extraction.outputs.exit_code == '0' && steps.pending.outputs.pending_count == '0'
