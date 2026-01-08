@@ -1,0 +1,25 @@
+{
+  "source_checksum": "8706a743c7e389daad160306dd3ea9f1bb81c14622c4e6c851b386ac8b7992db",
+  "associations": [
+    {
+      "source": "Sean Payton",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "Head Coach Sean Payton meets the media to talk about how the team keeps its focus.",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 0.9
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "Los Angeles Chargers",
+      "relationship": "Opposed to",
+      "evidence": "HC Sean Payton on Broncos' outlook for Week 18 vs. Chargers.",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 0.8
+    }
+  ],
+  "extracted_at": "2026-01-08T04:37:17.126173+00:00",
+  "metadata": {}
+}
