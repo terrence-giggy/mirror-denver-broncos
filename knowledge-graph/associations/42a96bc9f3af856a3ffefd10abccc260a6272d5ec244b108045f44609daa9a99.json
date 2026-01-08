@@ -1,0 +1,43 @@
+{
+  "source_checksum": "42a96bc9f3af856a3ffefd10abccc260a6272d5ec244b108045f44609daa9a99",
+  "associations": [
+    {
+      "source": "Joe Lombardi",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "Broncos Offensive Coordinator Joe Lombardi",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Vance Joseph",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "Defensive Coordinator Vance Joseph",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Darren Rizzi",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "Special Teams Coordinator/Assistant Special Teams Coach Darren Rizzi",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "Los Angeles Chargers",
+      "relationship": "Opposed to",
+      "evidence": "ahead of Sunday's Week 18 game against the Los Angeles Chargers",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-08T04:36:49.494510+00:00",
+  "metadata": {}
+}
