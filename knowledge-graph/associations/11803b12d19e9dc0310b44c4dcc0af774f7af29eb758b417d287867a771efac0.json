@@ -1,0 +1,34 @@
+{
+  "source_checksum": "11803b12d19e9dc0310b44c4dcc0af774f7af29eb758b417d287867a771efac0",
+  "associations": [
+    {
+      "source": "Alex Singleton",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "inside linebacker Alex Singleton talks about the mindset of the Broncos",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Adam Trautman",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "tight end Adam Trautman discusses the importance of home-field advantage",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "Los Angeles Chargers",
+      "relationship": "Opposed to",
+      "evidence": "Broncos as they prepare for their Week 18 matchup vs. the Los Angeles Chargers",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-08T04:34:03.649964+00:00",
+  "metadata": {}
+}
