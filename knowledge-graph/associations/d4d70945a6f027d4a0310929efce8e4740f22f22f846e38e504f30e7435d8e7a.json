@@ -1,0 +1,34 @@
+{
+  "source_checksum": "d4d70945a6f027d4a0310929efce8e4740f22f22f846e38e504f30e7435d8e7a",
+  "associations": [
+    {
+      "source": "Denver Broncos",
+      "target": "M\u00e9xico",
+      "relationship": "Obtained as market in",
+      "evidence": "En 2021, los Denver Broncos obtuvieron M\u00e9xico como parte del programa de Global Markets Program de la NFL.",
+      "source_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "Global Markets Program",
+      "relationship": "Participant in",
+      "evidence": "En 2021, los Denver Broncos obtuvieron M\u00e9xico como parte del programa de Global Markets Program de la NFL.",
+      "source_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "Tochito",
+      "relationship": "Supports development of",
+      "evidence": "Los Broncos contin\u00faan expandiendo aut\u00e9nticamente su presencia en M\u00e9xico mediante el desarrollo de asociaciones con marcas locales, el apoyo al desarrollo del Tochito.",
+      "source_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-08T04:33:13.118403+00:00",
+  "metadata": {}
+}
