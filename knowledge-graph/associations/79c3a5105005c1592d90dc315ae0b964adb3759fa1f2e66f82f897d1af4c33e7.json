@@ -1,0 +1,25 @@
+{
+  "source_checksum": "79c3a5105005c1592d90dc315ae0b964adb3759fa1f2e66f82f897d1af4c33e7",
+  "associations": [
+    {
+      "source": "Pat Surtain II",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "Cornerback Pat Surtain II meets the media to talk about... how the Broncos can force more takeaways and more.",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Trey Lance",
+      "target": "Chargers",
+      "relationship": "Member of",
+      "evidence": "the potential of playing against Chargers quarterback Trey Lance",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-08T04:37:09.736850+00:00",
+  "metadata": {}
+}
