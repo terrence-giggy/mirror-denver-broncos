@@ -3,7 +3,7 @@
   "associations": [
     {
       "source": "Sean Payton",
-      "target": "stadium",
+      "target": "stadium atmosphere",
       "relationship": "Related to",
       "evidence": "\"Let's get this [stadium], when they're getting in the huddle, deafening,\" Head Coach Sean Payton said.",
       "source_type": "Person",
@@ -13,11 +13,11 @@
     {
       "source": "Denver Broncos",
       "target": "Los Angeles Chargers",
-      "relationship": "Opposed to",
+      "relationship": "Related to",
       "evidence": "The Broncos will host the Los Angeles Chargers in the 2025 regular-season finale on Sunday, Jan. 4 at 2:25 p.m. MT on CBS.",
       "source_type": "Organization",
       "target_type": "Organization",
-      "confidence": 0.95
+      "confidence": 0.9
     },
     {
       "source": "Denver Broncos",
@@ -26,11 +26,11 @@
       "evidence": "The Broncos will host the Los Angeles Chargers in the 2025 regular-season finale on Sunday, Jan. 4 at 2:25 p.m. MT on CBS.",
       "source_type": "Organization",
       "target_type": "Organization",
-      "confidence": 0.9
+      "confidence": 0.8
     },
     {
-      "source": "Denver Broncos",
-      "target": "NFL Week 18 scenarios",
+      "source": "NFL",
+      "target": "Week 18 scenarios",
       "relationship": "Related to",
       "evidence": "The NFL announced the following Week 18 scenarios for the Broncos.",
       "source_type": "Organization",
@@ -38,6 +38,6 @@
       "confidence": 0.9
     }
   ],
-  "extracted_at": "2026-01-05T04:33:36.361984+00:00",
+  "extracted_at": "2026-01-08T04:32:06.257582+00:00",
   "metadata": {}
 }
