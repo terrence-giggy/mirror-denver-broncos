@@ -1,0 +1,115 @@
+{
+  "source_checksum": "8b21d1d86d7fc435a552d1bfc4249e92ac30aec7493a51ba47bf00fd38c933a4",
+  "associations": [
+    {
+      "source": "Denver Broncos Foundation",
+      "target": "Ent Credit Union",
+      "relationship": "Collaborated with",
+      "evidence": "the Denver Broncos Foundation and Ent Credit Union hosted an Adventures in Reality simulation for students at Manual High School",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 0.9
+    },
+    {
+      "source": "Denver Broncos Foundation",
+      "target": "Malcolm Roach",
+      "relationship": "Collaborated with",
+      "evidence": "the Denver Broncos Foundation and Ent Credit Union hosted an Adventures in Reality simulation for students at Manual High School, with help from Malcolm Roach",
+      "source_type": "Organization",
+      "target_type": "Person",
+      "confidence": 0.9
+    },
+    {
+      "source": "Denver Broncos Foundation",
+      "target": "Denver Broncos Cheerleaders",
+      "relationship": "Collaborated with",
+      "evidence": "the Denver Broncos Foundation and Ent Credit Union hosted an Adventures in Reality simulation for students at Manual High School, with help from Malcolm Roach, Denver Broncos Cheerleaders and Broncos alumni",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 0.9
+    },
+    {
+      "source": "Denver Broncos Foundation",
+      "target": "Broncos alumni",
+      "relationship": "Collaborated with",
+      "evidence": "the Denver Broncos Foundation and Ent Credit Union hosted an Adventures in Reality simulation for students at Manual High School, with help from Malcolm Roach, Denver Broncos Cheerleaders and Broncos alumni",
+      "source_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 0.9
+    },
+    {
+      "source": "Frank Crum",
+      "target": "Que Robinson",
+      "relationship": "Collaborated with",
+      "evidence": "Broncos players Frank Crum and Que Robinson, alumni Montee Ball and Reuben Droughns, cheerleaders Julia and Sydney J and Miles the Mascot visited those fighting cancer at CommonSpirit St. Anthony Hospital",
+      "source_type": "Person",
+      "target_type": "Person",
+      "confidence": 0.9
+    },
+    {
+      "source": "Frank Crum",
+      "target": "Montee Ball",
+      "relationship": "Collaborated with",
+      "evidence": "Broncos players Frank Crum and Que Robinson, alumni Montee Ball and Reuben Droughns, cheerleaders Julia and Sydney J and Miles the Mascot visited those fighting cancer at CommonSpirit St. Anthony Hospital",
+      "source_type": "Person",
+      "target_type": "Person",
+      "confidence": 0.9
+    },
+    {
+      "source": "Frank Crum",
+      "target": "Reuben Droughns",
+      "relationship": "Collaborated with",
+      "evidence": "Broncos players Frank Crum and Que Robinson, alumni Montee Ball and Reuben Droughns, cheerleaders Julia and Sydney J and Miles the Mascot visited those fighting cancer at CommonSpirit St. Anthony Hospital",
+      "source_type": "Person",
+      "target_type": "Person",
+      "confidence": 0.9
+    },
+    {
+      "source": "Frank Crum",
+      "target": "Julia",
+      "relationship": "Collaborated with",
+      "evidence": "Broncos players Frank Crum and Que Robinson, alumni Montee Ball and Reuben Droughns, cheerleaders Julia and Sydney J and Miles the Mascot visited those fighting cancer at CommonSpirit St. Anthony Hospital",
+      "source_type": "Person",
+      "target_type": "Person",
+      "confidence": 0.9
+    },
+    {
+      "source": "Frank Crum",
+      "target": "Sydney J",
+      "relationship": "Collaborated with",
+      "evidence": "Broncos players Frank Crum and Que Robinson, alumni Montee Ball and Reuben Droughns, cheerleaders Julia and Sydney J and Miles the Mascot visited those fighting cancer at CommonSpirit St. Anthony Hospital",
+      "source_type": "Person",
+      "target_type": "Person",
+      "confidence": 0.9
+    },
+    {
+      "source": "Frank Crum",
+      "target": "Miles the Mascot",
+      "relationship": "Collaborated with",
+      "evidence": "Broncos players Frank Crum and Que Robinson, alumni Montee Ball and Reuben Droughns, cheerleaders Julia and Sydney J and Miles the Mascot visited those fighting cancer at CommonSpirit St. Anthony Hospital",
+      "source_type": "Person",
+      "target_type": "Person",
+      "confidence": 0.9
+    },
+    {
+      "source": "Denver Broncos Cheerleaders",
+      "target": "Denver Broncos Boys & Girls Club",
+      "relationship": "Collaborated with",
+      "evidence": "Miles the Mascot, Denver Broncos alumni and Denver Broncos Cheerleaders joined children from the Denver Broncos Boys & Girls Club to go on a back-to-school shopping spree at a local King Soopers Marketplace",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 0.9
+    },
+    {
+      "source": "Miles the Mascot",
+      "target": "Denver Broncos Boys & Girls Club",
+      "relationship": "Collaborated with",
+      "evidence": "Miles the Mascot, Denver Broncos alumni and Denver Broncos Cheerleaders joined children from the Denver Broncos Boys & Girls Club to go on a back-to-school shopping spree at a local King Soopers Marketplace",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 0.9
+    }
+  ],
+  "extracted_at": "2026-01-08T04:33:05.064459+00:00",
+  "metadata": {}
+}
