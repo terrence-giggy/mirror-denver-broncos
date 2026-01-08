@@ -1,0 +1,52 @@
+{
+  "source_checksum": "f1f6d35ded2c304a0061b1541c401d9825bf7a2b07cf6b8af75e921acb9ad22a",
+  "associations": [
+    {
+      "source": "Sean Payton",
+      "target": "Denver Broncos",
+      "relationship": "Head Coach of",
+      "evidence": "Head Coach Sean Payton said the team didn't discuss winning the division.",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Alex Singleton",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "inside linebacker Alex Singleton said.",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "AFC West",
+      "relationship": "Champion of",
+      "evidence": "The AFC West champion Broncos' focus on Monday was on what's next.",
+      "source_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos",
+      "target": "Los Angeles Chargers",
+      "relationship": "Opponent of",
+      "evidence": "The Broncos' team meeting centered around a Week 18 matchup against the Chargers.",
+      "source_type": "Organization",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Sean Payton",
+      "target": "AFC No. 1 Seed",
+      "relationship": "Advocate for",
+      "evidence": "Payton said of the benefit of earning the top seed: 'Just historically speaking, it's extremely important.'",
+      "source_type": "Person",
+      "target_type": "Concept",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-08T04:34:13.293833+00:00",
+  "metadata": {}
+}
