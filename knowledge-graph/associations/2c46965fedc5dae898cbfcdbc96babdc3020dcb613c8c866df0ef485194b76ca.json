@@ -1,0 +1,16 @@
+{
+  "source_checksum": "2c46965fedc5dae898cbfcdbc96babdc3020dcb613c8c866df0ef485194b76ca",
+  "associations": [
+    {
+      "source": "Bo Nix",
+      "target": "Denver Broncos",
+      "relationship": "Member of",
+      "evidence": "Quarterback Bo Nix meets the media to talk about the Broncos' opportunity to clinch the AFC's top seed",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-08T04:37:23.907071+00:00",
+  "metadata": {}
+}
