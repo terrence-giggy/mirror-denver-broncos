@@ -1,0 +1,34 @@
+{
+  "source_checksum": "306e3f3d8837772b93c31848a59f1048ab5b29efd416ded4e62305cb1f9f22e1",
+  "associations": [
+    {
+      "source": "Bo Nix",
+      "target": "Broncos",
+      "relationship": "Member of",
+      "evidence": "quarterback Bo Nix talks about the team's focus heading into Week 18",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Pat Surtain II",
+      "target": "Broncos",
+      "relationship": "Member of",
+      "evidence": "cornerback Pat Surtain II discusses how they're preparing to face quarterback Trey Lance",
+      "source_type": "Person",
+      "target_type": "Organization",
+      "confidence": 1.0
+    },
+    {
+      "source": "Pat Surtain II",
+      "target": "Trey Lance",
+      "relationship": "Opposed to",
+      "evidence": "cornerback Pat Surtain II discusses how they're preparing to face quarterback Trey Lance",
+      "source_type": "Person",
+      "target_type": "Person",
+      "confidence": 1.0
+    }
+  ],
+  "extracted_at": "2026-01-08T04:34:38.587379+00:00",
+  "metadata": {}
+}
