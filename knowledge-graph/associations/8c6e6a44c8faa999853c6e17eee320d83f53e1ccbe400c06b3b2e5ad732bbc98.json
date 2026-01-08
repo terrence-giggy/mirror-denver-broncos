@@ -3,17 +3,26 @@
   "associations": [
     {
       "source": "Alex Singleton",
-      "target": "Denver Broncos",
+      "target": "mindset of the Broncos",
       "relationship": "Related to",
       "evidence": "inside linebacker Alex Singleton talks about the mindset of the Broncos",
       "source_type": "Person",
-      "target_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "Alex Singleton",
+      "target": "Week 18 matchup",
+      "relationship": "Related to",
+      "evidence": "Alex Singleton talks about the mindset of the Broncos as they prepare for their Week 18 matchup",
+      "source_type": "Person",
+      "target_type": "Concept",
       "confidence": 1.0
     },
     {
       "source": "Alex Singleton",
       "target": "Los Angeles Chargers",
-      "relationship": "Preparing for",
+      "relationship": "Related to",
       "evidence": "Alex Singleton talks about the mindset of the Broncos as they prepare for their Week 18 matchup vs. the Los Angeles Chargers",
       "source_type": "Person",
       "target_type": "Organization",
@@ -21,50 +30,86 @@
     },
     {
       "source": "Adam Trautman",
-      "target": "Denver Broncos",
+      "target": "home-field advantage",
       "relationship": "Related to",
       "evidence": "tight end Adam Trautman discusses the importance of home-field advantage in the playoffs",
       "source_type": "Person",
-      "target_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "Adam Trautman",
+      "target": "playoffs",
+      "relationship": "Related to",
+      "evidence": "tight end Adam Trautman discusses the importance of home-field advantage in the playoffs",
+      "source_type": "Person",
+      "target_type": "Concept",
       "confidence": 1.0
     },
     {
       "source": "Bo Nix",
-      "target": "Denver Broncos",
+      "target": "team focus",
       "relationship": "Related to",
       "evidence": "quarterback Bo Nix talks about the team's focus heading into Week 18",
       "source_type": "Person",
-      "target_type": "Organization",
+      "target_type": "Concept",
       "confidence": 1.0
     },
     {
-      "source": "Pat Surtain II",
-      "target": "Denver Broncos",
+      "source": "Bo Nix",
+      "target": "Week 18",
       "relationship": "Related to",
-      "evidence": "cornerback Pat Surtain II discusses how they're preparing to face quarterback Trey Lance",
+      "evidence": "quarterback Bo Nix talks about the team's focus heading into Week 18",
       "source_type": "Person",
-      "target_type": "Organization",
+      "target_type": "Concept",
       "confidence": 1.0
     },
     {
       "source": "Pat Surtain II",
       "target": "Trey Lance",
-      "relationship": "Preparing to face",
+      "relationship": "Preparing for",
       "evidence": "cornerback Pat Surtain II discusses how they're preparing to face quarterback Trey Lance",
       "source_type": "Person",
       "target_type": "Person",
       "confidence": 1.0
     },
     {
+      "source": "Pat Surtain II",
+      "target": "preparation for Trey Lance",
+      "relationship": "Related to",
+      "evidence": "cornerback Pat Surtain II discusses how they're preparing to face quarterback Trey Lance",
+      "source_type": "Person",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
       "source": "Denver Broncos Cheerleaders",
-      "target": "Denver Broncos",
-      "relationship": "Member of",
+      "target": "auditions",
+      "relationship": "Related to",
+      "evidence": "Stay connected with the Denver Broncos Cheerleaders and learn more about auditions",
+      "source_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos Cheerleaders",
+      "target": "performances",
+      "relationship": "Related to",
+      "evidence": "Stay connected with the Denver Broncos Cheerleaders and learn more about auditions, performances",
+      "source_type": "Organization",
+      "target_type": "Concept",
+      "confidence": 1.0
+    },
+    {
+      "source": "Denver Broncos Cheerleaders",
+      "target": "team news",
+      "relationship": "Related to",
       "evidence": "Stay connected with the Denver Broncos Cheerleaders and learn more about auditions, performances, and team news",
       "source_type": "Organization",
-      "target_type": "Organization",
+      "target_type": "Concept",
       "confidence": 1.0
     }
   ],
-  "extracted_at": "2026-01-05T04:33:07.159721+00:00",
+  "extracted_at": "2026-01-08T04:31:39.252551+00:00",
   "metadata": {}
 }
