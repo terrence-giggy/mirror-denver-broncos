@@ -1,0 +1,30 @@
+{
+  "canonical_id": "nfl",
+  "canonical_name": "NFL",
+  "entity_type": "Organization",
+  "aliases": [
+    "NFL"
+  ],
+  "source_checksums": [
+    "22f13f6a1e57b6882796c973d623744e11e60f3c869041f174c35f668a56746c",
+    "1c17939eb309aefbce0f43e9c57c9ae1c10097a0559dd3557e4222629c7bb9f1",
+    "1107b115e212fb679d67b8bf7e05cb4217513edadcd4d2c730a05f642d9b125b"
+  ],
+  "corroboration_score": 3,
+  "first_seen": "2026-01-09T05:06:29.324933+00:00",
+  "last_updated": "2026-01-09T05:06:29.324934+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T05:06:29.324935+00:00",
+      "by": "copilot",
+      "reasoning": "New NFL entity from entity resolution batch"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}
