@@ -1,0 +1,29 @@
+{
+  "canonical_id": "sean-payton",
+  "canonical_name": "Sean Payton",
+  "entity_type": "Person",
+  "aliases": [
+    "Sean Payton"
+  ],
+  "source_checksums": [
+    "8706a743c7e389daad160306dd3ea9f1bb81c14622c4e6c851b386ac8b7992db"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T02:19:13.605190+00:00",
+  "last_updated": "2026-01-09T02:19:13.605190+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T02:19:13.605190+00:00",
+      "by": "copilot",
+      "issue_number": 757,
+      "reasoning": "NFL head coach of the Denver Broncos"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

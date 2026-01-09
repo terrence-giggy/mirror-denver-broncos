@@ -1,0 +1,29 @@
+{
+  "canonical_id": "justin-herbert",
+  "canonical_name": "Justin Herbert",
+  "entity_type": "Person",
+  "aliases": [
+    "Justin Herbert"
+  ],
+  "source_checksums": [
+    "7bd4968b80c018a46ccdfcaa1e6ed1b09d9deb22361ec9e537132dd461b19520"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T02:19:13.605190+00:00",
+  "last_updated": "2026-01-09T02:19:13.605190+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T02:19:13.605190+00:00",
+      "by": "copilot",
+      "issue_number": 757,
+      "reasoning": "NFL player, quarterback for the Los Angeles Chargers mentioned in Broncos context"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

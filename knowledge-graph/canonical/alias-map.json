@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "last_updated": "2026-01-09T02:19:13.614772+00:00",
+  "by_type": {
+    "Person": {
+      "ben powers": "ben-powers",
+      "karene reid": "karene-reid",
+      "john franklin-myers": "john-franklin-myers",
+      "dre greenlaw": "dre-greenlaw",
+      "pat surtain": "pat-surtain",
+      "trey lance": "trey-lance",
+      "elisa hernandez": "elisa-hernandez",
+      "aric dilalla": "aric-dilalla",
+      "justin herbert": "justin-herbert",
+      "sean payton": "sean-payton",
+      "malcolm roach": "malcolm-roach",
+      "frank crum": "frank-crum",
+      "que robinson": "que-robinson",
+      "montee ball": "montee-ball",
+      "reuben droughns": "reuben-droughns",
+      "julia": "julia",
+      "sydney j": "sydney-j",
+      "alex singleton": "alex-singleton",
+      "adam trautman": "adam-trautman",
+      "bo nix": "bo-nix"
+    },
+    "Organization": {},
+    "Concept": {}
+  }
+}

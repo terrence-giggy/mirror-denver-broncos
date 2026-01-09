@@ -1,0 +1,29 @@
+{
+  "canonical_id": "alex-singleton",
+  "canonical_name": "Alex Singleton",
+  "entity_type": "Person",
+  "aliases": [
+    "Alex Singleton"
+  ],
+  "source_checksums": [
+    "8c6e6a44c8faa999853c6e17eee320d83f53e1ccbe400c06b3b2e5ad732bbc98"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T02:19:13.605190+00:00",
+  "last_updated": "2026-01-09T02:19:13.605190+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T02:19:13.605190+00:00",
+      "by": "copilot",
+      "issue_number": 757,
+      "reasoning": "NFL player, linebacker for the Denver Broncos"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

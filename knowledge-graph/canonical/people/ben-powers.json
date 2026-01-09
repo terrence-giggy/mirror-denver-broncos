@@ -1,0 +1,29 @@
+{
+  "canonical_id": "ben-powers",
+  "canonical_name": "Ben Powers",
+  "entity_type": "Person",
+  "aliases": [
+    "Ben Powers"
+  ],
+  "source_checksums": [
+    "708064eadce1b635b616dc7fd0ac8e429ef593775e1866aaf0620e96c677bbda"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T02:19:13.605190+00:00",
+  "last_updated": "2026-01-09T02:19:13.605190+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T02:19:13.605190+00:00",
+      "by": "copilot",
+      "issue_number": 757,
+      "reasoning": "NFL player, offensive guard for the Denver Broncos"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}
