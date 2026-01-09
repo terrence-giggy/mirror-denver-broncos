@@ -1,4 +1,4 @@
-name: "Template: Validate & Auto-Merge Sync PRs 🔧🔄"
+name: "PR Auto-Approve: Upstream Sync 🔧🔄"
 
 on:
   pull_request:
@@ -103,58 +103,80 @@ jobs:
           echo "auto_merge=true" >> $GITHUB_OUTPUT
           echo "✅ All verification checks passed"
 
-      - name: Approve PR (if possible)
+      - name: Auto-approve PR
         if: steps.verify.outputs.auto_merge == 'true'
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          # Attempt to approve PR, but suppress expected errors (self-approval)
-          if python -m main approve-pr \
-            --repo "${{ github.repository }}" \
-            --pr ${{ github.event.pull_request.number }} \
-            --body "✅ Automated approval: Upstream sync PR passed all validation checks" 2>/dev/null; then
-            echo "✅ PR approved successfully"
-          else
-            echo "ℹ️ Skipping PR approval (expected for self-created PRs)"
-            echo "Auto-merge will proceed without explicit approval"
-          fi
-
-      - name: Wait for PR to stabilize
-        if: steps.verify.outputs.auto_merge == 'true'
-        run: |
-          echo "Waiting for PR status to stabilize..."
-          sleep 5
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Check if already approved
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            const hasApproval = reviews.data.some(review => 
+              review.state === 'APPROVED'
+            );
+            
+            if (!hasApproval) {
+              try {
+                await github.rest.pulls.createReview({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  event: 'APPROVE',
+                  body: '🤖 Auto-approved: Upstream sync PR passed all validation checks.\n\n✅ Only synced template files modified\n✅ All validation checks passed\n✅ Safe to merge automatically'
+                });
+                
+                console.log(`✅ Auto-approved PR #${pr.number}`);
+              } catch (error) {
+                // Expected for self-created PRs
+                console.log(`ℹ️ Could not approve (${error.message}) - proceeding with auto-merge anyway`);
+              }
+            } else {
+              console.log(`⏭️  PR #${pr.number} already approved`);
+            }
 
       - name: Enable auto-merge
         if: steps.verify.outputs.auto_merge == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          # Retry logic for enabling auto-merge
-          MAX_RETRIES=3
-          RETRY_DELAY=10
-          
-          for i in $(seq 1 $MAX_RETRIES); do
-            echo "Attempt $i of $MAX_RETRIES to enable auto-merge..."
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
             
-            if python -m main enable-auto-merge \
-              --repo "${{ github.repository }}" \
-              --pr ${{ github.event.pull_request.number }} \
-              --merge-method SQUASH; then
-              echo "✅ Auto-merge enabled successfully"
-              exit 0
-            fi
-            
-            if [ $i -lt $MAX_RETRIES ]; then
-              echo "Failed, waiting ${RETRY_DELAY}s before retry..."
-              sleep $RETRY_DELAY
-            fi
-          done
-          
-          echo "::warning::Failed to enable auto-merge after $MAX_RETRIES attempts"
-          echo "::warning::PR may need manual merge or will auto-merge once all checks pass"
-          exit 0
+            try {
+              // Enable auto-merge using GraphQL (required for auto-merge API)
+              const mutation = `
+                mutation EnableAutoMerge($pullRequestId: ID!) {
+                  enablePullRequestAutoMerge(input: {
+                    pullRequestId: $pullRequestId,
+                    mergeMethod: SQUASH
+                  }) {
+                    pullRequest {
+                      autoMergeRequest {
+                        enabledAt
+                      }
+                    }
+                  }
+                }
+              `;
+              
+              const result = await github.graphql(mutation, {
+                pullRequestId: pr.node_id
+              });
+              
+              console.log(`✅ Enabled auto-merge for PR #${pr.number}`);
+              console.log('PR will automatically merge once all required checks pass.');
+            } catch (error) {
+              console.log(`⚠️  Could not enable auto-merge: ${error.message}`);
+              console.log('This may be expected if auto-merge is already enabled or branch protection requires reviews.');
+              // Don't fail the workflow - auto-merge might already be enabled
+            }
 
       - name: Create job summary
         if: always()

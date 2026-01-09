@@ -1,0 +1,218 @@
+name: "PR Auto-Approve: Knowledge Base 🤖✅"
+
+# Auto-approves and merges PRs that ONLY modify knowledge-graph/ files
+# This prevents bottlenecks from synthesis/extraction PRs waiting for human review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-and-approve:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get changed files
+        id: changed_files
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            const changedFiles = files.data.map(f => f.filename);
+            console.log('Changed files:', changedFiles);
+            
+            // Check if ALL files are under knowledge-graph/ or evidence/parsed/
+            const allowedPrefixes = [
+              'knowledge-graph/',
+              'evidence/parsed/'
+            ];
+            
+            const allAllowed = changedFiles.every(file => 
+              allowedPrefixes.some(prefix => file.startsWith(prefix))
+            );
+            
+            // Check if any workflow files were changed (security concern)
+            const hasWorkflowChanges = changedFiles.some(file => 
+              file.startsWith('.github/workflows/')
+            );
+            
+            // Check if any source code was changed
+            const hasCodeChanges = changedFiles.some(file => 
+              file.startsWith('src/') || 
+              file.startsWith('tests/') ||
+              file === 'requirements.txt' ||
+              file === 'main.py'
+            );
+            
+            core.setOutput('all_kb_files', allAllowed.toString());
+            core.setOutput('has_workflow_changes', hasWorkflowChanges.toString());
+            core.setOutput('has_code_changes', hasCodeChanges.toString());
+            core.setOutput('file_count', changedFiles.length);
+            
+            return {
+              allAllowed,
+              hasWorkflowChanges,
+              hasCodeChanges,
+              fileCount: changedFiles.length,
+              files: changedFiles
+            };
+      
+      - name: Check if auto-approvable
+        id: check_approval
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const allKbFiles = '${{ steps.changed_files.outputs.all_kb_files }}' === 'true';
+            const hasWorkflowChanges = '${{ steps.changed_files.outputs.has_workflow_changes }}' === 'true';
+            const hasCodeChanges = '${{ steps.changed_files.outputs.has_code_changes }}' === 'true';
+            const fileCount = parseInt('${{ steps.changed_files.outputs.file_count }}');
+            
+            // Auto-approve if:
+            // 1. All files are KB/evidence files
+            // 2. No workflow changes (security)
+            // 3. No source code changes
+            const shouldAutoApprove = allKbFiles && !hasWorkflowChanges && !hasCodeChanges;
+            
+            console.log('Auto-approval check:');
+            console.log(`  All KB files: ${allKbFiles}`);
+            console.log(`  Has workflow changes: ${hasWorkflowChanges}`);
+            console.log(`  Has code changes: ${hasCodeChanges}`);
+            console.log(`  File count: ${fileCount}`);
+            console.log(`  Should auto-approve: ${shouldAutoApprove}`);
+            
+            core.setOutput('should_approve', shouldAutoApprove.toString());
+            return shouldAutoApprove;
+      
+      - name: Auto-approve PR
+        if: steps.check_approval.outputs.should_approve == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Check if already approved
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            const hasApproval = reviews.data.some(review => 
+              review.state === 'APPROVED'
+            );
+            
+            if (!hasApproval) {
+              await github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                event: 'APPROVE',
+                body: '🤖 Auto-approved: This PR only modifies knowledge graph and evidence files.\n\n✅ No code changes detected\n✅ No workflow changes detected\n✅ Safe to merge automatically'
+              });
+              
+              console.log(`✅ Auto-approved PR #${pr.number}`);
+            } else {
+              console.log(`⏭️  PR #${pr.number} already approved`);
+            }
+      
+      - name: Enable auto-merge
+        if: steps.check_approval.outputs.should_approve == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            
+            try {
+              // Enable auto-merge using GraphQL (required for auto-merge)
+              const mutation = `
+                mutation EnableAutoMerge($pullRequestId: ID!) {
+                  enablePullRequestAutoMerge(input: {
+                    pullRequestId: $pullRequestId,
+                    mergeMethod: SQUASH
+                  }) {
+                    pullRequest {
+                      autoMergeRequest {
+                        enabledAt
+                      }
+                    }
+                  }
+                }
+              `;
+              
+              const result = await github.graphql(mutation, {
+                pullRequestId: pr.node_id
+              });
+              
+              console.log(`✅ Enabled auto-merge for PR #${pr.number}`);
+            } catch (error) {
+              console.log(`⚠️  Could not enable auto-merge: ${error.message}`);
+              console.log('This may be expected if auto-merge is already enabled or branch protection requires reviews.');
+            }
+      
+      - name: Comment on non-auto-approvable PR
+        if: steps.check_approval.outputs.should_approve != 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const allKbFiles = '${{ steps.changed_files.outputs.all_kb_files }}' === 'true';
+            const hasWorkflowChanges = '${{ steps.changed_files.outputs.has_workflow_changes }}' === 'true';
+            const hasCodeChanges = '${{ steps.changed_files.outputs.has_code_changes }}' === 'true';
+            
+            let reason = '⚠️  This PR requires manual review:\n\n';
+            
+            if (!allKbFiles) {
+              reason += '- ❌ Contains files outside `knowledge-graph/` and `evidence/parsed/`\n';
+            }
+            if (hasWorkflowChanges) {
+              reason += '- ❌ Modifies workflow files (security concern)\n';
+            }
+            if (hasCodeChanges) {
+              reason += '- ❌ Modifies source code or dependencies\n';
+            }
+            
+            reason += '\n💡 Auto-approval is only available for PRs that exclusively modify knowledge graph and evidence files.';
+            
+            // Check if we already commented
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number
+            });
+            
+            const alreadyCommented = comments.data.some(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('requires manual review')
+            );
+            
+            if (!alreadyCommented) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: reason
+              });
+              
+              console.log(`💬 Commented on PR #${pr.number} explaining why auto-approval was skipped`);
+            }

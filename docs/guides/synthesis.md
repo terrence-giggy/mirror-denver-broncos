@@ -31,14 +31,19 @@ knowledge-graph/canonical/
 
 ## How It Works
 
-### 1. Automatic Issue Creation
+### 1. Sequential Issue Creation (Prevents Merge Conflicts)
 
-The synthesis queue workflow runs:
+The synthesis queue workflow ensures **only ONE batch Issue is active at a time**:
+- **Before creating** a new Issue, checks for open `synthesis-batch` Issues
+- **Skips creation** if any open synthesis Issues exist
+- **Waits** for the current batch to complete before queueing the next
+
+This prevents multiple Copilot instances from updating the same files (`alias-map.json`, canonical entities) simultaneously, which would cause merge conflicts.
+
+The workflow runs:
 - **After extraction completes** (triggered by extraction workflow)
 - **Daily at 7 AM UTC** (scheduled)
-- **Manually** via workflow dispatch
-
-It scans for unresolved entities and creates GitHub Issues with detailed instructions for Copilot.
+- **Manually** via workflow dispatch (with optional `force` flag to override)
 
 ### 2. Copilot Resolution
 
@@ -55,7 +60,18 @@ When an Issue is labeled `synthesis-batch`, Copilot is automatically assigned an
 5. Comments on the Issue with summary
 6. Closes the Issue
 
-### 3. Human Review & Objections
+### 3. Auto-Approval for Knowledge Graph PRs
+
+PRs that **only** modify `knowledge-graph/` or `evidence/parsed/` files are automatically:
+- **Approved** by the bot (if no code/workflow changes)
+- **Auto-merged** when checks pass
+
+This prevents bottlenecks from synthesis batches waiting for human review. Human review is still required for:
+- Code changes (`src/`, `tests/`, `requirements.txt`)
+- Workflow changes (`.github/workflows/`)
+- Any files outside knowledge graph/evidence
+
+### 4. Human Review & Objections
 
 All synthesis changes come via PRs for human review. If you spot an error:
 
@@ -220,9 +236,10 @@ If Copilot hits rate limits mid-Issue:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `synthesis-queue.yml` | Post-extraction, daily, manual | Create synthesis Issues |
+| `synthesis-queue.yml` | Post-extraction, daily, manual | Create synthesis Issues (one at a time) |
 | `synthesis-assign.yml` | Issue labeled | Assign Copilot to synthesis Issues |
-| `synthesis-objection.yml` | Discussion created | Create Issue from objection |
+| `discussion-dispatcher.yml` | Discussion created (with objection marker) | Create Issue from objection |
+| `pr-auto-approve-kb.yml` | PR opened/updated | Auto-approve and merge knowledge-graph-only PRs |
 
 ## Best Practices
 
@@ -250,6 +267,15 @@ Check:
 
 - Use the objection workflow to request corrections
 - Provide specific evidence in the objection Discussion
+
+### Multiple Synthesis Issues Open
+
+The workflow prevents creating new synthesis Issues when one is already open to avoid merge conflicts.
+
+- **Why:** Parallel PRs modifying `alias-map.json` and canonical entities cause conflicts
+- **Behavior:** `synthesis-queue.yml` checks for open `synthesis-batch` Issues and skips creation
+- **Override:** Use manual dispatch with `force: true` input if needed (⚠️ may cause conflicts)
+- **Wait:** Let current Issue complete and PR merge before next batch runs
 
 ## Future Enhancements
 
