@@ -5,7 +5,7 @@ name: "PR Auto-Approve: Knowledge Base 🤖✅"
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: write
@@ -16,6 +16,44 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Mark PR as ready for review (if draft)
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // If PR is a draft and has synthesis label, mark as ready
+            if (pr.draft && pr.labels.some(label => label.name === 'synthesis')) {
+              console.log(`📝 PR #${pr.number} is a draft with synthesis label. Marking as ready for review...`);
+              
+              try {
+                const mutation = `
+                  mutation MarkAsReady($pullRequestId: ID!) {
+                    markPullRequestReadyForReview(input: {
+                      pullRequestId: $pullRequestId
+                    }) {
+                      pullRequest {
+                        isDraft
+                      }
+                    }
+                  }
+                `;
+                
+                await github.graphql(mutation, {
+                  pullRequestId: pr.node_id
+                });
+                
+                console.log(`✅ Marked PR #${pr.number} as ready for review`);
+              } catch (error) {
+                console.log(`⚠️  Could not mark as ready: ${error.message}`);
+              }
+            } else if (pr.draft) {
+              console.log(`⏭️  PR #${pr.number} is a draft but not a synthesis PR. Skipping.`);
+            } else {
+              console.log(`⏭️  PR #${pr.number} is already ready for review.`);
+            }
+      
       - name: Checkout PR
         uses: actions/checkout@v4
         with:
@@ -142,6 +180,12 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             
+            // Check if PR is a draft
+            if (pr.draft) {
+              core.setFailed(`❌ Cannot auto-merge: PR #${pr.number} is a draft`);
+              return;
+            }
+            
             try {
               // Enable auto-merge using GraphQL (required for auto-merge)
               const mutation = `
@@ -165,8 +209,18 @@ jobs:
               
               console.log(`✅ Enabled auto-merge for PR #${pr.number}`);
             } catch (error) {
-              console.log(`⚠️  Could not enable auto-merge: ${error.message}`);
-              console.log('This may be expected if auto-merge is already enabled or branch protection requires reviews.');
+              // Check if it's a "draft" error or other blockers
+              const errorMessage = error.message || String(error);
+              
+              if (errorMessage.includes('draft') || errorMessage.includes('Draft')) {
+                core.setFailed(`❌ Cannot auto-merge: PR #${pr.number} is a draft`);
+              } else if (errorMessage.includes('already enabled')) {
+                console.log(`⏭️  Auto-merge already enabled for PR #${pr.number}`);
+              } else {
+                // Other errors might be recoverable (e.g., branch protection)
+                console.log(`⚠️  Could not enable auto-merge: ${errorMessage}`);
+                console.log('This may be expected if branch protection requires reviews.');
+              }
             }
       
       - name: Comment on non-auto-approvable PR
