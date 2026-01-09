@@ -1,0 +1,29 @@
+{
+  "canonical_id": "home-field-advantage",
+  "canonical_name": "Home-field advantage",
+  "entity_type": "Concept",
+  "aliases": [
+    "Home-field advantage"
+  ],
+  "source_checksums": [
+    "1107b115e212fb679d67b8bf7e05cb4217513edadcd4d2c730a05f642d9b125b"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T05:06:12.686025+00:00",
+  "last_updated": "2026-01-09T05:06:12.686025+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T05:06:12.686025+00:00",
+      "issue_number": 0,
+      "by": "copilot",
+      "reasoning": "First occurrence from batch resolution"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

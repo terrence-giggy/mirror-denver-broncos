@@ -10,13 +10,21 @@
   ],
   "corroboration_score": 1,
   "first_seen": "2026-01-09T03:10:28.463581+00:00",
-  "last_updated": "2026-01-09T03:10:28.463581+00:00",
+  "last_updated": "2026-01-09T05:06:12.687420+00:00",
   "resolution_history": [
     {
       "action": "created",
       "timestamp": "2026-01-09T03:10:28.463581+00:00",
       "by": "copilot",
       "reasoning": "First occurrence from batch resolution"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-09T05:06:12.687428+00:00",
+      "issue_number": 0,
+      "by": "copilot",
+      "reasoning": "Added alias 'Courtland Sutton' from source 1107b115e212...",
+      "alias": "Courtland Sutton"
     }
   ],
   "attributes": {},

@@ -10,13 +10,21 @@
   ],
   "corroboration_score": 1,
   "first_seen": "2026-01-09T03:10:28.463581+00:00",
-  "last_updated": "2026-01-09T03:10:28.463581+00:00",
+  "last_updated": "2026-01-09T05:06:12.689566+00:00",
   "resolution_history": [
     {
       "action": "created",
       "timestamp": "2026-01-09T03:10:28.463581+00:00",
       "by": "copilot",
       "reasoning": "First occurrence from batch resolution"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-09T05:06:12.689574+00:00",
+      "issue_number": 0,
+      "by": "copilot",
+      "reasoning": "Added alias 'Alex Singleton' from source 11803b12d19e...",
+      "alias": "Alex Singleton"
     }
   ],
   "attributes": {},

@@ -1,0 +1,29 @@
+{
+  "canonical_id": "team-mindset",
+  "canonical_name": "team mindset",
+  "entity_type": "Concept",
+  "aliases": [
+    "team mindset"
+  ],
+  "source_checksums": [
+    "11803b12d19e9dc0310b44c4dcc0af774f7af29eb758b417d287867a771efac0"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T05:06:12.689833+00:00",
+  "last_updated": "2026-01-09T05:06:12.689833+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T05:06:12.689833+00:00",
+      "issue_number": 0,
+      "by": "copilot",
+      "reasoning": "First occurrence from batch resolution"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

@@ -11,7 +11,7 @@
   ],
   "corroboration_score": 2,
   "first_seen": "2026-01-09T02:16:15.628939+00:00",
-  "last_updated": "2026-01-09T03:10:28.463581+00:00",
+  "last_updated": "2026-01-09T05:06:12.687016+00:00",
   "resolution_history": [
     {
       "action": "created",
@@ -24,6 +24,14 @@
       "timestamp": "2026-01-09T03:10:28.463581+00:00",
       "by": "copilot",
       "reasoning": "Added 0 alias(es) from batch resolution"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-09T05:06:12.687025+00:00",
+      "issue_number": 0,
+      "by": "copilot",
+      "reasoning": "Added alias 'Mike McGlinchey' from source 1107b115e212...",
+      "alias": "Mike McGlinchey"
     }
   ],
   "attributes": {},

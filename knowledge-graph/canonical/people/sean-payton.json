@@ -13,7 +13,7 @@
   ],
   "corroboration_score": 4,
   "first_seen": "2026-01-09T02:16:15.642880+00:00",
-  "last_updated": "2026-01-09T03:10:28.463581+00:00",
+  "last_updated": "2026-01-09T05:06:12.686532+00:00",
   "resolution_history": [
     {
       "action": "created",
@@ -26,6 +26,14 @@
       "timestamp": "2026-01-09T03:10:28.463581+00:00",
       "by": "copilot",
       "reasoning": "Added 0 alias(es) from batch resolution"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-09T05:06:12.686537+00:00",
+      "issue_number": 0,
+      "by": "copilot",
+      "reasoning": "Added alias 'Sean Payton' from source 1107b115e212...",
+      "alias": "Sean Payton"
     }
   ],
   "attributes": {},

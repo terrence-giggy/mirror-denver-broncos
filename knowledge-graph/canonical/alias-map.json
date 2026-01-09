@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-09T03:10:28.474447+00:00",
+  "last_updated": "2026-01-09T05:06:12.690264+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -40,6 +40,23 @@
       "trey lance": "trey-lance"
     },
     "Organization": {},
-    "Concept": {}
+    "Concept": {
+      "denver broncos": "denver-broncos",
+      "super bowl lx": "super-bowl-lx",
+      "afc no. 1 seed": "afc-no-1-seed",
+      "empower field at mile high": "empower-field-at-mile-high",
+      "home-field advantage": "home-field-advantage",
+      "divisional round": "divisional-round",
+      "afc championship game": "afc-championship-game",
+      "nfl stadium noise": "nfl-stadium-noise",
+      "green bay packers matchup": "green-bay-packers-matchup",
+      "denver broncos fan impact": "denver-broncos-fan-impact",
+      "playoff path": "playoff-path",
+      "franchise history": "franchise-history",
+      "three-game skid to los angeles": "three-game-skid-to-los-angeles",
+      "broncos in 60": "broncos-in-60",
+      "team mindset": "team-mindset",
+      "week 18 matchup": "week-18-matchup"
+    }
   }
 }
