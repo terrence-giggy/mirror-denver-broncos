@@ -1,31 +1,23 @@
 {
-  "canonical_id": "bo-nix",
-  "canonical_name": "Bo Nix",
-  "entity_type": "Person",
+  "canonical_id": "denver-broncos",
+  "canonical_name": "Denver Broncos",
+  "entity_type": "Organization",
   "aliases": [
-    "Bo Nix"
+    "Denver Broncos"
   ],
   "source_checksums": [
-    "360d4a65765171946cf1845d631ce04ee13e103e8e87c011faca7494e14db09b",
     "2c46965fedc5dae898cbfcdbc96babdc3020dcb613c8c866df0ef485194b76ca",
     "306e3f3d8837772b93c31848a59f1048ab5b29efd416ded4e62305cb1f9f22e1"
   ],
-  "corroboration_score": 3,
-  "first_seen": "2026-01-09T02:16:15.627645+00:00",
+  "corroboration_score": 2,
+  "first_seen": "2026-01-09T03:20:27.488244+00:00",
   "last_updated": "2026-01-09T03:21:25.564840+00:00",
   "resolution_history": [
     {
       "action": "created",
-      "timestamp": "2026-01-09T02:16:15.627645+00:00",
+      "timestamp": "2026-01-09T03:20:27.488244+00:00",
       "by": "copilot",
-      "reasoning": "First occurrence in source 360d4a657651"
-    },
-    {
-      "action": "alias_added",
-      "timestamp": "2026-01-09T03:19:49.446217+00:00",
-      "by": "copilot",
-      "reasoning": "Added from source 2c46965fedc5",
-      "alias": "Bo Nix"
+      "reasoning": "First occurrence in source 2c46965fedc5"
     },
     {
       "action": "updated",

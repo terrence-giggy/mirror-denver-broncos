@@ -1,0 +1,35 @@
+{
+  "canonical_id": "press-conference",
+  "canonical_name": "press conference",
+  "entity_type": "Concept",
+  "aliases": [
+    "press conference"
+  ],
+  "source_checksums": [
+    "28d5e6d8d542d36d528a8a2021d61e8dc26e73589ca9518b6c82b4698b61f994",
+    "2c46965fedc5dae898cbfcdbc96babdc3020dcb613c8c866df0ef485194b76ca"
+  ],
+  "corroboration_score": 2,
+  "first_seen": "2026-01-09T03:19:49.446217+00:00",
+  "last_updated": "2026-01-09T03:21:25.564840+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:19:49.446217+00:00",
+      "by": "copilot",
+      "reasoning": "First occurrence in source 28d5e6d8d542"
+    },
+    {
+      "action": "updated",
+      "timestamp": "2026-01-09T03:21:25.564840+00:00",
+      "by": "copilot",
+      "reasoning": "Added 1 additional source(s): 2c46965fedc5"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

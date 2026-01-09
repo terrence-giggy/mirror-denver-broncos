@@ -1,0 +1,28 @@
+{
+  "canonical_id": "postseason",
+  "canonical_name": "postseason",
+  "entity_type": "Concept",
+  "aliases": [
+    "postseason"
+  ],
+  "source_checksums": [
+    "2c46965fedc5dae898cbfcdbc96babdc3020dcb613c8c866df0ef485194b76ca"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:19:49.446217+00:00",
+  "last_updated": "2026-01-09T03:19:49.446217+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:19:49.446217+00:00",
+      "by": "copilot",
+      "reasoning": "First occurrence in source 2c46965fedc5"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

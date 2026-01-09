@@ -6,17 +6,25 @@
     "Sean Payton"
   ],
   "source_checksums": [
-    "6489ccbf988eed6b6115bd103526aa6fd98f7622fc54cf67499823fbda8153c3"
+    "6489ccbf988eed6b6115bd103526aa6fd98f7622fc54cf67499823fbda8153c3",
+    "360d4a65765171946cf1845d631ce04ee13e103e8e87c011faca7494e14db09b"
   ],
-  "corroboration_score": 1,
+  "corroboration_score": 2,
   "first_seen": "2026-01-09T02:16:15.642880+00:00",
-  "last_updated": "2026-01-09T02:16:15.642880+00:00",
+  "last_updated": "2026-01-09T03:19:49.446217+00:00",
   "resolution_history": [
     {
       "action": "created",
       "timestamp": "2026-01-09T02:16:15.642880+00:00",
       "by": "copilot",
       "reasoning": "First occurrence in source 6489ccbf988e"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-09T03:19:49.446217+00:00",
+      "by": "copilot",
+      "reasoning": "Added from source 360d4a657651",
+      "alias": "Sean Payton"
     }
   ],
   "attributes": {},

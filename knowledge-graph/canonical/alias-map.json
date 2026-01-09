@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-09T02:16:15.645228+00:00",
+  "last_updated": "2026-01-09T03:20:27.500692+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -21,9 +21,48 @@
       "vance joseph": "vance-joseph",
       "darren rizzi": "darren-rizzi",
       "sean payton": "sean-payton",
-      "pat bryant": "pat-bryant"
+      "pat bryant": "pat-bryant",
+      "pat surtain ii": "pat-surtain-ii",
+      "trey lance": "trey-lance",
+      "ben powers": "ben-powers",
+      "karene reid": "karene-reid",
+      "john franklin-myers": "john-franklin-myers",
+      "cody schrader": "cody-schrader",
+      "marcedes lewis": "marcedes-lewis",
+      "calvin throckmorton": "calvin-throckmorton",
+      "luke wattenberg": "luke-wattenberg",
+      "patrick surtain": "patrick-surtain"
     },
-    "Organization": {},
-    "Concept": {}
+    "Organization": {
+      "denver broncos": "denver-broncos",
+      "chargers": "chargers",
+      "los angeles chargers": "los-angeles-chargers",
+      "kansas city chiefs": "kansas-city-chiefs",
+      "green bay packers": "green-bay-packers",
+      "vera institute of justice": "vera-institute-of-justice"
+    },
+    "Concept": {
+      "press conference": "press-conference",
+      "afc's top seed": "afc-s-top-seed",
+      "postseason": "postseason",
+      "football challenges": "football-challenges",
+      "team performance": "team-performance",
+      "broncos in 60": "broncos-in-60",
+      "team focus": "team-focus",
+      "week 18": "week-18",
+      "preparation": "preparation",
+      "2025 regular-season finale": "2025-regular-season-finale",
+      "afc west division title": "afc-west-division-title",
+      "christmas day matchup": "christmas-day-matchup",
+      "week 17 scenarios": "week-17-scenarios",
+      "week 16 scenarios": "week-16-scenarios",
+      "week 15 scenarios": "week-15-scenarios",
+      "week 14 scenarios": "week-14-scenarios",
+      "2026 pro bowl games": "2026-pro-bowl-games",
+      "summit white helmets": "summit-white-helmets",
+      "ed block courage award": "ed-block-courage-award",
+      "denver broncos app limited drops": "denver-broncos-app-limited-drops",
+      "mile high salute": "mile-high-salute"
+    }
   }
 }
