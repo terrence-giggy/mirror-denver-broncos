@@ -1,0 +1,29 @@
+{
+  "canonical_id": "january-4-2026",
+  "canonical_name": "January 4, 2026",
+  "entity_type": "Concept",
+  "aliases": [
+    "Sunday, Jan. 4"
+  ],
+  "source_checksums": [
+    "42a4d80f81eb660ad6e56bd967bbbc415c95d5ad9ef902b4357b961f42636e3b"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:20:18.036775+00:00",
+  "last_updated": "2026-01-09T03:20:18.036775+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:20:18.036775+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "Specific game date"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

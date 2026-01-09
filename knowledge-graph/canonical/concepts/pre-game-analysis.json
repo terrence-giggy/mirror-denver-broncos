@@ -1,0 +1,29 @@
+{
+  "canonical_id": "pre-game-analysis",
+  "canonical_name": "Pre-Game Analysis",
+  "entity_type": "Concept",
+  "aliases": [
+    "An\u00e1lisis previo al juego"
+  ],
+  "source_checksums": [
+    "3c3a44ae533c07ee77723f0919e6f7e0011e7f73b9e004214ee05fb8a43eb4f1"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:20:18.036775+00:00",
+  "last_updated": "2026-01-09T03:20:18.036775+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:20:18.036775+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "Pre-game analysis in Spanish"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

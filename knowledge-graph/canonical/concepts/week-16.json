@@ -1,0 +1,29 @@
+{
+  "canonical_id": "week-16",
+  "canonical_name": "Week 16",
+  "entity_type": "Concept",
+  "aliases": [
+    "Semana 16"
+  ],
+  "source_checksums": [
+    "3c3a44ae533c07ee77723f0919e6f7e0011e7f73b9e004214ee05fb8a43eb4f1"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:20:18.036775+00:00",
+  "last_updated": "2026-01-09T03:20:18.036775+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:20:18.036775+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "NFL Week 16 in Spanish"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

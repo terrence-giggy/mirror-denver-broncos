@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-09T02:16:15.645228+00:00",
+  "last_updated": "2026-01-09T03:20:18.064147+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -24,6 +24,53 @@
       "pat bryant": "pat-bryant"
     },
     "Organization": {},
-    "Concept": {}
+    "Concept": {
+      "denver broncos injury updates": "injury-updates",
+      "denver broncos player performances": "player-performances",
+      "denver broncos touchdown drives": "touchdown-drives",
+      "denver broncos rushing yards": "rushing-yards",
+      "denver broncos passing yards": "passing-yards",
+      "denver broncos interceptions": "interceptions",
+      "denver broncos defense": "defense",
+      "denver broncos offense": "offense",
+      "denver broncos special teams": "special-teams",
+      "denver broncos coaching": "coaching",
+      "denver broncos fan impact": "fan-impact",
+      "denver broncos game atmosphere": "game-atmosphere",
+      "denver broncos playoff implications": "playoff-implications",
+      "denver broncos game schedule": "game-schedule",
+      "denver broncos game broadcast": "game-broadcast",
+      "denver broncos game attendance": "game-attendance",
+      "denver broncos game analysis": "game-analysis",
+      "denver broncos game highlights": "game-highlights",
+      "denver broncos game strategy": "game-strategy",
+      "denver broncos game outcomes": "game-outcomes",
+      "denver broncos player nominations": "player-nominations",
+      "denver broncos league-wide recognition": "league-wide-recognition",
+      "denver broncos career highs": "career-highs",
+      "denver broncos team milestones": "team-milestones",
+      "denver broncos franchise history": "franchise-history",
+      "denver broncos sports culture": "sports-culture",
+      "denver broncos community initiatives": "community-initiatives",
+      "denver broncos youth programs": "youth-programs",
+      "denver broncos player development": "player-development",
+      "denver broncos team dynamics": "team-dynamics",
+      "denver broncos leadership": "leadership",
+      "denver broncos team challenges": "team-challenges",
+      "denver broncos game preparation": "game-preparation",
+      "denver broncos game execution": "game-execution",
+      "denver broncos game results": "game-results",
+      "denver broncos fan engagement": "fan-engagement",
+      "denver broncos team spirit": "team-spirit",
+      "denver broncos game day experience": "game-day-experience",
+      "broncast": "broncast",
+      "jaguars vs. broncos": "jaguars-vs-broncos-matchup",
+      "semana 16": "week-16",
+      "temporada 2025": "2025-season",
+      "an\u00e1lisis previo al juego": "pre-game-analysis",
+      "week 18 schedule": "week-18-schedule",
+      "sunday, jan. 4": "january-4-2026",
+      "2:25 p.m. mt": "2-25-pm-mt-kickoff"
+    }
   }
 }

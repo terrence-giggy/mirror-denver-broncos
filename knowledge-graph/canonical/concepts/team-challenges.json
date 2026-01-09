@@ -1,0 +1,29 @@
+{
+  "canonical_id": "team-challenges",
+  "canonical_name": "Team Challenges",
+  "entity_type": "Concept",
+  "aliases": [
+    "Denver Broncos team challenges"
+  ],
+  "source_checksums": [
+    "360d4a65765171946cf1845d631ce04ee13e103e8e87c011faca7494e14db09b"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:20:18.036775+00:00",
+  "last_updated": "2026-01-09T03:20:18.036775+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:20:18.036775+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "Obstacles and adversity faced"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}
