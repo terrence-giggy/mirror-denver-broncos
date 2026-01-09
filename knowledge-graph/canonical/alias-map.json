@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-09T03:10:28.474447+00:00",
+  "last_updated": "2026-01-09T05:06:29.326799+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -39,7 +39,19 @@
       "pat surtain": "pat-surtain",
       "trey lance": "trey-lance"
     },
-    "Organization": {},
+    "Organization": {
+      "afc": "afc",
+      "apple podcasts": "apple-podcasts",
+      "denver broncos": "denver-broncos",
+      "empower field at mile high": "empower-field-at-mile-high",
+      "green bay packers": "green-bay-packers",
+      "kansas city chiefs": "kansas-city-chiefs",
+      "los angeles chargers": "los-angeles-chargers",
+      "nfl": "nfl",
+      "spotify": "spotify",
+      "stitcher": "stitcher",
+      "tunein": "tunein"
+    },
     "Concept": {}
   }
 }
