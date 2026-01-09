@@ -1,0 +1,30 @@
+{
+  "canonical_id": "alex-singleton",
+  "canonical_name": "Alex Singleton",
+  "entity_type": "Person",
+  "aliases": [
+    "Alex Singleton"
+  ],
+  "source_checksums": [
+    "8c6e6a44c8faa999853c6e17eee320d83f53e1ccbe400c06b3b2e5ad732bbc98",
+    "f1f6d35ded2c304a0061b1541c401d9825bf7a2b07cf6b8af75e921acb9ad22a",
+    "fd27bc4beddaced71db4d1df31527dd763ec85f7389c6a70e24e10414231fec9"
+  ],
+  "corroboration_score": 3,
+  "first_seen": "2026-01-09T03:10:40.847720+00:00",
+  "last_updated": "2026-01-09T03:10:40.847720+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:10:40.847720+00:00",
+      "by": "copilot",
+      "reasoning": "New entity from batch 2 resolution"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

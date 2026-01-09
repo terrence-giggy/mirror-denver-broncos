@@ -1,0 +1,28 @@
+{
+  "canonical_id": "karene-reid",
+  "canonical_name": "Karene Reid",
+  "entity_type": "Person",
+  "aliases": [
+    "Karene Reid"
+  ],
+  "source_checksums": [
+    "f72614c00061d3c7bbf224092097043abf1184dac516cbafd2a017dc91442ccb"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:10:40.861142+00:00",
+  "last_updated": "2026-01-09T03:10:40.861142+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:10:40.861142+00:00",
+      "by": "copilot",
+      "reasoning": "New entity from batch 2 resolution"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

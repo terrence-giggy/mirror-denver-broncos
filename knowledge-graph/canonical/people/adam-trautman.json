@@ -6,17 +6,25 @@
     "Adam Trautman"
   ],
   "source_checksums": [
-    "360d4a65765171946cf1845d631ce04ee13e103e8e87c011faca7494e14db09b"
+    "360d4a65765171946cf1845d631ce04ee13e103e8e87c011faca7494e14db09b",
+    "8c6e6a44c8faa999853c6e17eee320d83f53e1ccbe400c06b3b2e5ad732bbc98"
   ],
-  "corroboration_score": 1,
+  "corroboration_score": 2,
   "first_seen": "2026-01-09T02:16:15.631877+00:00",
-  "last_updated": "2026-01-09T02:16:15.631877+00:00",
+  "last_updated": "2026-01-09T03:10:40.848378+00:00",
   "resolution_history": [
     {
       "action": "created",
       "timestamp": "2026-01-09T02:16:15.631877+00:00",
       "by": "copilot",
       "reasoning": "First occurrence in source 360d4a657651"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-09T03:10:40.848378+00:00",
+      "by": "copilot",
+      "reasoning": "Added 1 new source(s) in batch 2",
+      "alias": "Adam Trautman"
     }
   ],
   "attributes": {},

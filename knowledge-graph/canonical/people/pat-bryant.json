@@ -6,17 +6,25 @@
     "Pat Bryant"
   ],
   "source_checksums": [
-    "708064eadce1b635b616dc7fd0ac8e429ef593775e1866aaf0620e96c677bbda"
+    "708064eadce1b635b616dc7fd0ac8e429ef593775e1866aaf0620e96c677bbda",
+    "f72614c00061d3c7bbf224092097043abf1184dac516cbafd2a017dc91442ccb"
   ],
-  "corroboration_score": 1,
+  "corroboration_score": 2,
   "first_seen": "2026-01-09T02:16:15.644165+00:00",
-  "last_updated": "2026-01-09T02:16:15.644165+00:00",
+  "last_updated": "2026-01-09T03:10:40.859490+00:00",
   "resolution_history": [
     {
       "action": "created",
       "timestamp": "2026-01-09T02:16:15.644165+00:00",
       "by": "copilot",
       "reasoning": "First occurrence in source 708064eadce1"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-09T03:10:40.859490+00:00",
+      "by": "copilot",
+      "reasoning": "Added 1 new source(s) in batch 2",
+      "alias": "Pat Bryant"
     }
   ],
   "attributes": {},

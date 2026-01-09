@@ -1,0 +1,30 @@
+{
+  "canonical_id": "elisa-hernandez",
+  "canonical_name": "Elisa Hernandez",
+  "entity_type": "Person",
+  "aliases": [
+    "Elisa Hernandez"
+  ],
+  "source_checksums": [
+    "92f967d9283289aff05997af43591e229f7782b3b84f988827c5fd35e529afea",
+    "9918332d645a59079c29a6ea6c1d83de7a7921b2c3674e2f2a397c6a1f19139d",
+    "b4401cf157c290fb1a247a32979cb3593421eebfc6053df19aba8fdf40ae0da2"
+  ],
+  "corroboration_score": 3,
+  "first_seen": "2026-01-09T03:10:40.850782+00:00",
+  "last_updated": "2026-01-09T03:10:40.850782+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:10:40.850782+00:00",
+      "by": "copilot",
+      "reasoning": "New entity from batch 2 resolution"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

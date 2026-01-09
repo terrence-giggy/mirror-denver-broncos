@@ -6,17 +6,26 @@
     "Vance Joseph"
   ],
   "source_checksums": [
-    "42a96bc9f3af856a3ffefd10abccc260a6272d5ec244b108045f44609daa9a99"
+    "42a96bc9f3af856a3ffefd10abccc260a6272d5ec244b108045f44609daa9a99",
+    "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce",
+    "d0ec35ea9f171fa55fa1f80b122b7bf63a9e6ce1d2accc57c6f2344362821043"
   ],
-  "corroboration_score": 1,
+  "corroboration_score": 3,
   "first_seen": "2026-01-09T02:16:15.640448+00:00",
-  "last_updated": "2026-01-09T02:16:15.640448+00:00",
+  "last_updated": "2026-01-09T03:10:40.853565+00:00",
   "resolution_history": [
     {
       "action": "created",
       "timestamp": "2026-01-09T02:16:15.640448+00:00",
       "by": "copilot",
       "reasoning": "First occurrence in source 42a96bc9f3af"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-09T03:10:40.853565+00:00",
+      "by": "copilot",
+      "reasoning": "Added 2 new source(s) in batch 2",
+      "alias": "Vance Joseph"
     }
   ],
   "attributes": {},

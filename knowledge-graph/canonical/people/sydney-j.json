@@ -1,0 +1,28 @@
+{
+  "canonical_id": "sydney-j",
+  "canonical_name": "Sydney J",
+  "entity_type": "Person",
+  "aliases": [
+    "Sydney J"
+  ],
+  "source_checksums": [
+    "8b21d1d86d7fc435a552d1bfc4249e92ac30aec7493a51ba47bf00fd38c933a4"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:10:40.847206+00:00",
+  "last_updated": "2026-01-09T03:10:40.847206+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:10:40.847206+00:00",
+      "by": "copilot",
+      "reasoning": "Incomplete name - needs manual review and full name identification"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": true,
+    "confidence": 0.3
+  }
+}
