@@ -1,0 +1,29 @@
+{
+  "canonical_id": "jax-tie",
+  "canonical_name": "JAX tie",
+  "entity_type": "Concept",
+  "aliases": [
+    "JAX tie"
+  ],
+  "source_checksums": [
+    "22f13f6a1e57b6882796c973d623744e11e60f3c869041f174c35f668a56746c"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:19:59.336991+00:00",
+  "last_updated": "2026-01-09T03:19:59.336991+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:19:59.336991+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "New concept entity from batch resolution"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

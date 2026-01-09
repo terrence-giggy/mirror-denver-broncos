@@ -1,0 +1,29 @@
+{
+  "canonical_id": "dedicated-advocacy",
+  "canonical_name": "dedicated advocacy",
+  "entity_type": "Concept",
+  "aliases": [
+    "dedicated advocacy"
+  ],
+  "source_checksums": [
+    "277d0015bbc1c0e7396f79fc65abeffacbed12db888e998bdf62d135cfe5ab80"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:19:59.336991+00:00",
+  "last_updated": "2026-01-09T03:19:59.336991+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:19:59.336991+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "New concept entity from batch resolution"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}
