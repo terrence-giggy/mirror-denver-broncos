@@ -1,0 +1,28 @@
+{
+  "canonical_id": "patrick-surtain-ii",
+  "canonical_name": "Patrick Surtain II",
+  "entity_type": "Person",
+  "aliases": [
+    "Pat Surtain"
+  ],
+  "source_checksums": [
+    "8c6e6a44c8faa999853c6e17eee320d83f53e1ccbe400c06b3b2e5ad732bbc98"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T02:18:10.984194+00:00",
+  "last_updated": "2026-01-09T02:18:10.984194+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T02:18:10.984194+00:00",
+      "by": "copilot",
+      "reasoning": "Denver Broncos cornerback, son of former NFL player Patrick Surtain"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

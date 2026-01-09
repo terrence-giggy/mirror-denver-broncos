@@ -1,0 +1,28 @@
+{
+  "canonical_id": "rick-lewis",
+  "canonical_name": "Rick Lewis",
+  "entity_type": "Person",
+  "aliases": [
+    "Rick Lewis"
+  ],
+  "source_checksums": [
+    "e3175c13ee6849484fe4b76692968544b71b5536cc0b2a9604b1f9c103acb4a3"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T02:18:10.984856+00:00",
+  "last_updated": "2026-01-09T02:18:10.984856+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T02:18:10.984856+00:00",
+      "by": "copilot",
+      "reasoning": "Denver Broncos radio analyst"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.9
+  }
+}

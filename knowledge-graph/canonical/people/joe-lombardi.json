@@ -1,0 +1,29 @@
+{
+  "canonical_id": "joe-lombardi",
+  "canonical_name": "Joe Lombardi",
+  "entity_type": "Person",
+  "aliases": [
+    "Joe Lombardi"
+  ],
+  "source_checksums": [
+    "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce",
+    "d0ec35ea9f171fa55fa1f80b122b7bf63a9e6ce1d2accc57c6f2344362821043"
+  ],
+  "corroboration_score": 2,
+  "first_seen": "2026-01-09T02:18:10.983723+00:00",
+  "last_updated": "2026-01-09T02:18:10.983723+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T02:18:10.983723+00:00",
+      "by": "copilot",
+      "reasoning": "NFL offensive coordinator"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "canonical_id": "courtland-sutton",
+  "canonical_name": "Courtland Sutton",
+  "entity_type": "Person",
+  "aliases": [
+    "Courtland Sutton"
+  ],
+  "source_checksums": [
+    "bcc19baa247a7930dc518c968fb9230b9eb09c889f18943475ab341c8b17b271"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T02:18:10.981774+00:00",
+  "last_updated": "2026-01-09T02:18:10.981774+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T02:18:10.981774+00:00",
+      "by": "copilot",
+      "reasoning": "Denver Broncos wide receiver"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

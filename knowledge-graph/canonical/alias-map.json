@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "last_updated": "2026-01-09T02:18:10.988757+00:00",
+  "by_type": {
+    "Person": {
+      "aric dilalla": "aric-dilalla",
+      "courtland sutton": "courtland-sutton",
+      "dave logan": "dave-logan",
+      "elisa hernandez": "elisa-hernandez",
+      "jim nantz": "jim-nantz",
+      "joe lombardi": "joe-lombardi",
+      "pat surtain": "patrick-surtain-ii",
+      "rick lewis": "rick-lewis",
+      "rj harvey": "rj-harvey",
+      "susie wargin": "susie-wargin",
+      "tony romo": "tony-romo",
+      "tracy wolfson": "tracy-wolfson",
+      "trey lance": "trey-lance",
+      "vance joseph": "vance-joseph"
+    },
+    "Organization": {},
+    "Concept": {}
+  }
+}
