@@ -237,9 +237,10 @@ Edit `knowledge-graph/canonical/alias-map.json`:
 
 ## Completion
 
-1. Create a PR with all changes
-2. Comment summary: how many matched, how many new, any ambiguous
-3. Close this Issue
+1. Create a PR with all changes (ensure it's marked as "ready for review", not draft)
+2. Add label `synthesis` to the PR
+3. Comment summary: how many matched, how many new, any ambiguous
+4. Close this Issue
 
 ---
 <!-- copilot:synthesis-batch -->
@@ -265,8 +266,8 @@ def create_issue_cli(args: argparse.Namespace) -> int:
     else:
         entity_types = [args.entity_type]
     
-    total_created = 0
-    
+    # Process ONLY the first entity type with work
+    # synthesis-continue.yml will trigger next type after this one completes
     for entity_type in entity_types:
         # Gather unresolved entities
         if args.full:
@@ -277,6 +278,8 @@ def create_issue_cli(args: argparse.Namespace) -> int:
             unresolved = _gather_unresolved_entities(entity_type, kg_storage, canonical_storage)
         
         if not unresolved:
+            print(f"No unresolved {entity_type} entities found.")
+            continue
             print(f"No unresolved {entity_type} entities found.")
             continue
         
@@ -317,16 +320,30 @@ def create_issue_cli(args: argparse.Namespace) -> int:
             )
             print("  → Assigned to Copilot")
             
-            total_created += 1
-            
             if remaining > 0:
                 print(f"\n⏳ {remaining} {entity_type} entities remain (will be processed in next batch)")
+            
+            # Check if other entity types have work
+            remaining_types = []
+            for other_type in entity_types:
+                if other_type == entity_type:
+                    continue
+                other_unresolved = _gather_unresolved_entities(other_type, kg_storage, canonical_storage) if not args.full else _gather_all_entities(other_type, kg_storage)
+                if other_unresolved:
+                    remaining_types.append(f"{other_type} ({len(other_unresolved)})")
+            
+            if remaining_types:
+                print(f"⏳ Other entity types pending: {', '.join(remaining_types)}")
+            
+            print(f"\n✅ Created 1 synthesis Issue. Remaining work will be processed in next batch.")
+            return 0
             
         except Exception as e:  # noqa: BLE001 - broad exception for CLI error handling
             print(f"Error creating issue: {e}", file=sys.stderr)
             return 1
     
-    print(f"\nCreated {total_created} synthesis Issues.")
+    print(f"\n✅ No unresolved entities found across all types.")
+    return 0
     return 0
 
 
