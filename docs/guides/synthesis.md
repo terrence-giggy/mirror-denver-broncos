@@ -277,6 +277,17 @@ The workflow prevents creating new synthesis Issues when one is already open to 
 - **Override:** Use manual dispatch with `force: true` input if needed (⚠️ may cause conflicts)
 - **Wait:** Let current Issue complete and PR merge before next batch runs
 
+### PRs Not Auto-Merging
+
+If synthesis PRs remain open without auto-merging:
+
+- **Check PR status:** Draft PRs are skipped by auto-merge
+  - Solution: PRs are now created as non-draft by default
+- **Check branch protection:** Auto-merge requires branch protection to be configured
+- **Check approval:** Auto-approval workflow may have been blocked
+  - Review workflow logs for `pr-auto-approve-kb.yml`
+- **Manual intervention:** If needed, approve and merge manually
+
 ## Future Enhancements
 
 Planned features (not yet implemented):

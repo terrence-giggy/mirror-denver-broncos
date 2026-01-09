@@ -711,6 +711,7 @@ def create_sync_pull_request(
         "body": "\n".join(body_lines),
         "head": branch,
         "base": base_branch,
+        "draft": False,  # Non-draft for auto-merge compatibility
     }
     
     result = _make_request(endpoint, token, method="POST", data=data)

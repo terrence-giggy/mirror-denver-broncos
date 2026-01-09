@@ -267,6 +267,7 @@ class GitHubStorageClient:
             body=body,
             head=self._pr_branch,
             base=self.branch,
+            draft=False,  # Non-draft for auto-merge compatibility
             api_url=self.api_url,
         )
 

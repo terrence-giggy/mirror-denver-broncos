@@ -270,6 +270,7 @@ def create_pull_request(
     body: str,
     head: str,
     base: str,
+    draft: bool = False,
     api_url: str = DEFAULT_API_URL,
 ) -> dict[str, Any]:
     """Create a new pull request.
@@ -281,6 +282,7 @@ def create_pull_request(
         body: Body/description of the pull request
         head: The name of the branch where your changes are implemented
         base: The name of the branch you want the changes pulled into
+        draft: Whether to create as a draft PR (default: False for auto-merge compatibility)
         api_url: GitHub API base URL
 
     Returns:
@@ -297,6 +299,7 @@ def create_pull_request(
         "body": body,
         "head": head,
         "base": base,
+        "draft": draft,
     }
 
     raw_body = json.dumps(payload).encode("utf-8")

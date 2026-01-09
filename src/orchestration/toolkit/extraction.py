@@ -507,6 +507,7 @@ Return ONLY a JSON object with:
                 body=pr_body,
                 head=branch_name,
                 base=base_branch,
+                draft=False,  # Non-draft for auto-merge compatibility
             )
             
             return {

@@ -940,7 +940,7 @@ def register_github_mutation_tools(registry: ToolRegistry) -> None:
     registry.register_tool(
         ToolDefinition(
             name="create_pull_request",
-            description="Create a new pull request.",
+            description="Create a new pull request. By default creates a non-draft PR ready for auto-merge.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -948,6 +948,10 @@ def register_github_mutation_tools(registry: ToolRegistry) -> None:
                     "body": {"type": "string", "description": "Body/description of the pull request."},
                     "head": {"type": "string", "description": "The name of the branch where your changes are implemented."},
                     "base": {"type": "string", "description": "The name of the branch you want the changes pulled into."},
+                    "draft": {
+                        "type": "boolean",
+                        "description": "Whether to create as a draft PR. Default: false (non-draft for auto-merge compatibility).",
+                    },
                     "repository": {
                         "type": "string",
                         "description": "Repository name in 'owner/name' format. Defaults to GITHUB_REPOSITORY env var.",
@@ -1347,6 +1351,7 @@ def _create_pr_handler(args: Mapping[str, Any]) -> ToolResult:
     body = args.get("body")
     head = args.get("head")
     base = args.get("base")
+    draft = args.get("draft", False)  # Default to non-draft for auto-merge
     
     if not all([title, body, head, base]):
         return ToolResult(success=False, output=None, error="title, body, head, and base are required.")
@@ -1367,6 +1372,7 @@ def _create_pr_handler(args: Mapping[str, Any]) -> ToolResult:
             body=str(body),
             head=str(head),
             base=str(base),
+            draft=bool(draft),
         )
         return ToolResult(
             success=True,
