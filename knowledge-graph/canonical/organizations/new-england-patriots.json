@@ -1,0 +1,29 @@
+{
+  "canonical_id": "new-england-patriots",
+  "canonical_name": "New England Patriots",
+  "entity_type": "Organization",
+  "aliases": [
+    "New England Patriots"
+  ],
+  "source_checksums": [
+    "22f13f6a1e57b6882796c973d623744e11e60f3c869041f174c35f668a56746c"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:09:51.789787+00:00",
+  "last_updated": "2026-01-09T03:09:51.789787+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:09:51.789787+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "First occurrence - found in 1 source(s)"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

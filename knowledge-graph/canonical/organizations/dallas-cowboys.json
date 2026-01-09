@@ -1,0 +1,29 @@
+{
+  "canonical_id": "dallas-cowboys",
+  "canonical_name": "Dallas Cowboys",
+  "entity_type": "Organization",
+  "aliases": [
+    "Dallas Cowboys"
+  ],
+  "source_checksums": [
+    "360d4a65765171946cf1845d631ce04ee13e103e8e87c011faca7494e14db09b"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:09:51.783607+00:00",
+  "last_updated": "2026-01-09T03:09:51.783607+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:09:51.783607+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "First occurrence - found in 1 source(s)"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "canonical_id": "stitcher",
+  "canonical_name": "Stitcher",
+  "entity_type": "Organization",
+  "aliases": [
+    "Stitcher"
+  ],
+  "source_checksums": [
+    "11b44b39df7690e237ff543cc68aafa1ca5d35419f8525b530ae7644dfaa9334"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:09:51.791678+00:00",
+  "last_updated": "2026-01-09T03:09:51.791678+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:09:51.791678+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "First occurrence - found in 1 source(s)"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

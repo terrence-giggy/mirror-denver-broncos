@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-09T02:16:15.645228+00:00",
+  "last_updated": "2026-01-09T03:09:51.793378+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -23,7 +23,34 @@
       "sean payton": "sean-payton",
       "pat bryant": "pat-bryant"
     },
-    "Organization": {},
+    "Organization": {
+      "afc": "afc",
+      "afc west": "afc-west",
+      "apple podcasts": "apple-podcasts",
+      "atlanta falcons": "atlanta-falcons",
+      "cbs": "cbs",
+      "dallas cowboys": "dallas-cowboys",
+      "denver broncos": "denver-broncos",
+      "denver broncos foundation": "denver-broncos-foundation",
+      "ed block courage award": "ed-block-courage-award",
+      "empower field at mile high": "empower-field-at-mile-high",
+      "golden eagles": "golden-eagles",
+      "green bay packers": "green-bay-packers",
+      "indianapolis colts": "indianapolis-colts",
+      "jacksonville jaguars": "jacksonville-jaguars",
+      "kansas city chiefs": "kansas-city-chiefs",
+      "las vegas raiders": "las-vegas-raiders",
+      "los angeles chargers": "los-angeles-chargers",
+      "nfl": "nfl",
+      "new england patriots": "new-england-patriots",
+      "philadelphia eagles": "philadelphia-eagles",
+      "prime video": "prime-video",
+      "spotify": "spotify",
+      "stitcher": "stitcher",
+      "tunein": "tunein",
+      "vera institute of justice": "vera-institute-of-justice",
+      "washington commanders": "washington-commanders"
+    },
     "Concept": {}
   }
 }

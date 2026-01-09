@@ -1,0 +1,32 @@
+{
+  "canonical_id": "afc",
+  "canonical_name": "AFC",
+  "entity_type": "Organization",
+  "aliases": [
+    "AFC"
+  ],
+  "source_checksums": [
+    "1107b115e212fb679d67b8bf7e05cb4217513edadcd4d2c730a05f642d9b125b",
+    "1c17939eb309aefbce0f43e9c57c9ae1c10097a0559dd3557e4222629c7bb9f1",
+    "22f13f6a1e57b6882796c973d623744e11e60f3c869041f174c35f668a56746c",
+    "2c46965fedc5dae898cbfcdbc96babdc3020dcb613c8c866df0ef485194b76ca"
+  ],
+  "corroboration_score": 4,
+  "first_seen": "2026-01-09T03:09:51.780751+00:00",
+  "last_updated": "2026-01-09T03:09:51.780751+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:09:51.780751+00:00",
+      "by": "copilot",
+      "issue_number": 0,
+      "reasoning": "First occurrence - found in 4 source(s)"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}
