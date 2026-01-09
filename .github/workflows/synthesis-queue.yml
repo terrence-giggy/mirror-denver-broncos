@@ -1,0 +1,78 @@
+name: "Synthesis: Create Batch Issue 📋"
+
+# Creates GitHub Issues for entity resolution
+# Copilot will process these Issues to build canonical entities
+
+on:
+  # After extraction completes
+  workflow_run:
+    workflows: ["Extraction: Batch Run 🔄⚙️"]
+    types: [completed]
+    
+  # Scheduled daily at 7 AM UTC
+  schedule:
+    - cron: '0 7 * * *'
+    
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      entity_type:
+        description: 'Entity type to process'
+        type: choice
+        options:
+          - all
+          - Person
+          - Organization
+          - Concept
+        default: 'all'
+      batch_size:
+        description: 'Maximum entities per Issue'
+        type: number
+        default: 50
+      full_rebuild:
+        description: 'Full rebuild (reprocess all entities)'
+        type: boolean
+        default: false
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  create-synthesis-issue:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Create synthesis Issue
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          # Determine arguments
+          ENTITY_TYPE="${{ inputs.entity_type || 'all' }}"
+          BATCH_SIZE="${{ inputs.batch_size || 50 }}"
+          FULL_FLAG=""
+          
+          if [ "${{ inputs.full_rebuild }}" = "true" ]; then
+            FULL_FLAG="--full"
+          fi
+          
+          # Create Issue using CLI
+          python main.py synthesis create-issue \
+            --repository ${{ github.repository }} \
+            --entity-type "$ENTITY_TYPE" \
+            --batch-size "$BATCH_SIZE" \
+            $FULL_FLAG

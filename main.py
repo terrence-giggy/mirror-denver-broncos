@@ -50,6 +50,9 @@ from src.cli.commands.sources import (
 from src.cli.commands.sync import (
     register_commands as register_sync_commands,
 )
+from src.cli.commands.synthesis import (
+    register_commands as register_synthesis_commands,
+)
 
 
 def _build_command_parser() -> argparse.ArgumentParser:
@@ -72,6 +75,7 @@ def _build_command_parser() -> argparse.ArgumentParser:
     register_setup_commands(subparsers)
     register_source_commands(subparsers)
     register_sync_commands(subparsers)
+    register_synthesis_commands(subparsers)
     register_pipeline_commands(subparsers)
     return parser
 
