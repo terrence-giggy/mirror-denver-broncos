@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-09T02:16:15.645228+00:00",
+  "last_updated": "2026-01-09T03:20:26.363874+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -23,7 +23,33 @@
       "sean payton": "sean-payton",
       "pat bryant": "pat-bryant"
     },
-    "Organization": {},
+    "Organization": {
+      "peacock": "peacock",
+      "espn": "espn",
+      "amazon prime video": "amazon-prime-video",
+      "nfl mobile app": "nfl-mobile-app",
+      "nfl+": "nfl-premium",
+      "nfl+ premium": "nfl-premium",
+      "game pass": "game-pass",
+      "westwood one": "westwood-one",
+      "tunein": "tunein",
+      "denver broncos": "denver-broncos",
+      "chargers": "los-angeles-chargers",
+      "los angeles chargers": "los-angeles-chargers",
+      "cbs": "cbs",
+      "nfl": "nfl",
+      "paramount+": "paramount",
+      "nfl network": "nfl-network",
+      "nfl redzone": "nfl-redzone",
+      "koa": "koa",
+      "siriusxm": "siriusxm",
+      "sports usa": "sports-usa",
+      "afc west": "afc-west",
+      "texans": "texans",
+      "afc": "afc",
+      "eagles": "eagles",
+      "kansas city chiefs": "kansas-city-chiefs"
+    },
     "Concept": {}
   }
 }

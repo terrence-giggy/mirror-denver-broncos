@@ -1,0 +1,28 @@
+{
+  "canonical_id": "texans",
+  "canonical_name": "Texans",
+  "entity_type": "Organization",
+  "aliases": [
+    "Texans"
+  ],
+  "source_checksums": [
+    "f1f6d35ded2c304a0061b1541c401d9825bf7a2b07cf6b8af75e921acb9ad22a"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:20:26.362666+00:00",
+  "last_updated": "2026-01-09T03:20:26.362667+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:20:26.362667+00:00",
+      "by": "copilot",
+      "reasoning": "New entity from batch 4 resolution (1 sources)"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "canonical_id": "kansas-city-chiefs",
+  "canonical_name": "Kansas City Chiefs",
+  "entity_type": "Organization",
+  "aliases": [
+    "Kansas City Chiefs"
+  ],
+  "source_checksums": [
+    "f72614c00061d3c7bbf224092097043abf1184dac516cbafd2a017dc91442ccb"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:20:26.363695+00:00",
+  "last_updated": "2026-01-09T03:20:26.363696+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:20:26.363697+00:00",
+      "by": "copilot",
+      "reasoning": "New entity from batch 4 resolution (1 sources)"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "canonical_id": "peacock",
+  "canonical_name": "Peacock",
+  "entity_type": "Organization",
+  "aliases": [
+    "Peacock"
+  ],
+  "source_checksums": [
+    "d777b8628de2ea350bd4b6ab05fb09c73516c383139d24c068a6453146f534f5"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-09T03:20:26.355043+00:00",
+  "last_updated": "2026-01-09T03:20:26.355046+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-09T03:20:26.355047+00:00",
+      "by": "copilot",
+      "reasoning": "New entity from batch 4 resolution (1 sources)"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}
