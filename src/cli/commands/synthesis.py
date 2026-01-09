@@ -282,41 +282,49 @@ def create_issue_cli(args: argparse.Namespace) -> int:
         
         print(f"Found {len(unresolved)} unresolved {entity_type} entities.")
         
-        # Batch entities
+        # Create ONLY the first batch (sequential processing)
+        # synthesis-continue.yml will trigger next batch after this one completes
+        batch = unresolved[:args.batch_size]
         batch_number = 1
-        for i in range(0, len(unresolved), args.batch_size):
-            batch = unresolved[i:i + args.batch_size]
+        
+        # Generate issue
+        remaining = len(unresolved) - len(batch)
+        title = f"Synthesis: Resolve {entity_type} Entities (Batch {batch_number}"
+        if remaining > 0:
+            title += f", {remaining} more pending)"
+        else:
+            title += ")"
+        
+        body = _generate_issue_body(entity_type, batch, batch_number)
+        
+        # Create issue
+        try:
+            outcome = create_issue(
+                repository=repository,
+                token=token,
+                title=title,
+                body=body,
+                labels=["synthesis-batch", "copilot"],
+            )
             
-            # Generate issue
-            title = f"Synthesis: Resolve {entity_type} Entities (Batch {batch_number})"
-            body = _generate_issue_body(entity_type, batch, batch_number)
+            print(f"Created Issue #{outcome.number}: {outcome.html_url}")
             
-            # Create issue
-            try:
-                outcome = create_issue(
-                    repository=repository,
-                    token=token,
-                    title=title,
-                    body=body,
-                    labels=["synthesis-batch", "copilot"],
-                )
-                
-                print(f"Created Issue #{outcome.number}: {outcome.html_url}")
-                
-                # Assign to Copilot
-                assign_issue_to_copilot(
-                    repository=repository,
-                    token=token,
-                    issue_number=outcome.number,
-                )
-                print("  → Assigned to Copilot")
-                
-                total_created += 1
-                batch_number += 1
-                
-            except Exception as e:  # noqa: BLE001 - broad exception for CLI error handling
-                print(f"Error creating issue: {e}", file=sys.stderr)
-                return 1
+            # Assign to Copilot
+            assign_issue_to_copilot(
+                repository=repository,
+                token=token,
+                issue_number=outcome.number,
+            )
+            print("  → Assigned to Copilot")
+            
+            total_created += 1
+            
+            if remaining > 0:
+                print(f"\n⏳ {remaining} {entity_type} entities remain (will be processed in next batch)")
+            
+        except Exception as e:  # noqa: BLE001 - broad exception for CLI error handling
+            print(f"Error creating issue: {e}", file=sys.stderr)
+            return 1
     
     print(f"\nCreated {total_created} synthesis Issues.")
     return 0
