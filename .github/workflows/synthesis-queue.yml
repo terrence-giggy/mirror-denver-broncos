@@ -2,6 +2,7 @@ name: "Synthesis: Create Batch Issue 📋"
 
 # Creates GitHub Issues for entity resolution
 # Copilot will process these Issues to build canonical entities
+# IMPORTANT: Only creates ONE issue at a time to prevent merge conflicts
 
 on:
   # After extraction completes
@@ -33,6 +34,10 @@ on:
         description: 'Full rebuild (reprocess all entities)'
         type: boolean
         default: false
+      force:
+        description: 'Force creation even if synthesis Issue exists'
+        type: boolean
+        default: false
 
 permissions:
   issues: write
@@ -46,18 +51,56 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
+      - name: Check for existing synthesis Issues
+        if: inputs.force != true
+        id: check_existing
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'synthesis-batch',
+              state: 'open'
+            });
+            
+            if (issues.data.length > 0) {
+              console.log(`⏸️  Found ${issues.data.length} open synthesis-batch Issue(s):`);
+              issues.data.forEach(issue => {
+                console.log(`  - #${issue.number}: ${issue.title}`);
+              });
+              core.setOutput('has_open_issues', 'true');
+              core.setOutput('open_count', issues.data.length);
+            } else {
+              console.log('✅ No open synthesis-batch Issues found. Proceeding.');
+              core.setOutput('has_open_issues', 'false');
+              core.setOutput('open_count', 0);
+            }
+      
+      - name: Skip if existing Issues
+        if: steps.check_existing.outputs.has_open_issues == 'true' && inputs.force != true
+        run: |
+          echo "⏭️  Skipping synthesis Issue creation - ${{ steps.check_existing.outputs.open_count }} synthesis-batch Issue(s) still open"
+          echo "This prevents merge conflicts on alias-map.json and canonical entities."
+          echo "Wait for existing Issues to complete, or use force=true to override."
+          exit 0
+      
       - name: Set up Python
+        if: steps.check_existing.outputs.has_open_issues != 'true' || inputs.force == true
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "pip"
           
       - name: Install dependencies
+        if: steps.check_existing.outputs.has_open_issues != 'true' || inputs.force == true
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
       - name: Create synthesis Issue
+        if: steps.check_existing.outputs.has_open_issues != 'true' || inputs.force == true
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
