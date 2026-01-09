@@ -1,0 +1,68 @@
+name: "Synthesis: Continue Queue 🔄"
+
+# After a synthesis PR merges, check if more work remains and create next batch
+# This enables sequential processing to avoid merge conflicts
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  trigger-next-batch:
+    # Only run if PR was merged (not just closed) and has synthesis label
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'synthesis')
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check if synthesis work remains
+        id: check_work
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            // Check if there are any open synthesis-batch Issues
+            const openIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'synthesis-batch',
+              state: 'open'
+            });
+            
+            if (openIssues.data.length > 0) {
+              console.log(`⏸️  ${openIssues.data.length} synthesis-batch Issue(s) still open. Skipping trigger.`);
+              core.setOutput('should_continue', 'false');
+              return;
+            }
+            
+            console.log('✅ No open synthesis-batch Issues. Will check for remaining work.');
+            core.setOutput('should_continue', 'true');
+      
+      - name: Trigger synthesis queue workflow
+        if: steps.check_work.outputs.should_continue == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            console.log('🔄 Triggering synthesis-queue workflow to process next batch...');
+            
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'synthesis-queue.yml',
+              ref: 'main',
+              inputs: {
+                entity_type: 'all',
+                batch_size: '50',
+                full_rebuild: 'false',
+                force: 'false'
+              }
+            });
+            
+            console.log('✅ Workflow dispatched successfully');
