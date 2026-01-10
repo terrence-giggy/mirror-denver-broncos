@@ -13,6 +13,8 @@ permissions:
 
 jobs:
   check-and-approve:
+    # Skip draft PRs - let Copilot mark as ready when done
+    if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     
     steps:
@@ -76,44 +78,6 @@ jobs:
             }
             
             console.log('⏭️  No synthesis issues found among linked issues');
-      
-      - name: Mark PR as ready for review (if draft)
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GH_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            
-            // If PR is a draft and has synthesis label, mark as ready
-            if (pr.draft && pr.labels.some(label => label.name === 'synthesis')) {
-              console.log(`📝 PR #${pr.number} is a draft with synthesis label. Marking as ready for review...`);
-              
-              try {
-                const mutation = `
-                  mutation MarkAsReady($pullRequestId: ID!) {
-                    markPullRequestReadyForReview(input: {
-                      pullRequestId: $pullRequestId
-                    }) {
-                      pullRequest {
-                        isDraft
-                      }
-                    }
-                  }
-                `;
-                
-                await github.graphql(mutation, {
-                  pullRequestId: pr.node_id
-                });
-                
-                console.log(`✅ Marked PR #${pr.number} as ready for review`);
-              } catch (error) {
-                console.log(`⚠️  Could not mark as ready: ${error.message}`);
-              }
-            } else if (pr.draft) {
-              console.log(`⏭️  PR #${pr.number} is a draft but not a synthesis PR. Skipping.`);
-            } else {
-              console.log(`⏭️  PR #${pr.number} is already ready for review.`);
-            }
       
       - name: Checkout PR
         uses: actions/checkout@v4
