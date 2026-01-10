@@ -15,25 +15,74 @@ jobs:
     if: startsWith(github.head_ref, 'sync/upstream-')
     
     steps:
+      - name: Verify PR author is authorized
+        id: verify_author
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            const authorType = pr.user.type;
+            
+            console.log(`👤 PR Author: ${author} (${authorType})`);
+            
+            // Allow GitHub Actions bot (creates upstream sync PRs)
+            if (author === 'github-actions[bot]' || authorType === 'Bot') {
+              console.log('✅ Author is GitHub Actions bot');
+              core.setOutput('is_authorized', 'true');
+              return;
+            }
+            
+            // Check if author has admin permissions (for manual emergency syncs)
+            try {
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: author
+              });
+              
+              const level = permission.data.permission;
+              console.log(`🔐 Author permission level: ${level}`);
+              
+              if (level === 'admin') {
+                console.log('✅ Author has admin access (manual sync allowed)');
+                core.setOutput('is_authorized', 'true');
+                return;
+              }
+            } catch (error) {
+              console.log(`⚠️  Could not check permissions: ${error.message}`);
+            }
+            
+            console.log('❌ Author is not authorized for upstream sync auto-approval');
+            console.log('   Only GitHub Actions bot or repository admins can create upstream sync PRs');
+            core.setOutput('is_authorized', 'false');
+            core.setFailed('Unauthorized author for upstream sync PR');
+      
       - name: Block forks
-        if: github.event.repository.fork == true
+        if: steps.verify_author.outputs.is_authorized == 'true' && github.event.repository.fork == true
         run: |
           echo "::error::Auto-merge is disabled for forked repositories"
           exit 1
 
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        if: steps.verify_author.outputs.is_authorized == 'true'
+        uses: actions/checkout@v4
 
       - name: Set up Python
+        if: steps.verify_author.outputs.is_authorized == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: 'pip'
       - name: Install dependencies
+        if: steps.verify_author.outputs.is_authorized == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Validate PR file scope
+        if: steps.verify_author.outputs.is_authorized == 'true'
         id: validate
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -79,6 +128,7 @@ jobs:
           echo "✅ PR validation passed"
 
       - name: Verify PR branch and metadata
+        if: steps.verify_author.outputs.is_authorized == 'true'
         id: verify
         run: |
           # Verify branch name pattern
@@ -104,7 +154,7 @@ jobs:
           echo "✅ All verification checks passed"
 
       - name: Auto-approve PR
-        if: steps.verify.outputs.auto_merge == 'true'
+        if: steps.verify_author.outputs.is_authorized == 'true' && steps.verify.outputs.auto_merge == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_TOKEN }}
@@ -142,7 +192,7 @@ jobs:
             }
 
       - name: Merge PR directly
-        if: steps.verify.outputs.auto_merge == 'true'
+        if: steps.verify_author.outputs.is_authorized == 'true' && steps.verify.outputs.auto_merge == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_TOKEN }}
