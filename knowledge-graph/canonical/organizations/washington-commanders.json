@@ -1,0 +1,28 @@
+{
+  "canonical_id": "washington-commanders",
+  "canonical_name": "Washington Commanders",
+  "entity_type": "Organization",
+  "aliases": [
+    "Washington Commanders"
+  ],
+  "source_checksums": [
+    "360d4a65765171946cf1845d631ce04ee13e103e8e87c011faca7494e14db09b"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-10T03:47:17.331376+00:00",
+  "last_updated": "2026-01-10T03:47:17.331376+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-10T03:47:17.331376+00:00",
+      "by": "copilot",
+      "reasoning": "New Washington Commanders entity from entity resolution batch"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "needs_review": false,
+    "confidence": 0.95
+  }
+}
