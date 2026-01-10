@@ -4,6 +4,9 @@ name: "Synthesis: Continue Queue 🔄"
 # This enables sequential processing to avoid merge conflicts
 
 on:
+  # Handle PRs from both repository branches and Copilot forks
+  pull_request_target:
+    types: [closed]
   pull_request:
     types: [closed]
 
