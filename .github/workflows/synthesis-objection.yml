@@ -24,44 +24,44 @@ jobs:
             const discussion = context.payload.discussion;
             
             const issueBody = `## Synthesis Objection
-
-**From Discussion:** #${discussion.number}
-**Author:** @${discussion.user.login}
-**Created:** ${discussion.created_at}
-
-## Original Objection
-
-${discussion.body}
-
----
-
-## Instructions for @copilot
-
-Please review this objection:
-
-1. **Read the objection** above carefully
-2. **Find the canonical entity** mentioned in \`knowledge-graph/canonical/\`
-3. **Evaluate validity:**
-   - Is the objection factually correct?
-   - Does the evidence support the requested change?
-4. **Take action:**
-   - **If valid:** Update the canonical entity (remove/add alias, fix attributes, etc.)
-   - **If invalid:** Explain why the current resolution is correct
-5. **Create PR** with any changes to canonical entities or alias map
-6. **Comment on Discussion** #${discussion.number} with your resolution
-7. **Close this Issue** when complete
-
-## Guidelines
-
-- **Err on the side of caution**: If uncertain, mark entity with \`"needs_review": true\`
-- **Document reasoning**: Add detailed entry to \`resolution_history\`
-- **Preserve provenance**: Never delete source checksums
-- **Be respectful**: Acknowledge the reporter's contribution
-
----
-<!-- objection-discussion:${discussion.number} -->
-<!-- copilot:synthesis-objection -->
-`;
+            
+            **From Discussion:** #${discussion.number}
+            **Author:** @${discussion.user.login}
+            **Created:** ${discussion.created_at}
+            
+            ## Original Objection
+            
+            ${discussion.body}
+            
+            ---
+            
+            ## Instructions for @copilot
+            
+            Please review this objection:
+            
+            1. **Read the objection** above carefully
+            2. **Find the canonical entity** mentioned in \`knowledge-graph/canonical/\`
+            3. **Evaluate validity:**
+               - Is the objection factually correct?
+               - Does the evidence support the requested change?
+            4. **Take action:**
+               - **If valid:** Update the canonical entity (remove/add alias, fix attributes, etc.)
+               - **If invalid:** Explain why the current resolution is correct
+            5. **Create PR** with any changes to canonical entities or alias map
+            6. **Comment on Discussion** #${discussion.number} with your resolution
+            7. **Close this Issue** when complete
+            
+            ## Guidelines
+            
+            - **Err on the side of caution**: If uncertain, mark entity with \`"needs_review": true\`
+            - **Document reasoning**: Add detailed entry to \`resolution_history\`
+            - **Preserve provenance**: Never delete source checksums
+            - **Be respectful**: Acknowledge the reporter's contribution
+            
+            ---
+            <!-- objection-discussion:${discussion.number} -->
+            <!-- copilot:synthesis-objection -->
+            `;
             
             const issue = await github.rest.issues.create({
               owner: context.repo.owner,
@@ -74,9 +74,9 @@ Please review this objection:
             console.log(`✅ Created Issue #${issue.data.number} for objection from Discussion #${discussion.number}`);
             
             // Comment on the Discussion to link back to the Issue
-            await github.rest.discussions.createComment({
-              discussion_number: discussion.number,
+            await github.rest.discussions.createDiscussionComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
+              discussion_number: discussion.number,
               body: `Thank you for the objection! Created Issue #${issue.data.number} for @copilot to review.`
             });
