@@ -29,7 +29,7 @@ on:
       batch_size:
         description: 'Maximum entities per Issue'
         type: number
-        default: 50
+        default: 20
       full_rebuild:
         description: 'Full rebuild (reprocess all entities)'
         type: boolean

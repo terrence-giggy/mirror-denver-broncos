@@ -4,6 +4,11 @@ name: "PR Auto-Approve: Knowledge Base 🤖✅"
 # This prevents bottlenecks from synthesis/extraction PRs waiting for human review
 
 on:
+  # Use pull_request_target to handle PRs from Copilot forks
+  # This event grants write permissions and doesn't require approval
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+  # Keep pull_request for PRs from repository branches
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
@@ -18,7 +23,77 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Verify PR author is authorized
+        id: verify_author
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            const authorType = pr.user.type;
+            
+            console.log(`👤 PR Author: ${author} (${authorType})`);
+            
+            // Allow GitHub Copilot bot
+            if (author === 'copilot' || author.includes('[bot]')) {
+              console.log('✅ Author is a bot (Copilot or GitHub bot)');
+              core.setOutput('is_authorized', 'true');
+              return;
+            }
+            
+            // Check if author has write or admin permissions
+            try {
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: author
+              });
+              
+              const level = permission.data.permission;
+              console.log(`🔐 Author permission level: ${level}`);
+              
+              if (level === 'admin' || level === 'write') {
+                console.log('✅ Author has write access');
+                core.setOutput('is_authorized', 'true');
+                return;
+              }
+            } catch (error) {
+              console.log(`⚠️  Could not check permissions: ${error.message}`);
+            }
+            
+            console.log('❌ Author is not authorized for auto-approval');
+            console.log('   Only repository collaborators with write access or bots can use auto-approval');
+            core.setOutput('is_authorized', 'false');
+      
+      - name: Skip if author not authorized
+        if: steps.verify_author.outputs.is_authorized != 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            
+            const comment = `👋 Hi @${author}! 
+            
+            This PR modifies knowledge base files, but auto-approval is only available for:
+            - Repository collaborators with write access
+            - Automated bots (like @copilot)
+            
+            Your PR will require manual review from a maintainer. Thank you for your contribution!`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: comment
+            });
+            
+            console.log('💬 Added comment explaining manual review requirement');
+      
       - name: Add synthesis label to PR
+        if: steps.verify_author.outputs.is_authorized == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_TOKEN }}
@@ -80,11 +155,13 @@ jobs:
             console.log('⏭️  No synthesis issues found among linked issues');
       
       - name: Checkout PR
+        if: steps.verify_author.outputs.is_authorized == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
       - name: Get changed files
+        if: steps.verify_author.outputs.is_authorized == 'true'
         id: changed_files
         uses: actions/github-script@v7
         with:
@@ -138,6 +215,7 @@ jobs:
             };
       
       - name: Check if auto-approvable
+        if: steps.verify_author.outputs.is_authorized == 'true'
         id: check_approval
         uses: actions/github-script@v7
         with:
@@ -165,7 +243,7 @@ jobs:
             return shouldAutoApprove;
       
       - name: Auto-approve PR
-        if: steps.check_approval.outputs.should_approve == 'true'
+        if: steps.verify_author.outputs.is_authorized == 'true' && steps.check_approval.outputs.should_approve == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_TOKEN }}
@@ -198,7 +276,7 @@ jobs:
             }
       
       - name: Merge PR directly
-        if: steps.check_approval.outputs.should_approve == 'true'
+        if: steps.verify_author.outputs.is_authorized == 'true' && steps.check_approval.outputs.should_approve == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_TOKEN }}
@@ -262,7 +340,7 @@ jobs:
             }
       
       - name: Comment on non-auto-approvable PR
-        if: steps.check_approval.outputs.should_approve != 'true'
+        if: steps.verify_author.outputs.is_authorized == 'true' && steps.check_approval.outputs.should_approve != 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_TOKEN }}

@@ -239,21 +239,20 @@ Edit `knowledge-graph/canonical/alias-map.json`:
 
 When you have finished processing all entities:
 
-1. **Create a DRAFT Pull Request** with all changes
+1. **Create a Pull Request** (NOT a draft - mark it ready for review immediately)
    - Include all new/updated canonical entity files
    - Include updated alias-map.json
-   - Reference this issue in the PR body (e.g., "Fixes #{{issue_number}}")
+   - In the PR description, reference this issue: "Fixes #{{issue_number}}"
+   - **IMPORTANT:** Create the PR as "ready for review" from the start (do NOT create as draft)
 
 2. **Add a summary comment** to this issue:
    - How many entities matched to existing canonical entities
    - How many new canonical entities created
    - Any entities flagged for review (ambiguous)
 
-3. **Mark the PR as ready for review** (convert from draft)
-   - This signals that you've completed all work
-   - The PR will be auto-approved and merged
+3. **The PR will be auto-approved and merged** by workflows (no manual review needed)
 
-4. **Close this issue** (will happen automatically when PR merges)
+**Note:** If you create a fork to work on this, that's fine - the workflows are configured to handle fork PRs automatically.
 
 ---
 <!-- copilot:synthesis-batch -->
