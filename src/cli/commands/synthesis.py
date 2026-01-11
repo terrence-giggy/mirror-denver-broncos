@@ -603,12 +603,17 @@ def run_batch_cli(args: argparse.Namespace) -> int:
         """Simple evaluator for synthesis missions."""
         
         def evaluate(self, mission: Mission, steps: Sequence[AgentStep], context: ExecutionContext) -> EvaluationResult:
-            """Validate mission success based on successful tool executions."""
-            successful_steps = [s for s in steps if s.result and s.result.success]
-            if successful_steps:
-                summary = f"Successfully executed {len(successful_steps)} action(s)"
-                return EvaluationResult(complete=True, reason=summary)
-            return EvaluationResult(complete=False, reason="No successful actions completed")
+            """Let the agent decide when it's done - don't force early completion."""
+            # The agent will call finish action when done
+            # We only check for failure conditions
+            failed_steps = [s for s in steps if s.result and not s.result.success]
+            
+            # If there are many failures, mission has failed
+            if len(failed_steps) > 5:
+                return EvaluationResult(complete=True, reason=f"Too many failed actions ({len(failed_steps)})")
+            
+            # Otherwise, let the agent continue
+            return EvaluationResult(complete=False, reason="Agent still working")
     
     EXIT_SUCCESS = 0
     EXIT_ERROR = 1
@@ -714,6 +719,15 @@ def run_batch_cli(args: argparse.Namespace) -> int:
         # Execute the mission with the context we created earlier
         outcome = runtime.execute_mission(mission, context)
         
+        # Debug: Show what steps were executed
+        print(f"\n📋 Execution details:")
+        for i, step in enumerate(outcome.steps, 1):
+            tool_name = step.thought.tool_call.name if step.thought and step.thought.tool_call else 'finish/thinking'
+            success = step.result.success if step.result else 'N/A'
+            print(f"   Step {i}: {tool_name} (success={success})")
+            if step.thought:
+                print(f"      Thought: {step.thought.content[:80]}...")
+        
         if outcome.status == MissionStatus.SUCCEEDED:
             print(f"\n✅ Synthesis batch completed successfully")
             print(f"   Total steps: {len(outcome.steps)}")
@@ -721,8 +735,8 @@ def run_batch_cli(args: argparse.Namespace) -> int:
             # Count action types
             action_counts = {}
             for step in outcome.steps:
-                if step.result:
-                    action_name = step.result.tool_name if hasattr(step.result, 'tool_name') else 'unknown'
+                if step.thought and step.thought.tool_call:
+                    action_name = step.thought.tool_call.name
                     action_counts[action_name] = action_counts.get(action_name, 0) + 1
             
             if action_counts:
@@ -744,10 +758,9 @@ def run_batch_cli(args: argparse.Namespace) -> int:
             if failed_steps:
                 print(f"   Failed actions: {len(failed_steps)}")
                 for step in failed_steps[:3]:  # Show first 3 failures
-                    if step.result:
-                        tool_name = step.result.tool_name if hasattr(step.result, 'tool_name') else 'unknown'
-                        error_msg = step.result.error if hasattr(step.result, 'error') else 'unknown error'
-                        print(f"     • {tool_name}: {error_msg}")
+                    tool_name = step.thought.tool_call.name if step.thought and step.thought.tool_call else 'unknown'
+                    error_msg = step.result.error if step.result and step.result.error else 'unknown error'
+                    print(f"     • {tool_name}: {error_msg}")
             
             if outcome.summary:
                 print(f"   Summary: {outcome.summary}")
