@@ -625,17 +625,14 @@ def run_batch_cli(args: argparse.Namespace) -> int:
         mission_path = Path("config/missions/synthesize_batch.yaml")
         mission = load_mission(mission_path)
         
-        # Override model if specified
-        if model_name != "gpt-4o":
-            mission.model = model_name
-        
-        # Set mission inputs
-        mission.inputs = {
+        # Prepare execution context with inputs
+        inputs = {
             "entity_type": entity_type,
             "batch_size": batch_size,
             "branch_name": branch_name,
             "repository": repository,
         }
+        context = ExecutionContext(inputs=inputs)
         
         # Register tools
         registry = ToolRegistry()
@@ -664,8 +661,7 @@ def run_batch_cli(args: argparse.Namespace) -> int:
         
         print(f"\n🤖 Running synthesis agent...")
         
-        # Execute the mission
-        context = ExecutionContext(inputs=mission.inputs)
+        # Execute the mission with the context we created earlier
         outcome = runtime.execute_mission(mission, context)
         
         if outcome.status == MissionStatus.SUCCEEDED:

@@ -369,3 +369,59 @@ class TestRunBatchCLI:
         assert captured_kwargs["api_key"] == "test_token"
         assert "token" not in captured_kwargs, "token parameter should NOT be used"
         assert result == 0
+    
+    @mock.patch("src.orchestration.missions.load_mission")
+    @mock.patch("src.orchestration.agent.AgentRuntime")
+    def test_execution_context_receives_inputs_not_mission(self, mock_runtime_class, mock_load_mission):
+        """Verify inputs are passed via ExecutionContext, not by modifying frozen mission."""
+        from src.cli.commands.synthesis import run_batch_cli
+        import argparse
+        from src.orchestration.types import MissionStatus
+        
+        # Mission is a frozen dataclass - we can't modify mission.inputs
+        # Inputs should be passed via ExecutionContext(inputs={...})
+        
+        args = argparse.Namespace(
+            entity_type="Organization",
+            batch_size=10,
+            branch_name="test-branch",
+            model="gpt-4o",
+            repository="owner/repo",
+            token="test_token",
+        )
+        
+        # Setup mocks
+        mock_mission = mock.Mock()
+        mock_load_mission.return_value = mock_mission
+        
+        mock_runtime = mock.Mock()
+        mock_outcome = mock.Mock()
+        mock_outcome.status = MissionStatus.SUCCEEDED
+        mock_outcome.steps = []
+        mock_outcome.summary = None
+        mock_runtime.execute_mission.return_value = mock_outcome
+        mock_runtime_class.return_value = mock_runtime
+        
+        # Run
+        with mock.patch("src.cli.commands.synthesis.resolve_repository", return_value="owner/repo"):
+            with mock.patch("src.cli.commands.synthesis.resolve_token", return_value="test_token"):
+                with mock.patch("src.integrations.github.models.GitHubModelsClient"):
+                    result = run_batch_cli(args)
+        
+        # Verify execute_mission was called with mission and context
+        assert mock_runtime.execute_mission.called
+        call_args = mock_runtime.execute_mission.call_args.args
+        assert len(call_args) == 2, "execute_mission should receive (mission, context)"
+        
+        mission_arg, context_arg = call_args
+        
+        # Verify the context has the inputs
+        assert hasattr(context_arg, 'inputs'), "context should have inputs attribute"
+        assert context_arg.inputs is not None, "context.inputs should not be None"
+        assert "entity_type" in context_arg.inputs, "context.inputs should contain entity_type"
+        assert context_arg.inputs["entity_type"] == "Organization"
+        assert context_arg.inputs["batch_size"] == 10
+        assert context_arg.inputs["branch_name"] == "test-branch"
+        assert context_arg.inputs["repository"] == "owner/repo"
+        
+        assert result == 0
