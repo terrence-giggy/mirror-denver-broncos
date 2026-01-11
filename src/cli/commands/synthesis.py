@@ -134,8 +134,8 @@ def _gather_unresolved_entities(
     unresolved: List[tuple[str, str]] = []
     alias_map = canonical_storage.load_alias_map()
     
-    # Get all source checksums
-    checksums = _list_all_checksums(kg_storage)
+    # Get source checksums for this entity type only
+    checksums = _list_all_checksums(kg_storage, entity_type)
     
     # Check each source for unresolved entities
     for checksum in checksums:
@@ -166,16 +166,36 @@ def _gather_unresolved_entities(
     return unresolved
 
 
-def _list_all_checksums(kg_storage: KnowledgeGraphStorage) -> List[str]:
-    """List all source checksums in the knowledge graph."""
+def _list_all_checksums(kg_storage: KnowledgeGraphStorage, entity_type: str | None = None) -> List[str]:
+    """List all source checksums in the knowledge graph.
+    
+    Args:
+        kg_storage: Knowledge graph storage instance
+        entity_type: Optional entity type to filter by (Person, Organization, Concept).
+                     If None, returns checksums from all types.
+    
+    Returns:
+        Sorted list of unique checksums
+    """
     checksums: set[str] = set()
     
+    # Determine which directories to scan based on entity_type
     # Access protected members - justified for internal CLI utilities
-    for directory in [
-        kg_storage._people_dir,  # noqa: SLF001
-        kg_storage._organizations_dir,  # noqa: SLF001
-        kg_storage._concepts_dir,  # noqa: SLF001
-    ]:
+    if entity_type == "Person":
+        directories = [kg_storage._people_dir]  # noqa: SLF001
+    elif entity_type == "Organization":
+        directories = [kg_storage._organizations_dir]  # noqa: SLF001
+    elif entity_type == "Concept":
+        directories = [kg_storage._concepts_dir]  # noqa: SLF001
+    else:
+        # No filter - scan all types
+        directories = [
+            kg_storage._people_dir,  # noqa: SLF001
+            kg_storage._organizations_dir,  # noqa: SLF001
+            kg_storage._concepts_dir,  # noqa: SLF001
+        ]
+    
+    for directory in directories:
         if directory.exists():
             for path in directory.glob("*.json"):
                 checksums.add(path.stem)
@@ -617,6 +637,33 @@ def run_batch_cli(args: argparse.Namespace) -> int:
     print(f"   Batch size: {batch_size}")
     print(f"   Branch: {branch_name}")
     
+    # Discover pending entities
+    print(f"\n📊 Discovering pending {entity_type} entities...")
+    kg_root = get_knowledge_graph_root()
+    kg_storage = KnowledgeGraphStorage(root=kg_root)
+    canonical_storage = CanonicalStorage(root=kg_root / "canonical")
+    
+    unresolved = _gather_unresolved_entities(entity_type, kg_storage, canonical_storage)
+    
+    print(f"   Found {len(unresolved)} unresolved {entity_type} entities")
+    
+    if not unresolved:
+        print(f"   ✓ All {entity_type} entities are already resolved")
+        print(f"   Nothing to process")
+        return EXIT_SUCCESS
+    
+    # Show sample of entities
+    sample_size = min(5, len(unresolved))
+    print(f"   Sample entities to process:")
+    for name, checksum in unresolved[:sample_size]:
+        print(f"     • {name} (from {checksum[:12]}...)")
+    if len(unresolved) > sample_size:
+        print(f"     ... and {len(unresolved) - sample_size} more")
+    
+    # Determine actual batch size
+    actual_batch = min(batch_size, len(unresolved))
+    print(f"   Processing batch of {actual_batch} entities")
+    
     try:
         # Initialize components
         models_client = GitHubModelsClient(api_key=token, model=model_name)
@@ -660,6 +707,9 @@ def run_batch_cli(args: argparse.Namespace) -> int:
         )
         
         print(f"\n🤖 Running synthesis agent...")
+        print(f"   Mission: {mission.name}")
+        print(f"   Max steps: {mission.constraints.get('max_steps', 'unlimited')}")
+        print(f"")
         
         # Execute the mission with the context we created earlier
         outcome = runtime.execute_mission(mission, context)
@@ -668,15 +718,39 @@ def run_batch_cli(args: argparse.Namespace) -> int:
             print(f"\n✅ Synthesis batch completed successfully")
             print(f"   Total steps: {len(outcome.steps)}")
             
+            # Count action types
+            action_counts = {}
+            for step in outcome.steps:
+                if step.result:
+                    action_name = step.result.tool_name if hasattr(step.result, 'tool_name') else 'unknown'
+                    action_counts[action_name] = action_counts.get(action_name, 0) + 1
+            
+            if action_counts:
+                print(f"   Actions executed:")
+                for action, count in sorted(action_counts.items()):
+                    print(f"     • {action}: {count}")
+            
             # Show summary if available
             if outcome.summary:
-                print(f"   {outcome.summary}")
+                print(f"   Summary: {outcome.summary}")
             
             return EXIT_SUCCESS
         else:
             print(f"\n❌ Synthesis batch failed: {outcome.status.value}")
+            print(f"   Total steps attempted: {len(outcome.steps)}")
+            
+            # Show failed steps
+            failed_steps = [s for s in outcome.steps if s.result and not s.result.success]
+            if failed_steps:
+                print(f"   Failed actions: {len(failed_steps)}")
+                for step in failed_steps[:3]:  # Show first 3 failures
+                    if step.result:
+                        tool_name = step.result.tool_name if hasattr(step.result, 'tool_name') else 'unknown'
+                        error_msg = step.result.error if hasattr(step.result, 'error') else 'unknown error'
+                        print(f"     • {tool_name}: {error_msg}")
+            
             if outcome.summary:
-                print(f"   {outcome.summary}")
+                print(f"   Summary: {outcome.summary}")
             return EXIT_ERROR
             
     except RateLimitError as e:
