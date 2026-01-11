@@ -717,16 +717,31 @@ def run_batch_cli(args: argparse.Namespace) -> int:
         print(f"")
         
         # Execute the mission with the context we created earlier
-        outcome = runtime.execute_mission(mission, context)
+        try:
+            outcome = runtime.execute_mission(mission, context)
+        except Exception as e:
+            print(f"\n❌ Exception during agent execution: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            return EXIT_ERROR
         
         # Debug: Show what steps were executed
         print(f"\n📋 Execution details:")
         for i, step in enumerate(outcome.steps, 1):
             tool_name = step.thought.tool_call.name if step.thought and step.thought.tool_call else 'finish/thinking'
+            thought_type = step.thought.type.value if step.thought else 'unknown'
             success = step.result.success if step.result else 'N/A'
-            print(f"   Step {i}: {tool_name} (success={success})")
+            print(f"   Step {i}: {tool_name} [type={thought_type}] (success={success})")
             if step.thought:
-                print(f"      Thought: {step.thought.content[:80]}...")
+                print(f"      Thought: {step.thought.content[:120]}...")
+            # Show error details if the step failed
+            if step.result and not step.result.success and step.result.error:
+                print(f"      ❌ Error: {step.result.error[:200]}")
+        
+        # Check if mission ended early
+        if len(outcome.steps) < 3:
+            print(f"\n⚠️  Warning: Mission ended after only {len(outcome.steps)} step(s)")
+            print(f"   Expected more steps to process {actual_batch} entities")
         
         if outcome.status == MissionStatus.SUCCEEDED:
             print(f"\n✅ Synthesis batch completed successfully")
@@ -753,17 +768,35 @@ def run_batch_cli(args: argparse.Namespace) -> int:
             print(f"\n❌ Synthesis batch failed: {outcome.status.value}")
             print(f"   Total steps attempted: {len(outcome.steps)}")
             
-            # Show failed steps
+            # Show ALL steps for debugging
+            print(f"\n   All steps:")
+            for i, step in enumerate(outcome.steps, 1):
+                tool_name = step.thought.tool_call.name if step.thought and step.thought.tool_call else 'finish/thinking'
+                success = step.result.success if step.result else 'N/A'
+                print(f"      {i}. {tool_name} - success={success}")
+                if step.result and step.result.error:
+                    print(f"         Error: {step.result.error}")
+            
+            # Show failed steps summary
             failed_steps = [s for s in outcome.steps if s.result and not s.result.success]
             if failed_steps:
-                print(f"   Failed actions: {len(failed_steps)}")
+                print(f"\n   Failed actions: {len(failed_steps)}")
                 for step in failed_steps[:3]:  # Show first 3 failures
                     tool_name = step.thought.tool_call.name if step.thought and step.thought.tool_call else 'unknown'
                     error_msg = step.result.error if step.result and step.result.error else 'unknown error'
                     print(f"     • {tool_name}: {error_msg}")
+            else:
+                print(f"\n   ⚠️  No failed steps detected - mission failed for another reason")
             
             if outcome.summary:
                 print(f"   Summary: {outcome.summary}")
+            
+            # Additional debugging info
+            print(f"\n   🔍 Debugging info:")
+            print(f"      - Successful steps: {len([s for s in outcome.steps if s.result and s.result.success])}")
+            print(f"      - Failed steps: {len(failed_steps)}")
+            print(f"      - Steps without results: {len([s for s in outcome.steps if not s.result])}")
+            
             return EXIT_ERROR
             
     except RateLimitError as e:
