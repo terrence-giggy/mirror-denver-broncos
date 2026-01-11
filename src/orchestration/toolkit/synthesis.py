@@ -189,36 +189,59 @@ def _list_pending_entities_handler(args: Mapping[str, Any]) -> ToolResult:
         type_key = entity_type
         existing_aliases = alias_map.by_type.get(type_key, {})
 
-        # Collect all raw entity names from extraction
-        entity_dir_name = entity_type.lower() + "s" if entity_type != "Person" else "people"
-        entity_dir = kb_dir / entity_dir_name
+        # Collect unresolved entities using KnowledgeGraphStorage
+        from src.knowledge.canonical import normalize_name
         pending = []
         
-        if entity_dir.exists():
-            for entity_file in entity_dir.glob("*.json"):
+        # Get all checksums for this entity type
+        if entity_type == "Person":
+            directory = kb_storage._people_dir  # noqa: SLF001
+        elif entity_type == "Organization":
+            directory = kb_storage._organizations_dir  # noqa: SLF001
+        elif entity_type == "Concept":
+            directory = kb_storage._concepts_dir  # noqa: SLF001
+        else:
+            return ToolResult(success=False, output=None, error=f"Unknown entity_type: {entity_type}")
+        
+        if directory.exists():
+            for entity_file in directory.glob("*.json"):
+                source_checksum = entity_file.stem
+                entity_list = []
+                
                 try:
-                    with entity_file.open("r", encoding="utf-8") as f:
-                        entities = json.load(f)
-                    
-                    # entities is a list of strings
-                    if isinstance(entities, list):
-                        source_checksum = entity_file.stem
-                        for entity_name in entities:
-                            # Normalize and check if already in alias map
-                            from src.knowledge.canonical import normalize_name
-                            normalized = normalize_name(entity_name)
-                            
-                            if normalized not in existing_aliases:
-                                pending.append({
-                                    "raw_name": entity_name,
-                                    "source_checksum": source_checksum,
-                                    "normalized": normalized,
-                                })
-                                
-                                if len(pending) >= limit:
-                                    break
+                    # Try loading using KnowledgeGraphStorage methods first
+                    if entity_type == "Person":
+                        extracted = kb_storage.get_extracted_people(source_checksum)
+                        entity_list = extracted.people if extracted else []
+                    elif entity_type == "Organization":
+                        extracted = kb_storage.get_extracted_organizations(source_checksum)
+                        entity_list = extracted.organizations if extracted else []
+                    elif entity_type == "Concept":
+                        extracted = kb_storage.get_extracted_concepts(source_checksum)
+                        entity_list = extracted.concepts if extracted else []
                 except Exception:
-                    continue  # Skip problematic files
+                    # Fallback: Try reading as simple JSON list (for backward compatibility / tests)
+                    try:
+                        with entity_file.open("r", encoding="utf-8") as f:
+                            data = json.load(f)
+                        if isinstance(data, list):
+                            entity_list = data
+                    except Exception:
+                        # Skip files that can't be loaded
+                        continue
+                
+                for entity_name in entity_list:
+                    normalized = normalize_name(entity_name)
+                    
+                    if normalized not in existing_aliases:
+                        pending.append({
+                            "raw_name": entity_name,
+                            "source_checksum": source_checksum,
+                            "normalized": normalized,
+                        })
+                        
+                        if len(pending) >= limit:
+                            break
                 
                 if len(pending) >= limit:
                     break
