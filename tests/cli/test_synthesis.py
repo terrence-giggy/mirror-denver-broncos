@@ -27,18 +27,44 @@ class TestListAllChecksums:
     
     def test_empty_storage(self, temp_kg_storage: KnowledgeGraphStorage):
         """Test with no extracted entities."""
-        checksums = _list_all_checksums(temp_kg_storage)
+        checksums = _list_all_checksums(temp_kg_storage, entity_type=None)
         assert checksums == []
     
     def test_multiple_checksums(self, temp_kg_storage: KnowledgeGraphStorage):
-        """Test with multiple source documents."""
+        """Test with multiple source documents (no entity type filter)."""
         temp_kg_storage.save_extracted_people("abc123", ["Person A"])
         temp_kg_storage.save_extracted_organizations("abc123", ["Org A"])
         temp_kg_storage.save_extracted_people("def456", ["Person B"])
         
-        checksums = _list_all_checksums(temp_kg_storage)
+        checksums = _list_all_checksums(temp_kg_storage, entity_type=None)
         assert set(checksums) == {"abc123", "def456"}
         assert checksums == sorted(checksums)  # Should be sorted
+    
+    def test_filter_by_person(self, temp_kg_storage: KnowledgeGraphStorage):
+        """Test filtering checksums by Person entity type."""
+        temp_kg_storage.save_extracted_people("abc123", ["Person A"])
+        temp_kg_storage.save_extracted_organizations("def456", ["Org A"])
+        temp_kg_storage.save_extracted_people("ghi789", ["Person B"])
+        
+        checksums = _list_all_checksums(temp_kg_storage, entity_type="Person")
+        assert set(checksums) == {"abc123", "ghi789"}
+    
+    def test_filter_by_organization(self, temp_kg_storage: KnowledgeGraphStorage):
+        """Test filtering checksums by Organization entity type."""
+        temp_kg_storage.save_extracted_people("abc123", ["Person A"])
+        temp_kg_storage.save_extracted_organizations("def456", ["Org A"])
+        temp_kg_storage.save_extracted_organizations("ghi789", ["Org B"])
+        
+        checksums = _list_all_checksums(temp_kg_storage, entity_type="Organization")
+        assert set(checksums) == {"def456", "ghi789"}
+    
+    def test_filter_by_concept(self, temp_kg_storage: KnowledgeGraphStorage):
+        """Test filtering checksums by Concept entity type."""
+        temp_kg_storage.save_extracted_people("abc123", ["Person A"])
+        temp_kg_storage.save_extracted_concepts("def456", ["Concept A"])
+        
+        checksums = _list_all_checksums(temp_kg_storage, entity_type="Concept")
+        assert set(checksums) == {"def456"}
 
 
 class TestGatherUnresolvedEntities:
@@ -267,9 +293,16 @@ class TestRunBatchCLI:
         from src.cli.commands.synthesis import run_batch_cli
         import argparse
         from src.orchestration.types import MissionStatus
+        from src.knowledge.storage import KnowledgeGraphStorage
+        from src.paths import get_knowledge_graph_root
         
-        # Previous bug: AgentRuntime(mission=mission, planner=planner) 
+        # Previous bug: AgentRuntime(mission=mission, planner=planner)
         # Correct API: AgentRuntime(planner=planner, tools=registry, safety=validator, evaluator=evaluator)
+        
+        # Add test entities so CLI doesn't exit early
+        kg_root = get_knowledge_graph_root()
+        kg_storage = KnowledgeGraphStorage(root=kg_root)
+        kg_storage.save_extracted_organizations("test123", ["Test Org"])
         
         args = argparse.Namespace(
             entity_type="Organization",
@@ -324,9 +357,16 @@ class TestRunBatchCLI:
         from src.cli.commands.synthesis import run_batch_cli
         import argparse
         from src.orchestration.types import MissionStatus
+        from src.knowledge.storage import KnowledgeGraphStorage
+        from src.paths import get_knowledge_graph_root
         
         # Previous bug: GitHubModelsClient(token=token, ...)
         # Correct API: GitHubModelsClient(api_key=token, ...)
+        
+        # Add test entities so CLI doesn't exit early
+        kg_root = get_knowledge_graph_root()
+        kg_storage = KnowledgeGraphStorage(root=kg_root)
+        kg_storage.save_extracted_organizations("test456", ["Test Org 2"])
         
         args = argparse.Namespace(
             entity_type="Organization",
@@ -377,9 +417,16 @@ class TestRunBatchCLI:
         from src.cli.commands.synthesis import run_batch_cli
         import argparse
         from src.orchestration.types import MissionStatus
+        from src.knowledge.storage import KnowledgeGraphStorage
+        from src.paths import get_knowledge_graph_root
         
         # Mission is a frozen dataclass - we can't modify mission.inputs
         # Inputs should be passed via ExecutionContext(inputs={...})
+        
+        # Add test entities so CLI doesn't exit early
+        kg_root = get_knowledge_graph_root()
+        kg_storage = KnowledgeGraphStorage(root=kg_root)
+        kg_storage.save_extracted_organizations("test789", ["Test Org 3"])
         
         args = argparse.Namespace(
             entity_type="Organization",
