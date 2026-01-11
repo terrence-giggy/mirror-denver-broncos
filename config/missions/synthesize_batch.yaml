@@ -1,0 +1,61 @@
+# Mission to resolve entity duplicates via LLM-driven synthesis.
+
+id: synthesize_batch
+version: 1
+metadata:
+  owner: synthesis-agent
+  created_at: 2026-01-10
+  summary_tooling: llm-synthesis
+
+goal: |
+  Resolve raw extracted entity names to canonical entities by deduplicating,
+  matching to existing canonical entities, or creating new ones. Save all
+  resolutions to the canonical store and create a pull request with changes.
+
+  Process:
+  1. List pending entities for the specified entity_type (not yet in canonical store).
+  2. Get the alias map to check for existing canonical entities.
+  3. For each pending entity:
+     - Check if normalized name exists in alias map (already resolved → skip)
+     - Search canonical entities for semantic matches (abbreviations, nicknames, variants)
+     - Decide: MATCH to existing entity OR create NEW canonical entity
+     - Call resolve_entity with decision (match to canonical_id or create new)
+  4. Save all resolutions in a batch (updates canonical entities + alias map).
+  5. Create a branch and commit all changes.
+  6. Create a pull request with the changes.
+
+  Resolution Rules:
+  - Abbreviations match full names: "Broncos" → "Denver Broncos"
+  - Nicknames match formal names: "AFC" might match "American Football Conference"
+  - Ambiguous cases: set needs_review=true
+  - Cross-type leakage (person name in concepts): mark for review
+  - Confidence < 0.8: set needs_review=true
+
+constraints:
+  - Process only the entity_type specified in mission inputs (Person, Organization, or Concept).
+  - Do NOT reprocess entities already in alias map (they are resolved).
+  - Maximum batch_size entities per run (from mission inputs).
+  - Create feature branch from main before committing.
+  - Use commit_files_batch for atomic multi-file commits (canonical entities + alias map).
+
+success_criteria:
+  - All pending entities (up to batch_size) are resolved via resolve_entity tool.
+  - Batch is saved via save_synthesis_batch tool.
+  - Feature branch is created with branch_name from mission inputs.
+  - All modified files are committed to the branch in a single atomic commit.
+  - "Pull request is created with title 'Synthesis: Resolve {entity_type} entities (batch {timestamp})'."
+  - Pull request body lists how many entities were created vs updated.
+
+max_steps: 100
+model: gpt-4o
+allowed_tools:
+  - list_pending_entities
+  - get_canonical_entity
+  - get_alias_map
+  - resolve_entity
+  - save_synthesis_batch
+  - read_file_content
+  - create_branch
+  - commit_files_batch
+  - create_pull_request
+requires_approval: false
