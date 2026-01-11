@@ -255,3 +255,117 @@ class TestSynthesisCLI:
         assert "Person (2 pending)" in captured.out
         assert "Sean Payton" in captured.out
         assert "Courtland Sutton" in captured.out
+
+class TestRunBatchCLI:
+    """Tests for run_batch_cli command to verify correct API usage."""
+    
+    @mock.patch("src.orchestration.missions.load_mission")
+    @mock.patch("src.integrations.github.models.GitHubModelsClient")
+    @mock.patch("src.orchestration.agent.AgentRuntime")
+    def test_agent_runtime_receives_correct_parameters(self, mock_runtime_class, mock_client_class, mock_load_mission):
+        """Verify AgentRuntime is initialized with planner, tools, safety, evaluator (not mission)."""
+        from src.cli.commands.synthesis import run_batch_cli
+        import argparse
+        from src.orchestration.types import MissionStatus
+        
+        # Previous bug: AgentRuntime(mission=mission, planner=planner) 
+        # Correct API: AgentRuntime(planner=planner, tools=registry, safety=validator, evaluator=evaluator)
+        
+        args = argparse.Namespace(
+            entity_type="Organization",
+            batch_size=10,
+            branch_name="test-branch",
+            model="gpt-4o",
+            repository="owner/repo",
+            token="test_token",
+        )
+        
+        # Setup mocks
+        mock_mission = mock.Mock()
+        mock_mission.inputs = {}
+        mock_load_mission.return_value = mock_mission
+        
+        mock_runtime = mock.Mock()
+        mock_outcome = mock.Mock()
+        mock_outcome.status = MissionStatus.SUCCEEDED
+        mock_outcome.steps = []
+        mock_outcome.summary = None
+        mock_runtime.execute_mission.return_value = mock_outcome
+        mock_runtime_class.return_value = mock_runtime
+        
+        # Run
+        with mock.patch("src.cli.commands.synthesis.resolve_repository", return_value="owner/repo"):
+            with mock.patch("src.cli.commands.synthesis.resolve_token", return_value="test_token"):
+                result = run_batch_cli(args)
+        
+        # Verify AgentRuntime constructor was called
+        assert mock_runtime_class.called
+        call_kwargs = mock_runtime_class.call_args.kwargs
+        
+        # Verify required parameters are present
+        assert "planner" in call_kwargs, "AgentRuntime must receive planner parameter"
+        assert "tools" in call_kwargs, "AgentRuntime must receive tools parameter"
+        assert "safety" in call_kwargs, "AgentRuntime must receive safety parameter"
+        assert "evaluator" in call_kwargs, "AgentRuntime must receive evaluator parameter"
+        
+        # Verify mission is NOT passed to constructor (it goes to execute_mission instead)
+        assert "mission" not in call_kwargs, "mission should NOT be in AgentRuntime constructor"
+        
+        # Verify execute_mission was called with mission
+        assert mock_runtime.execute_mission.called
+        exec_args = mock_runtime.execute_mission.call_args.args
+        assert len(exec_args) == 2, "execute_mission should receive (mission, context)"
+        assert result == 0
+    
+    @mock.patch("src.orchestration.missions.load_mission")
+    @mock.patch("src.orchestration.agent.AgentRuntime")
+    def test_github_models_client_uses_api_key_parameter(self, mock_runtime_class, mock_load_mission):
+        """Verify GitHubModelsClient is initialized with api_key= not token=."""
+        from src.cli.commands.synthesis import run_batch_cli
+        import argparse
+        from src.orchestration.types import MissionStatus
+        
+        # Previous bug: GitHubModelsClient(token=token, ...)
+        # Correct API: GitHubModelsClient(api_key=token, ...)
+        
+        args = argparse.Namespace(
+            entity_type="Organization",
+            batch_size=10,
+            branch_name="test-branch",
+            model="gpt-4o",
+            repository="owner/repo",
+            token="test_token",
+        )
+        
+        # Capture kwargs passed to GitHubModelsClient
+        captured_kwargs = {}
+        
+        class MockGitHubModelsClient:
+            def __init__(self, **kwargs):
+                captured_kwargs.update(kwargs)
+                self.model = kwargs.get("model", "gpt-4o")
+        
+        # Setup other mocks
+        mock_mission = mock.Mock()
+        mock_mission.inputs = {}
+        mock_load_mission.return_value = mock_mission
+        
+        mock_runtime = mock.Mock()
+        mock_outcome = mock.Mock()
+        mock_outcome.status = MissionStatus.SUCCEEDED
+        mock_outcome.steps = []
+        mock_outcome.summary = None
+        mock_runtime.execute_mission.return_value = mock_outcome
+        mock_runtime_class.return_value = mock_runtime
+        
+        # Run with our custom mock
+        with mock.patch("src.cli.commands.synthesis.resolve_repository", return_value="owner/repo"):
+            with mock.patch("src.cli.commands.synthesis.resolve_token", return_value="test_token"):
+                with mock.patch("src.integrations.github.models.GitHubModelsClient", MockGitHubModelsClient):
+                    result = run_batch_cli(args)
+        
+        # Verify api_key parameter was used (not token)
+        assert "api_key" in captured_kwargs, "GitHubModelsClient must be initialized with api_key parameter"
+        assert captured_kwargs["api_key"] == "test_token"
+        assert "token" not in captured_kwargs, "token parameter should NOT be used"
+        assert result == 0

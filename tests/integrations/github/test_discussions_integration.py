@@ -573,7 +573,7 @@ class TestRealKnowledgeGraph:
     """Test with the actual knowledge graph data if it exists."""
 
     @pytest.mark.skipif(
-        not Path("knowledge-graph/profiles").exists(),
+        not any(Path("knowledge-graph/people").glob("*.json")),
         reason="Real knowledge graph not available"
     )
     def test_list_entities_from_real_graph(self) -> None:
@@ -594,7 +594,7 @@ class TestRealKnowledgeGraph:
             assert entity.entity_type == "Person"
 
     @pytest.mark.skipif(
-        not Path("knowledge-graph/profiles").exists(),
+        not any(Path("knowledge-graph/people").glob("*.json")),
         reason="Real knowledge graph not available"
     )
     def test_build_content_for_real_entity(self) -> None:
