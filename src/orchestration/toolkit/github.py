@@ -997,6 +997,102 @@ def register_github_mutation_tools(registry: ToolRegistry) -> None:
         )
     )
 
+    registry.register_tool(
+        ToolDefinition(
+            name="read_file_content",
+            description="Read the content of a file from the repository.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Path to the file."},
+                    "ref": {
+                        "type": "string",
+                        "description": "Git reference (branch, tag, or commit SHA). Uses default branch if not provided.",
+                    },
+                    "repository": {
+                        "type": "string",
+                        "description": "Repository name in 'owner/name' format. Defaults to GITHUB_REPOSITORY env var.",
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "GitHub token with read access. Defaults to GITHUB_TOKEN env var.",
+                    },
+                },
+                "required": ["path"],
+                "additionalProperties": False,
+            },
+            handler=_read_file_content_handler,
+            risk_level=ActionRisk.SAFE,
+        )
+    )
+
+    registry.register_tool(
+        ToolDefinition(
+            name="create_branch",
+            description="Create a new branch from an existing branch.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "branch_name": {"type": "string", "description": "Name of the new branch."},
+                    "from_branch": {
+                        "type": "string",
+                        "description": "Branch to create from. Defaults to 'main'.",
+                    },
+                    "repository": {
+                        "type": "string",
+                        "description": "Repository name in 'owner/name' format. Defaults to GITHUB_REPOSITORY env var.",
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "GitHub token with write access. Defaults to GITHUB_TOKEN env var.",
+                    },
+                },
+                "required": ["branch_name"],
+                "additionalProperties": False,
+            },
+            handler=_create_branch_handler,
+            risk_level=ActionRisk.DESTRUCTIVE,
+        )
+    )
+
+    registry.register_tool(
+        ToolDefinition(
+            name="commit_files_batch",
+            description="Commit multiple files in a single atomic commit using the Git Trees API.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "files": {
+                        "type": "array",
+                        "description": "List of file objects with 'path' and 'content' properties.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "path": {"type": "string", "description": "Path to the file."},
+                                "content": {"type": "string", "description": "Content of the file."},
+                            },
+                            "required": ["path", "content"],
+                        },
+                    },
+                    "message": {"type": "string", "description": "Commit message for the batch."},
+                    "branch": {"type": "string", "description": "Branch to commit to."},
+                    "repository": {
+                        "type": "string",
+                        "description": "Repository name in 'owner/name' format. Defaults to GITHUB_REPOSITORY env var.",
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "GitHub token with write access. Defaults to GITHUB_TOKEN env var.",
+                    },
+                },
+                "required": ["files", "message", "branch"],
+                "additionalProperties": False,
+            },
+            handler=_commit_files_batch_handler,
+            risk_level=ActionRisk.DESTRUCTIVE,
+        )
+    )
+
 
 # Handler implementations for mutation tools
 
@@ -1418,4 +1514,118 @@ def _commit_file_handler(args: Mapping[str, Any]) -> ToolResult:
         )
     except github_issues.GitHubIssueError as exc:
         return ToolResult(success=False, output=None, error=str(exc))
+
+
+def _read_file_content_handler(args: Mapping[str, Any]) -> ToolResult:
+    from src.integrations.github import files as github_files
+    
+    path = args.get("path")
+    if not path:
+        return ToolResult(success=False, output=None, error="path is required.")
+
+    ref = args.get("ref")
+    repository_arg = args.get("repository")
+    token_arg = args.get("token")
+    
+    try:
+        repository = github_issues.resolve_repository(str(repository_arg) if repository_arg else None)
+        token = github_issues.resolve_token(str(token_arg) if token_arg else None)
+    except github_issues.GitHubIssueError as exc:
+        return ToolResult(success=False, output=None, error=str(exc))
+
+    try:
+        content, sha = github_files.get_file_content(
+            token=token,
+            repository=repository,
+            path=str(path),
+            ref=str(ref) if ref else None,
+        )
+        return ToolResult(
+            success=True,
+            output={"content": content, "sha": sha, "path": path},
+            error=None,
+        )
+    except github_issues.GitHubIssueError as exc:
+        return ToolResult(success=False, output=None, error=str(exc))
+
+
+def _create_branch_handler(args: Mapping[str, Any]) -> ToolResult:
+    from src.integrations.github import sync as github_sync
+    
+    branch_name = args.get("branch_name")
+    if not branch_name:
+        return ToolResult(success=False, output=None, error="branch_name is required.")
+
+    from_branch = args.get("from_branch", "main")
+    repository_arg = args.get("repository")
+    token_arg = args.get("token")
+    
+    try:
+        repository = github_issues.resolve_repository(str(repository_arg) if repository_arg else None)
+        token = github_issues.resolve_token(str(token_arg) if token_arg else None)
+    except github_issues.GitHubIssueError as exc:
+        return ToolResult(success=False, output=None, error=str(exc))
+
+    try:
+        sha = github_sync.create_branch(
+            repository=repository,
+            branch_name=str(branch_name),
+            from_branch=str(from_branch),
+            token=token,
+        )
+        return ToolResult(
+            success=True,
+            output={"branch_name": branch_name, "sha": sha, "from_branch": from_branch},
+            error=None,
+        )
+    except Exception as exc:
+        return ToolResult(success=False, output=None, error=str(exc))
+
+
+def _commit_files_batch_handler(args: Mapping[str, Any]) -> ToolResult:
+    from src.integrations.github import files as github_files
+    
+    files = args.get("files")
+    message = args.get("message")
+    branch = args.get("branch")
+    
+    if not files or not isinstance(files, list):
+        return ToolResult(success=False, output=None, error="files must be a non-empty list.")
+    if not message:
+        return ToolResult(success=False, output=None, error="message is required.")
+    if not branch:
+        return ToolResult(success=False, output=None, error="branch is required.")
+
+    # Convert files array of objects to list of tuples
+    file_tuples = []
+    for f in files:
+        if not isinstance(f, dict) or "path" not in f or "content" not in f:
+            return ToolResult(success=False, output=None, error="Each file must have 'path' and 'content' properties.")
+        file_tuples.append((str(f["path"]), str(f["content"])))
+
+    repository_arg = args.get("repository")
+    token_arg = args.get("token")
+    
+    try:
+        repository = github_issues.resolve_repository(str(repository_arg) if repository_arg else None)
+        token = github_issues.resolve_token(str(token_arg) if token_arg else None)
+    except github_issues.GitHubIssueError as exc:
+        return ToolResult(success=False, output=None, error=str(exc))
+
+    try:
+        result = github_files.commit_files_batch(
+            token=token,
+            repository=repository,
+            files=file_tuples,
+            message=str(message),
+            branch=str(branch),
+        )
+        return ToolResult(
+            success=True,
+            output={"commit_sha": result.get("sha"), "files_count": len(file_tuples)},
+            error=None,
+        )
+    except github_issues.GitHubIssueError as exc:
+        return ToolResult(success=False, output=None, error=str(exc))
+
 
