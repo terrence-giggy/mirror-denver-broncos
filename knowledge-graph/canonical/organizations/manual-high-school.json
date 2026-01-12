@@ -1,0 +1,30 @@
+{
+  "canonical_id": "manual-high-school",
+  "canonical_name": "Manual High School",
+  "entity_type": "Organization",
+  "aliases": [
+    "Manual High School"
+  ],
+  "source_checksums": [
+    "8b21d1d86d7fc435a552d1bfc4249e92ac30aec7493a51ba47bf00fd38c933a4"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-12T22:09:36.465520+00:00",
+  "last_updated": "2026-01-12T22:09:36.465520+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-12T22:09:36.465520+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "New entity based on extracted name."
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260112-220816",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}

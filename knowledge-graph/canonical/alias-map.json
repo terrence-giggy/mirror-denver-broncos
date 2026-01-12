@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-12T22:01:55.913963+00:00",
+  "last_updated": "2026-01-12T22:09:36.466759+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -87,7 +87,16 @@
       "denver broncos team store": "denver-broncos-team-store",
       "pro shop": "pro-shop",
       "texans": "houston-texans",
-      "eagles": "philadelphia-eagles"
+      "eagles": "philadelphia-eagles",
+      "denver broncos cheerleaders": "denver-broncos",
+      "ent credit union": "ent-credit-union",
+      "manual high school": "manual-high-school",
+      "commonspirit st. anthony hospital": "commonspirit-st-anthony-hospital",
+      "denver broncos boys & girls club": "denver-broncos-boys-and-girls-club",
+      "king soopers marketplace": "king-soopers-marketplace",
+      "youtube": "youtube",
+      "jaguars": "jaguars",
+      "altitude advantage": "altitude-advantage"
     },
     "Concept": {}
   }
