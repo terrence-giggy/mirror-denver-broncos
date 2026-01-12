@@ -97,7 +97,7 @@ def _register_run_command(subparsers: argparse._SubParsersAction[argparse.Argume
     )
     parser.add_argument(
         "--model",
-        help="LLM model to use (default: gpt-4o)",
+        help="LLM model to use (default: gpt-4o-mini)",
     )
     parser.add_argument(
         "--output",
