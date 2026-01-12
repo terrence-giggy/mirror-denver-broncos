@@ -1598,9 +1598,12 @@ def _commit_files_batch_handler(args: Mapping[str, Any]) -> ToolResult:
 
     # Convert files array of objects to list of tuples
     file_tuples = []
+    import sys
+    print(f"\n📤 commit_files_batch received {len(files)} files:", file=sys.stderr)
     for f in files:
         if not isinstance(f, dict) or "path" not in f or "content" not in f:
             return ToolResult(success=False, output=None, error="Each file must have 'path' and 'content' properties.")
+        print(f"   - {f['path']} ({len(f['content'])} bytes)", file=sys.stderr)
         file_tuples.append((str(f["path"]), str(f["content"])))
 
     repository_arg = args.get("repository")
