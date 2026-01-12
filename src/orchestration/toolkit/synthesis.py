@@ -139,7 +139,7 @@ def register_synthesis_tools(registry: ToolRegistry) -> None:
     registry.register_tool(
         ToolDefinition(
             name="save_synthesis_batch",
-            description="Save all pending entity resolutions and return file changes for PR creation.",
+            description="Save all pending entity resolutions and return file changes with content for PR creation. Returns array of {path, content} objects ready for commit_files_batch.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -443,21 +443,26 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
         alias_map.last_updated = datetime.now(timezone.utc)
         canonical_store.save_alias_map(alias_map)
 
-        # Get list of modified files for PR
+        # Get list of modified files and their content for PR
         canonical_dir = canonical_store.root
         modified_files = []
         
-        # Add all entity files that were created/updated
+        # Add all entity files that were created/updated (with content)
         for change in _batch_pending_changes:
             entity_type = change["entity_type"]
             canonical_id = change["canonical_id"]
             entity_path = canonical_dir / f"{entity_type.lower()}s" / f"{canonical_id}.json"
             if entity_path.exists():
-                modified_files.append(str(entity_path.relative_to(canonical_dir.parent.parent)))
+                rel_path = str(entity_path.relative_to(canonical_dir.parent.parent))
+                content = entity_path.read_text(encoding="utf-8")
+                modified_files.append({"path": rel_path, "content": content})
         
-        # Add alias map
+        # Add alias map (with content)
         alias_map_path = canonical_dir / "alias-map.json"
-        modified_files.append(str(alias_map_path.relative_to(canonical_dir.parent.parent)))
+        if alias_map_path.exists():
+            rel_path = str(alias_map_path.relative_to(canonical_dir.parent.parent))
+            content = alias_map_path.read_text(encoding="utf-8")
+            modified_files.append({"path": rel_path, "content": content})
 
         # Clear batch state
         _batch_pending_changes = []
