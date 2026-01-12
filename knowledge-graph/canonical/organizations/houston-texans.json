@@ -1,0 +1,30 @@
+{
+  "canonical_id": "houston-texans",
+  "canonical_name": "Texans",
+  "entity_type": "Organization",
+  "aliases": [
+    "Texans"
+  ],
+  "source_checksums": [
+    "f1f6d35ded2c304a0061b1541c401d9825bf7a2b07cf6b8af75e921acb9ad22a"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-12T21:09:09.703630+00:00",
+  "last_updated": "2026-01-12T21:09:09.703630+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-12T21:09:09.703630+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "Identified as a distinct organization"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260112-210635",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}
