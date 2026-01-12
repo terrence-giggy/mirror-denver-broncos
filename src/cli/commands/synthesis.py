@@ -105,8 +105,8 @@ def register_commands(subparsers: argparse._SubParsersAction[argparse.ArgumentPa
     batch_parser.add_argument(
         "--model",
         type=str,
-        default="gpt-4o",
-        help="Model to use for synthesis (default: gpt-4o).",
+        default="gpt-4o-mini",
+        help="Model to use for synthesis (default: gpt-4o-mini).",
     )
     batch_parser.add_argument(
         "--repository",
@@ -720,6 +720,25 @@ def run_batch_cli(args: argparse.Namespace) -> int:
         try:
             outcome = runtime.execute_mission(mission, context)
         except Exception as e:
+            # Check if this is a retryable API/network error
+            error_str = str(e).lower()
+            is_retryable = any(keyword in error_str for keyword in [
+                'incompleteread',
+                'connection broken',
+                'connection reset',
+                'timeout',
+                'network',
+                'api request failed',
+                'chunkedencodingerror',
+            ])
+            
+            if is_retryable:
+                print(f"\n⏸️  Retryable API/network error during agent execution: {e}", file=sys.stderr)
+                print(f"   Error type: {type(e).__name__}")
+                print(f"   Partial progress has been saved")
+                print(f"   Workflow will retry automatically")
+                return EXIT_RATE_LIMITED
+            
             print(f"\n❌ Exception during agent execution: {type(e).__name__}: {e}")
             import traceback
             traceback.print_exc()

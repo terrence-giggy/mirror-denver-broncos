@@ -67,7 +67,7 @@ class TestConfigureRepository:
         assert config["source_url"] == "https://example.gov/data"
         assert config["topic"] == "Government Policy"
         assert config["frequency"] == "weekly"
-        assert config["model"] == "gpt-4o"
+        assert config["model"] == "gpt-4o-mini"
 
     def test_registers_primary_source(self, temp_workspace: Path) -> None:
         """Should register source_url as primary source."""

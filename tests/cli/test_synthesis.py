@@ -308,7 +308,7 @@ class TestRunBatchCLI:
             entity_type="Organization",
             batch_size=10,
             branch_name="test-branch",
-            model="gpt-4o",
+            model="gpt-4o-mini",
             repository="owner/repo",
             token="test_token",
         )
@@ -372,7 +372,7 @@ class TestRunBatchCLI:
             entity_type="Organization",
             batch_size=10,
             branch_name="test-branch",
-            model="gpt-4o",
+            model="gpt-4o-mini",
             repository="owner/repo",
             token="test_token",
         )
@@ -383,7 +383,7 @@ class TestRunBatchCLI:
         class MockGitHubModelsClient:
             def __init__(self, **kwargs):
                 captured_kwargs.update(kwargs)
-                self.model = kwargs.get("model", "gpt-4o")
+                self.model = kwargs.get("model", "gpt-4o-mini")
         
         # Setup other mocks
         mock_mission = mock.Mock()
@@ -432,7 +432,7 @@ class TestRunBatchCLI:
             entity_type="Organization",
             batch_size=10,
             branch_name="test-branch",
-            model="gpt-4o",
+            model="gpt-4o-mini",
             repository="owner/repo",
             token="test_token",
         )
