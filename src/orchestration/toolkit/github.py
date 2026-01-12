@@ -1600,6 +1600,17 @@ def _commit_files_batch_handler(args: Mapping[str, Any]) -> ToolResult:
     file_tuples = []
     import sys
     print(f"\n📤 commit_files_batch received {len(files)} files:", file=sys.stderr)
+    
+    # Check if alias-map.json is missing (common LLM agent error)
+    file_paths = [f.get("path", "") if isinstance(f, dict) else "" for f in files]
+    has_alias_map = any("alias-map.json" in path for path in file_paths)
+    has_entity_files = any("/organizations/" in path or "/people/" in path or "/concepts/" in path for path in file_paths)
+    
+    if has_entity_files and not has_alias_map:
+        print(f"⚠️  WARNING: alias-map.json is MISSING from commit!", file=sys.stderr)
+        print(f"   This is a common LLM agent error - the agent filtered it out.", file=sys.stderr)
+        print(f"   The alias map MUST be included to track resolved entities.", file=sys.stderr)
+    
     for f in files:
         if not isinstance(f, dict) or "path" not in f or "content" not in f:
             return ToolResult(success=False, output=None, error="Each file must have 'path' and 'content' properties.")
