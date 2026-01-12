@@ -446,6 +446,7 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
         # Get list of modified files and their content for PR
         canonical_dir = canonical_store.root
         modified_files = []
+        seen_paths = set()  # Track paths to avoid duplicates
         
         import sys
         print(f"\n📂 Building modified files list:", file=sys.stderr)
@@ -453,15 +454,20 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
         print(f"   canonical_dir.parent.parent: {canonical_dir.parent.parent}", file=sys.stderr)
         
         # Add all entity files that were created/updated (with content)
+        # Use seen_paths to deduplicate - multiple raw entities may resolve to same canonical entity
         for change in _batch_pending_changes:
             entity_type = change["entity_type"]
             canonical_id = change["canonical_id"]
             entity_path = canonical_dir / f"{entity_type.lower()}s" / f"{canonical_id}.json"
             if entity_path.exists():
                 rel_path = str(entity_path.relative_to(canonical_dir.parent.parent))
-                content = entity_path.read_text(encoding="utf-8")
-                modified_files.append({"path": rel_path, "content": content})
-                print(f"   ✓ Added entity: {rel_path}", file=sys.stderr)
+                if rel_path not in seen_paths:
+                    content = entity_path.read_text(encoding="utf-8")
+                    modified_files.append({"path": rel_path, "content": content})
+                    seen_paths.add(rel_path)
+                    print(f"   ✓ Added entity: {rel_path}", file=sys.stderr)
+                else:
+                    print(f"   ⊘ Skipped duplicate: {rel_path}", file=sys.stderr)
             else:
                 print(f"   ✗ Entity file not found: {entity_path}", file=sys.stderr)
         
