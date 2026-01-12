@@ -39,7 +39,7 @@ def configure_repository(args: Mapping[str, Any]) -> dict[str, Any]:
     source_url = args.get("source_url")
     topic = args.get("topic")
     frequency = args.get("frequency")
-    model = args.get("model", "gpt-4o")
+    model = args.get("model", "gpt-4o-mini")
     
     config = {
         "source_url": source_url,
@@ -358,7 +358,7 @@ def register_setup_tools(registry: ToolRegistry) -> None:
                     "source_url": {"type": "string"},
                     "topic": {"type": "string"},
                     "frequency": {"type": "string"},
-                    "model": {"type": "string", "description": "LLM model to use (default: gpt-4o)"}
+                    "model": {"type": "string", "description": "LLM model to use (default: gpt-4o-mini)"}
                 },
                 "required": ["source_url", "topic", "frequency"],
             },
