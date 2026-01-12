@@ -3,27 +3,36 @@
   "canonical_name": "Paramount+",
   "entity_type": "Organization",
   "aliases": [
-    "Paramount+"
+    "Paramount+",
+    "Paramount +"
   ],
   "source_checksums": [
-    "e3175c13ee6849484fe4b76692968544b71b5536cc0b2a9604b1f9c103acb4a3"
+    "e3175c13ee6849484fe4b76692968544b71b5536cc0b2a9604b1f9c103acb4a3",
+    "d777b8628de2ea350bd4b6ab05fb09c73516c383139d24c068a6453146f534f5"
   ],
-  "corroboration_score": 1,
+  "corroboration_score": 2,
   "first_seen": "2026-01-12T22:18:18.087352+00:00",
-  "last_updated": "2026-01-12T22:18:18.087352+00:00",
+  "last_updated": "2026-01-12T22:51:50.744596+00:00",
   "resolution_history": [
     {
       "action": "created",
       "timestamp": "2026-01-12T22:18:18.087352+00:00",
       "by": "synthesis-agent",
       "reasoning": "New organization based on the raw entity name."
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-12T22:51:50.744596+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "Matched to existing canonical entity.",
+      "alias": "Paramount +"
     }
   ],
   "attributes": {},
   "associations": [],
   "metadata": {
     "synthesis_complete": true,
-    "synthesis_batch_id": "20260112-221649",
+    "synthesis_batch_id": "20260112-225141",
     "confidence": 0.95,
     "needs_review": false
   }
