@@ -1,0 +1,30 @@
+{
+  "canonical_id": "jaguars",
+  "canonical_name": "Jaguars",
+  "entity_type": "Organization",
+  "aliases": [
+    "Jaguars"
+  ],
+  "source_checksums": [
+    "b4401cf157c290fb1a247a32979cb3593421eebfc6053df19aba8fdf40ae0da2"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-12T22:09:36.466464+00:00",
+  "last_updated": "2026-01-12T22:09:36.466464+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-12T22:09:36.466464+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "New entity based on extracted name."
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260112-220816",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}

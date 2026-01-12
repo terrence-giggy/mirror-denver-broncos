@@ -1,0 +1,30 @@
+{
+  "canonical_id": "youtube",
+  "canonical_name": "YouTube",
+  "entity_type": "Organization",
+  "aliases": [
+    "YouTube"
+  ],
+  "source_checksums": [
+    "92f967d9283289aff05997af43591e229f7782b3b84f988827c5fd35e529afea"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-12T22:09:36.466306+00:00",
+  "last_updated": "2026-01-12T22:09:36.466306+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-12T22:09:36.466306+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "New entity based on extracted name."
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260112-220816",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}
