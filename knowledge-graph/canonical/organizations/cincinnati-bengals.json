@@ -1,0 +1,30 @@
+{
+  "canonical_id": "cincinnati-bengals",
+  "canonical_name": "Cincinnati Bengals",
+  "entity_type": "Organization",
+  "aliases": [
+    "Cincinnati Bengals"
+  ],
+  "source_checksums": [
+    "d12c8ba21ea8ebc0275092f1ff7303b2c1b298e6a13001293bfecc4b79c763e6"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-12T22:01:55.912974+00:00",
+  "last_updated": "2026-01-12T22:01:55.912974+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-12T22:01:55.912974+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "New entity created for Cincinnati Bengals"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260112-220105",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}
