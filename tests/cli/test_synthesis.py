@@ -293,16 +293,9 @@ class TestRunBatchCLI:
         from src.cli.commands.synthesis import run_batch_cli
         import argparse
         from src.orchestration.types import MissionStatus
-        from src.knowledge.storage import KnowledgeGraphStorage
-        from src.paths import get_knowledge_graph_root
         
         # Previous bug: AgentRuntime(mission=mission, planner=planner)
         # Correct API: AgentRuntime(planner=planner, tools=registry, safety=validator, evaluator=evaluator)
-        
-        # Add test entities so CLI doesn't exit early
-        kg_root = get_knowledge_graph_root()
-        kg_storage = KnowledgeGraphStorage(root=kg_root)
-        kg_storage.save_extracted_organizations("test123", ["Test Org"])
         
         args = argparse.Namespace(
             entity_type="Organization",
@@ -315,7 +308,8 @@ class TestRunBatchCLI:
         
         # Setup mocks
         mock_mission = mock.Mock()
-        mock_mission.inputs = {}
+        mock_mission.id = "synthesize_batch"
+        mock_mission.max_steps = 100
         mock_load_mission.return_value = mock_mission
         
         mock_runtime = mock.Mock()
@@ -326,10 +320,14 @@ class TestRunBatchCLI:
         mock_runtime.execute_mission.return_value = mock_outcome
         mock_runtime_class.return_value = mock_runtime
         
+        # Mock unresolved entities to avoid early exit
+        mock_unresolved = [("Test Org", "checksum123")]
+        
         # Run
         with mock.patch("src.cli.commands.synthesis.resolve_repository", return_value="owner/repo"):
             with mock.patch("src.cli.commands.synthesis.resolve_token", return_value="test_token"):
-                result = run_batch_cli(args)
+                with mock.patch("src.cli.commands.synthesis._gather_unresolved_entities", return_value=mock_unresolved):
+                    result = run_batch_cli(args)
         
         # Verify AgentRuntime constructor was called
         assert mock_runtime_class.called
@@ -357,16 +355,9 @@ class TestRunBatchCLI:
         from src.cli.commands.synthesis import run_batch_cli
         import argparse
         from src.orchestration.types import MissionStatus
-        from src.knowledge.storage import KnowledgeGraphStorage
-        from src.paths import get_knowledge_graph_root
         
         # Previous bug: GitHubModelsClient(token=token, ...)
         # Correct API: GitHubModelsClient(api_key=token, ...)
-        
-        # Add test entities so CLI doesn't exit early
-        kg_root = get_knowledge_graph_root()
-        kg_storage = KnowledgeGraphStorage(root=kg_root)
-        kg_storage.save_extracted_organizations("test456", ["Test Org 2"])
         
         args = argparse.Namespace(
             entity_type="Organization",
@@ -387,7 +378,8 @@ class TestRunBatchCLI:
         
         # Setup other mocks
         mock_mission = mock.Mock()
-        mock_mission.inputs = {}
+        mock_mission.id = "synthesize_batch"
+        mock_mission.max_steps = 100
         mock_load_mission.return_value = mock_mission
         
         mock_runtime = mock.Mock()
@@ -398,11 +390,15 @@ class TestRunBatchCLI:
         mock_runtime.execute_mission.return_value = mock_outcome
         mock_runtime_class.return_value = mock_runtime
         
+        # Mock unresolved entities to avoid early exit
+        mock_unresolved = [("Test Org 2", "checksum456")]
+        
         # Run with our custom mock
         with mock.patch("src.cli.commands.synthesis.resolve_repository", return_value="owner/repo"):
             with mock.patch("src.cli.commands.synthesis.resolve_token", return_value="test_token"):
                 with mock.patch("src.integrations.github.models.GitHubModelsClient", MockGitHubModelsClient):
-                    result = run_batch_cli(args)
+                    with mock.patch("src.cli.commands.synthesis._gather_unresolved_entities", return_value=mock_unresolved):
+                        result = run_batch_cli(args)
         
         # Verify api_key parameter was used (not token)
         assert "api_key" in captured_kwargs, "GitHubModelsClient must be initialized with api_key parameter"
@@ -417,16 +413,9 @@ class TestRunBatchCLI:
         from src.cli.commands.synthesis import run_batch_cli
         import argparse
         from src.orchestration.types import MissionStatus
-        from src.knowledge.storage import KnowledgeGraphStorage
-        from src.paths import get_knowledge_graph_root
         
         # Mission is a frozen dataclass - we can't modify mission.inputs
         # Inputs should be passed via ExecutionContext(inputs={...})
-        
-        # Add test entities so CLI doesn't exit early
-        kg_root = get_knowledge_graph_root()
-        kg_storage = KnowledgeGraphStorage(root=kg_root)
-        kg_storage.save_extracted_organizations("test789", ["Test Org 3"])
         
         args = argparse.Namespace(
             entity_type="Organization",
@@ -439,6 +428,8 @@ class TestRunBatchCLI:
         
         # Setup mocks
         mock_mission = mock.Mock()
+        mock_mission.id = "synthesize_batch"
+        mock_mission.max_steps = 100
         mock_load_mission.return_value = mock_mission
         
         mock_runtime = mock.Mock()
@@ -449,11 +440,15 @@ class TestRunBatchCLI:
         mock_runtime.execute_mission.return_value = mock_outcome
         mock_runtime_class.return_value = mock_runtime
         
+        # Mock unresolved entities to avoid early exit
+        mock_unresolved = [("Test Org 3", "checksum789")]
+        
         # Run
         with mock.patch("src.cli.commands.synthesis.resolve_repository", return_value="owner/repo"):
             with mock.patch("src.cli.commands.synthesis.resolve_token", return_value="test_token"):
                 with mock.patch("src.integrations.github.models.GitHubModelsClient"):
-                    result = run_batch_cli(args)
+                    with mock.patch("src.cli.commands.synthesis._gather_unresolved_entities", return_value=mock_unresolved):
+                        result = run_batch_cli(args)
         
         # Verify execute_mission was called with mission and context
         assert mock_runtime.execute_mission.called
