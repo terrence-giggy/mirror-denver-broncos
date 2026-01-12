@@ -447,6 +447,11 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
         canonical_dir = canonical_store.root
         modified_files = []
         
+        import sys
+        print(f"\n📂 Building modified files list:", file=sys.stderr)
+        print(f"   canonical_dir: {canonical_dir}", file=sys.stderr)
+        print(f"   canonical_dir.parent.parent: {canonical_dir.parent.parent}", file=sys.stderr)
+        
         # Add all entity files that were created/updated (with content)
         for change in _batch_pending_changes:
             entity_type = change["entity_type"]
@@ -456,16 +461,34 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
                 rel_path = str(entity_path.relative_to(canonical_dir.parent.parent))
                 content = entity_path.read_text(encoding="utf-8")
                 modified_files.append({"path": rel_path, "content": content})
+                print(f"   ✓ Added entity: {rel_path}", file=sys.stderr)
+            else:
+                print(f"   ✗ Entity file not found: {entity_path}", file=sys.stderr)
         
         # Add alias map (with content)
         alias_map_path = canonical_dir / "alias-map.json"
+        print(f"\n📍 Checking alias map:", file=sys.stderr)
+        print(f"   Path: {alias_map_path}", file=sys.stderr)
+        print(f"   Exists: {alias_map_path.exists()}", file=sys.stderr)
+        
         if alias_map_path.exists():
             rel_path = str(alias_map_path.relative_to(canonical_dir.parent.parent))
             content = alias_map_path.read_text(encoding="utf-8")
+            print(f"   ✓ Adding alias-map.json as: {rel_path}", file=sys.stderr)
+            print(f"   Content preview: {content[:200]}...", file=sys.stderr)
             modified_files.append({"path": rel_path, "content": content})
+        else:
+            # This should never happen - log warning
+            print(f"   ✗ ERROR: alias-map.json not found at {alias_map_path}", file=sys.stderr)
 
         # Clear batch state
         _batch_pending_changes = []
+        
+        # Debug: Log what files are being returned
+        import sys
+        print(f"📦 save_synthesis_batch returning {len(modified_files)} files:", file=sys.stderr)
+        for f in modified_files:
+            print(f"   - {f['path']} ({len(f['content'])} bytes)", file=sys.stderr)
 
         return ToolResult(
             success=True,
