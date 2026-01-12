@@ -32,9 +32,9 @@ class ProjectConfig:
 
     @property
     def model(self) -> str:
-        """Get the configured LLM model, defaulting to gpt-4o."""
+        """Get the configured LLM model, defaulting to gpt-4o-mini."""
         self._ensure_loaded()
-        return self._data.get("model", "gpt-4o")
+        return self._data.get("model", "gpt-4o-mini")
 
     @property
     def source_url(self) -> Optional[str]:
