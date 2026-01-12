@@ -149,6 +149,12 @@ def setup_repo_cli(args: argparse.Namespace) -> int:
         print("Removing dev_data directory...")
         shutil.rmtree(dev_data)
 
+    # Cleanup devops if it exists (template-only planning directory)
+    devops = Path("devops")
+    if devops.exists() and devops.is_dir():
+        print("Removing devops directory...")
+        shutil.rmtree(devops)
+
     try:
         # 0. Ensure required labels exist
         print("Ensuring required labels exist...")
