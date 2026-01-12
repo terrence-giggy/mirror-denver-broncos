@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-12T22:18:18.088662+00:00",
+  "last_updated": "2026-01-12T22:26:05.778730+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -105,7 +105,19 @@
       "nfl red zone": "nfl-red-zone",
       "koa": "koa",
       "siriusxm": "siriusxm",
-      "sports usa": "sports-usa"
+      "sports usa": "sports-usa",
+      "nfl sunday ticket": "nfl-sunday-ticket",
+      "youtube tv": "youtube-tv",
+      "denverbroncos.com": "denverbroncos.com",
+      "fox sports": "fox-sports",
+      "nbc sports": "nbc-sports",
+      "peacock": "peacock",
+      "espn": "espn",
+      "amazon prime video": "amazon-prime-video",
+      "nfl mobile app": "nfl-mobile-app",
+      "nfl+ premium": "nfl+premium",
+      "game pass": "game-pass",
+      "westwood one": "westwood-one"
     },
     "Concept": {}
   }
