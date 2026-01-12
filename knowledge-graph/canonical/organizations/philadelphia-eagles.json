@@ -3,26 +3,36 @@
   "canonical_name": "Philadelphia Eagles",
   "entity_type": "Organization",
   "aliases": [
-    "Philadelphia Eagles"
+    "Philadelphia Eagles",
+    "Eagles"
   ],
   "source_checksums": [
-    "360d4a65765171946cf1845d631ce04ee13e103e8e87c011faca7494e14db09b"
+    "360d4a65765171946cf1845d631ce04ee13e103e8e87c011faca7494e14db09b",
+    "f1f6d35ded2c304a0061b1541c401d9825bf7a2b07cf6b8af75e921acb9ad22a"
   ],
-  "corroboration_score": 1,
+  "corroboration_score": 2,
   "first_seen": "2026-01-10T03:47:17.331376+00:00",
-  "last_updated": "2026-01-10T03:47:17.331376+00:00",
+  "last_updated": "2026-01-12T22:01:55.913758+00:00",
   "resolution_history": [
     {
       "action": "created",
       "timestamp": "2026-01-10T03:47:17.331376+00:00",
       "by": "copilot",
       "reasoning": "New Philadelphia Eagles entity from entity resolution batch"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-12T22:01:55.913758+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "Abbreviation of canonical name",
+      "alias": "Eagles"
     }
   ],
   "attributes": {},
   "associations": [],
   "metadata": {
     "needs_review": false,
-    "confidence": 0.95
+    "confidence": 0.95,
+    "synthesis_batch_id": "20260112-220105"
   }
 }

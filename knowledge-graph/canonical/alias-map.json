@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-10T03:47:17.340371+00:00",
+  "last_updated": "2026-01-12T22:01:55.913963+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -81,7 +81,13 @@
       "dallas cowboys": "dallas-cowboys",
       "golden eagles": "golden-eagles",
       "las vegas raiders": "las-vegas-raiders",
-      "mile high salute": "mile-high-salute"
+      "mile high salute": "mile-high-salute",
+      "chargers": "los-angeles-chargers",
+      "cincinnati bengals": "cincinnati-bengals",
+      "denver broncos team store": "denver-broncos-team-store",
+      "pro shop": "pro-shop",
+      "texans": "houston-texans",
+      "eagles": "philadelphia-eagles"
     },
     "Concept": {}
   }
