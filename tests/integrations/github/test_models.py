@@ -43,7 +43,7 @@ def test_copilot_client_explicit_token():
 def test_copilot_client_defaults():
     """GitHubModelsClient sets appropriate defaults."""
     client = GitHubModelsClient(api_key="test")
-    assert client.model == "gpt-4o"
+    assert client.model == "gpt-4o-mini"
     assert client.max_tokens == 4000
     assert client.temperature == 0.7
     assert client.timeout == 60
@@ -53,12 +53,12 @@ def test_copilot_client_custom_values():
     """GitHubModelsClient accepts custom configuration."""
     client = GitHubModelsClient(
         api_key="test",
-        model="gpt-4o",
+        model="gpt-4o-mini",
         max_tokens=8000,
         temperature=0.5,
         timeout=120,
     )
-    assert client.model == "gpt-4o"
+    assert client.model == "gpt-4o-mini"
     assert client.max_tokens == 8000
     assert client.temperature == 0.5
     assert client.timeout == 120
@@ -174,7 +174,7 @@ def test_chat_completion_sends_correct_payload():
         }
         mock_post.return_value.raise_for_status = MagicMock()
         
-        client = GitHubModelsClient(api_key="test_token", model="gpt-4o")
+        client = GitHubModelsClient(api_key="test_token", model="gpt-4o-mini")
         
         tools = [{
             "type": "function",
@@ -196,7 +196,7 @@ def test_chat_completion_sends_correct_payload():
         assert call_kwargs["headers"]["Content-Type"] == "application/json"
         
         payload = call_kwargs["json"]
-        assert payload["model"] == "gpt-4o"
+        assert payload["model"] == "gpt-4o-mini"
         assert payload["messages"] == [{"role": "user", "content": "test"}]
         assert payload["max_tokens"] == 2000
         assert payload["temperature"] == 0.9
