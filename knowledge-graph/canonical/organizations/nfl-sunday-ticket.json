@@ -1,0 +1,30 @@
+{
+  "canonical_id": "nfl-sunday-ticket",
+  "canonical_name": "NFL Sunday Ticket",
+  "entity_type": "Organization",
+  "aliases": [
+    "NFL Sunday Ticket"
+  ],
+  "source_checksums": [
+    "d777b8628de2ea350bd4b6ab05fb09c73516c383139d24c068a6453146f534f5"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-12T22:26:05.776550+00:00",
+  "last_updated": "2026-01-12T22:26:05.776550+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-12T22:26:05.776550+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "New entity; not found in canonical store."
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260112-222354",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}
