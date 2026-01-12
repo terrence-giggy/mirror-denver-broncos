@@ -3,28 +3,38 @@
   "canonical_name": "Los Angeles Chargers",
   "entity_type": "Organization",
   "aliases": [
-    "Los Angeles Chargers"
+    "Los Angeles Chargers",
+    "Chargers"
   ],
   "source_checksums": [
     "22f13f6a1e57b6882796c973d623744e11e60f3c869041f174c35f668a56746c",
     "11803b12d19e9dc0310b44c4dcc0af774f7af29eb758b417d287867a771efac0",
-    "1107b115e212fb679d67b8bf7e05cb4217513edadcd4d2c730a05f642d9b125b"
+    "1107b115e212fb679d67b8bf7e05cb4217513edadcd4d2c730a05f642d9b125b",
+    "79c3a5105005c1592d90dc315ae0b964adb3759fa1f2e66f82f897d1af4c33e7"
   ],
-  "corroboration_score": 3,
+  "corroboration_score": 4,
   "first_seen": "2026-01-09T05:06:29.324380+00:00",
-  "last_updated": "2026-01-09T05:06:29.324382+00:00",
+  "last_updated": "2026-01-12T17:17:14.670507+00:00",
   "resolution_history": [
     {
       "action": "created",
       "timestamp": "2026-01-09T05:06:29.324383+00:00",
       "by": "copilot",
       "reasoning": "New Los Angeles Chargers entity from entity resolution batch"
+    },
+    {
+      "action": "alias_added",
+      "timestamp": "2026-01-12T17:17:14.670507+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "Abbreviation of canonical name",
+      "alias": "Chargers"
     }
   ],
   "attributes": {},
   "associations": [],
   "metadata": {
     "needs_review": false,
-    "confidence": 0.95
+    "confidence": 0.95,
+    "synthesis_batch_id": "20260112-171617"
   }
 }
