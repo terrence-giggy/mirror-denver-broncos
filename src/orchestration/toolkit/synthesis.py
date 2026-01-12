@@ -443,7 +443,7 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
         alias_map.last_updated = datetime.now(timezone.utc)
         canonical_store.save_alias_map(alias_map)
 
-        # Get list of modified files and their content for PR
+        # Get list of modified file paths (not content - files are already on disk)
         canonical_dir = canonical_store.root
         modified_files = []
         seen_paths = set()  # Track paths to avoid duplicates
@@ -453,7 +453,7 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
         print(f"   canonical_dir: {canonical_dir}", file=sys.stderr)
         print(f"   canonical_dir.parent.parent: {canonical_dir.parent.parent}", file=sys.stderr)
         
-        # Add all entity files that were created/updated (with content)
+        # Add all entity files that were created/updated (paths only)
         # Use seen_paths to deduplicate - multiple raw entities may resolve to same canonical entity
         for change in _batch_pending_changes:
             entity_type = change["entity_type"]
@@ -462,8 +462,7 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
             if entity_path.exists():
                 rel_path = str(entity_path.relative_to(canonical_dir.parent.parent))
                 if rel_path not in seen_paths:
-                    content = entity_path.read_text(encoding="utf-8")
-                    modified_files.append({"path": rel_path, "content": content})
+                    modified_files.append(rel_path)  # Just the path
                     seen_paths.add(rel_path)
                     print(f"   ✓ Added entity: {rel_path}", file=sys.stderr)
                 else:
@@ -471,7 +470,7 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
             else:
                 print(f"   ✗ Entity file not found: {entity_path}", file=sys.stderr)
         
-        # Add alias map (with content)
+        # Add alias map (path only)
         alias_map_path = canonical_dir / "alias-map.json"
         print(f"\n📍 Checking alias map:", file=sys.stderr)
         print(f"   Path: {alias_map_path}", file=sys.stderr)
@@ -479,22 +478,17 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
         
         if alias_map_path.exists():
             rel_path = str(alias_map_path.relative_to(canonical_dir.parent.parent))
-            content = alias_map_path.read_text(encoding="utf-8")
             print(f"   ✓ Adding alias-map.json as: {rel_path}", file=sys.stderr)
-            print(f"   Content preview: {content[:200]}...", file=sys.stderr)
-            modified_files.append({"path": rel_path, "content": content})
+            modified_files.append(rel_path)  # Just the path
         else:
             # This should never happen - log warning
             print(f"   ✗ ERROR: alias-map.json not found at {alias_map_path}", file=sys.stderr)
 
-        # Clear batch state
-        _batch_pending_changes = []
-        
         # Debug: Log what files are being returned
         import sys
-        print(f"📦 save_synthesis_batch returning {len(modified_files)} files:", file=sys.stderr)
+        print(f"📦 save_synthesis_batch returning {len(modified_files)} file paths:", file=sys.stderr)
         for f in modified_files:
-            print(f"   - {f['path']} ({len(f['content'])} bytes)", file=sys.stderr)
+            print(f"   - {f}", file=sys.stderr)
 
         return ToolResult(
             success=True,
@@ -503,7 +497,7 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
                 "entities_created": entities_created,
                 "entities_updated": entities_updated,
                 "total_resolutions": entities_created + entities_updated,
-                "modified_files": modified_files,
+                "modified_file_paths": modified_files,  # Just paths, not content
             },
             error=None,
         )

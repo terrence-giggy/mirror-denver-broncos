@@ -216,17 +216,14 @@ def test_save_synthesis_batch(temp_kb_dir: Path):
         assert "broncos" in alias_map_content["by_type"]["Organization"]
         assert "kansas city chiefs" in alias_map_content["by_type"]["Organization"]
         
-        # Verify modified_files includes both path and content
-        modified_files = result.output["modified_files"]
-        assert len(modified_files) == 3  # 2 entity files + 1 alias map
+        # Verify modified_file_paths includes paths only (not content)
+        modified_file_paths = result.output["modified_file_paths"]
+        assert len(modified_file_paths) == 3  # 2 entity files + 1 alias map
         
-        # Check structure of modified files
-        for file in modified_files:
-            assert "path" in file
-            assert "content" in file
-            assert isinstance(file["content"], str)
+        # Check structure - should be list of strings (paths)
+        for file_path in modified_file_paths:
+            assert isinstance(file_path, str)
+            assert file_path.startswith("knowledge-graph/canonical/")
             
-        # Verify content is valid JSON
-        for file in modified_files:
-            parsed = json.loads(file["content"])
-            assert parsed is not None
+        # Verify alias-map.json is included
+        assert any("alias-map.json" in path for path in modified_file_paths)

@@ -1058,20 +1058,25 @@ def register_github_mutation_tools(registry: ToolRegistry) -> None:
     registry.register_tool(
         ToolDefinition(
             name="commit_files_batch",
-            description="Commit multiple files in a single atomic commit using the Git Trees API.",
+            description="Commit multiple files in a single atomic commit. Accepts file paths (reads from disk) or {path,content} objects.",
             parameters={
                 "type": "object",
                 "properties": {
                     "files": {
                         "type": "array",
-                        "description": "List of file objects with 'path' and 'content' properties.",
+                        "description": "List of file paths (strings) OR file objects with 'path' and 'content'. Tool reads paths from disk.",
                         "items": {
-                            "type": "object",
-                            "properties": {
-                                "path": {"type": "string", "description": "Path to the file."},
-                                "content": {"type": "string", "description": "Content of the file."},
-                            },
-                            "required": ["path", "content"],
+                            "oneOf": [
+                                {"type": "string", "description": "File path (tool reads content from disk)"},
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "path": {"type": "string", "description": "Path to the file."},
+                                        "content": {"type": "string", "description": "Content of the file."},
+                                    },
+                                    "required": ["path", "content"],
+                                },
+                            ]
                         },
                     },
                     "message": {"type": "string", "description": "Commit message for the batch."},
@@ -1584,25 +1589,46 @@ def _create_branch_handler(args: Mapping[str, Any]) -> ToolResult:
 
 def _commit_files_batch_handler(args: Mapping[str, Any]) -> ToolResult:
     from src.integrations.github import files as github_files
+    from pathlib import Path
     
-    files = args.get("files")
+    files_arg = args.get("files")
     message = args.get("message")
     branch = args.get("branch")
     
-    if not files or not isinstance(files, list):
+    if not files_arg or not isinstance(files_arg, list):
         return ToolResult(success=False, output=None, error="files must be a non-empty list.")
     if not message:
         return ToolResult(success=False, output=None, error="message is required.")
     if not branch:
         return ToolResult(success=False, output=None, error="branch is required.")
 
-    # Convert files array of objects to list of tuples
+    # Convert files - accept either paths (strings) or {path, content} objects
     file_tuples = []
     import sys
-    print(f"\n📤 commit_files_batch received {len(files)} files:", file=sys.stderr)
+    print(f"\n📤 commit_files_batch received {len(files_arg)} files:", file=sys.stderr)
+    
+    # Determine workspace root for reading files
+    workspace_root = Path.cwd()
+    
+    for f in files_arg:
+        # Accept both string paths and {path, content} objects
+        if isinstance(f, str):
+            # Path only - read file from disk
+            file_path = workspace_root / f
+            if not file_path.exists():
+                return ToolResult(success=False, output=None, error=f"File not found: {f}")
+            content = file_path.read_text(encoding="utf-8")
+            print(f"   - {f} ({len(content)} bytes, read from disk)", file=sys.stderr)
+            file_tuples.append((f, content))
+        elif isinstance(f, dict) and "path" in f and "content" in f:
+            # Legacy format with content included
+            print(f"   - {f['path']} ({len(f['content'])} bytes, from args)", file=sys.stderr)
+            file_tuples.append((str(f["path"]), str(f["content"])))
+        else:
+            return ToolResult(success=False, output=None, error="Each file must be a path string or have 'path' and 'content' properties.")
     
     # Check if alias-map.json is missing (common LLM agent error)
-    file_paths = [f.get("path", "") if isinstance(f, dict) else "" for f in files]
+    file_paths = [t[0] for t in file_tuples]
     has_alias_map = any("alias-map.json" in path for path in file_paths)
     has_entity_files = any("/organizations/" in path or "/people/" in path or "/concepts/" in path for path in file_paths)
     
@@ -1610,12 +1636,6 @@ def _commit_files_batch_handler(args: Mapping[str, Any]) -> ToolResult:
         print(f"⚠️  WARNING: alias-map.json is MISSING from commit!", file=sys.stderr)
         print(f"   This is a common LLM agent error - the agent filtered it out.", file=sys.stderr)
         print(f"   The alias map MUST be included to track resolved entities.", file=sys.stderr)
-    
-    for f in files:
-        if not isinstance(f, dict) or "path" not in f or "content" not in f:
-            return ToolResult(success=False, output=None, error="Each file must have 'path' and 'content' properties.")
-        print(f"   - {f['path']} ({len(f['content'])} bytes)", file=sys.stderr)
-        file_tuples.append((str(f["path"]), str(f["content"])))
 
     repository_arg = args.get("repository")
     token_arg = args.get("token")

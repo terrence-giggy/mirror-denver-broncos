@@ -35,11 +35,12 @@ goal: |
        * confidence: 0.0-1.0 (default 0.95)
        * needs_review: true if ambiguous
   4. After processing all entities, call save_synthesis_batch with a unique batch_id.
-     This writes files to disk AND returns modified_files array with {path, content} objects.
-     **The modified_files array includes BOTH entity files AND alias-map.json.**
+     This writes files to disk AND returns modified_file_paths array (just file paths, not content).
+     **The modified_file_paths array includes BOTH entity files AND alias-map.json.**
   5. Create a branch using create_branch with branch_name from mission inputs.
-  6. Commit ALL files using commit_files_batch with the COMPLETE files array from save_synthesis_batch output.
-     **CRITICAL: Pass the ENTIRE modified_files array without filtering. The alias-map.json MUST be included.**
+  6. Commit ALL files using commit_files_batch with the modified_file_paths array from save_synthesis_batch.
+     **CRITICAL: Pass the ENTIRE modified_file_paths array. The tool will read files from disk.**
+     **The alias-map.json MUST be included in the paths array.**
   7. Create a pull request using create_pull_request.
 
   Resolution Rules:
@@ -54,8 +55,8 @@ constraints:
   - Do NOT reprocess entities already in alias map (they are resolved).
   - Maximum batch_size entities per run (from mission inputs).
   - Create feature branch from main before committing.
-  - "Use commit_files_batch with the COMPLETE modified_files array from save_synthesis_batch - do NOT filter or modify it."
-  - "The alias-map.json file MUST be included in every commit - it tracks what entities have been resolved."
+  - "Use commit_files_batch with the modified_file_paths array from save_synthesis_batch - pass paths as-is."
+  - "The alias-map.json path MUST be included - it tracks what entities have been resolved."
   - "NEVER manually create JSON files - use resolve_entity and save_synthesis_batch tools."
   - "NEVER use commit_file to write individual entity files - save_synthesis_batch does this."
   - The synthesis tools (resolve_entity, save_synthesis_batch) handle all file I/O automatically.
