@@ -55,7 +55,7 @@ goal: |
 constraints:
   - Do NOT perform the file operations yourself. Delegate to Copilot via posted instructions.
   - Only assign to Copilot if the configuration is complete and valid.
-  - If the user does not specify a model, default to "gpt-4o".
+  - If the user does not specify a model, default to "gpt-4o-mini".
 
 success_criteria:
   - Configuration details extracted and validated.
