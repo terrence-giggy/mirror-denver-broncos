@@ -1,0 +1,30 @@
+{
+  "canonical_id": "denver-broncos-cheerleaders",
+  "canonical_name": "Denver Broncos Cheerleaders",
+  "entity_type": "Organization",
+  "aliases": [
+    "Denver Broncos Cheerleaders"
+  ],
+  "source_checksums": [
+    "8b21d1d86d7fc435a552d1bfc4249e92ac30aec7493a51ba47bf00fd38c933a4"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-12T16:29:04.073171+00:00",
+  "last_updated": "2026-01-12T16:29:04.073171+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-12T16:29:04.073171+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "New entity created for Denver Broncos Cheerleaders"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260112-162815",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}

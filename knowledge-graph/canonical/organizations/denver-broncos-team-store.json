@@ -1,0 +1,30 @@
+{
+  "canonical_id": "denver-broncos-team-store",
+  "canonical_name": "Denver Broncos Team Store",
+  "entity_type": "Organization",
+  "aliases": [
+    "Denver Broncos Team Store"
+  ],
+  "source_checksums": [
+    "7c5108880244cff10d31f43862d5326ca5114033579c195a2feab1cec37da191"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-12T16:29:04.072675+00:00",
+  "last_updated": "2026-01-12T16:29:04.072675+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-12T16:29:04.072675+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "New entity created for Denver Broncos Team Store"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260112-162815",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}
