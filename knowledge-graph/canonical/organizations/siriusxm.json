@@ -1,0 +1,30 @@
+{
+  "canonical_id": "siriusxm",
+  "canonical_name": "SiriusXM",
+  "entity_type": "Organization",
+  "aliases": [
+    "SiriusXM"
+  ],
+  "source_checksums": [
+    "e3175c13ee6849484fe4b76692968544b71b5536cc0b2a9604b1f9c103acb4a3"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-12T22:18:18.088340+00:00",
+  "last_updated": "2026-01-12T22:18:18.088340+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-12T22:18:18.088340+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "New organization based on the raw entity name."
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260112-221649",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}
