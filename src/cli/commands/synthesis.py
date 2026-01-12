@@ -603,14 +603,38 @@ def run_batch_cli(args: argparse.Namespace) -> int:
         """Simple evaluator for synthesis missions."""
         
         def evaluate(self, mission: Mission, steps: Sequence[AgentStep], context: ExecutionContext) -> EvaluationResult:
-            """Let the agent decide when it's done - don't force early completion."""
-            # The agent will call finish action when done
-            # We only check for failure conditions
-            failed_steps = [s for s in steps if s.result and not s.result.success]
+            """Detect successful completion by checking if PR was created or batch was saved."""
+            # Check if the agent completed its work by creating a PR
+            pr_created = any(
+                s.result and s.result.success and 
+                s.thought and s.thought.tool_call and 
+                s.thought.tool_call.name == 'create_pull_request'
+                for s in steps
+            )
             
-            # If there are many failures, mission has failed
+            # Or if the batch was saved (partial progress is still success)
+            batch_saved = any(
+                s.result and s.result.success and 
+                s.thought and s.thought.tool_call and 
+                s.thought.tool_call.name == 'save_synthesis_batch'
+                for s in steps
+            )
+            
+            if pr_created:
+                return EvaluationResult(complete=True, reason="PR created successfully")
+            
+            if batch_saved:
+                return EvaluationResult(complete=True, reason="Batch saved successfully")
+            
+            # Check for excessive failures (ignore "entity not found" errors - those are expected)
+            failed_steps = [
+                s for s in steps 
+                if s.result and not s.result.success and 
+                not (s.result.error and 'Entity not found' in s.result.error)
+            ]
+            
             if len(failed_steps) > 5:
-                return EvaluationResult(complete=True, reason=f"Too many failed actions ({len(failed_steps)})")
+                return EvaluationResult(complete=True, reason=f"Too many unexpected failures ({len(failed_steps)})")
             
             # Otherwise, let the agent continue
             return EvaluationResult(complete=False, reason="Agent still working")
