@@ -36,8 +36,10 @@ goal: |
        * needs_review: true if ambiguous
   4. After processing all entities, call save_synthesis_batch with a unique batch_id.
      This writes files to disk AND returns modified_files array with {path, content} objects.
+     **The modified_files array includes BOTH entity files AND alias-map.json.**
   5. Create a branch using create_branch with branch_name from mission inputs.
-  6. Commit all files using commit_files_batch with the files array from save_synthesis_batch output.
+  6. Commit ALL files using commit_files_batch with the COMPLETE files array from save_synthesis_batch output.
+     **CRITICAL: Pass the ENTIRE modified_files array without filtering. The alias-map.json MUST be included.**
   7. Create a pull request using create_pull_request.
 
   Resolution Rules:
@@ -52,7 +54,8 @@ constraints:
   - Do NOT reprocess entities already in alias map (they are resolved).
   - Maximum batch_size entities per run (from mission inputs).
   - Create feature branch from main before committing.
-  - Use commit_files_batch for atomic multi-file commits (canonical entities + alias map).
+  - "Use commit_files_batch with the COMPLETE modified_files array from save_synthesis_batch - do NOT filter or modify it."
+  - "The alias-map.json file MUST be included in every commit - it tracks what entities have been resolved."
   - "NEVER manually create JSON files - use resolve_entity and save_synthesis_batch tools."
   - "NEVER use commit_file to write individual entity files - save_synthesis_batch does this."
   - The synthesis tools (resolve_entity, save_synthesis_batch) handle all file I/O automatically.
@@ -61,7 +64,8 @@ success_criteria:
   - All pending entities (up to batch_size) are resolved via resolve_entity tool.
   - Batch is saved via save_synthesis_batch tool (this writes files to disk).
   - Feature branch is created with branch_name from mission inputs.
-  - All modified files are committed to the branch in a single atomic commit via commit_files_batch.
+  - "All modified files from save_synthesis_batch output are committed (including alias-map.json)."
+  - "The commit MUST include both entity files AND the alias-map.json file."
   - "Pull request is created with title 'Synthesis: Resolve {entity_type} entities (batch {timestamp})'."
   - Pull request body lists how many entities were created vs updated (from save_synthesis_batch output).
 
