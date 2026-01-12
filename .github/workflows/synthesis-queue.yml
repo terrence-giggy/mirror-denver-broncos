@@ -28,11 +28,11 @@ on:
       batch_size:
         description: 'Maximum entities per batch'
         type: number
-        default: 50
+        default: 10
       model:
         description: 'Model to use'
         type: string
-        default: 'gpt-4o'
+        default: 'gpt-4o-mini'
 
 permissions:
   contents: write
@@ -72,7 +72,7 @@ jobs:
           # Determine arguments
           ENTITY_TYPE="${{ inputs.entity_type || 'Organization' }}"
           BATCH_SIZE="${{ inputs.batch_size || 50 }}"
-          MODEL="${{ inputs.model || 'gpt-4o' }}"
+          MODEL="${{ inputs.model || 'gpt-4o-mini' }}"
           
           echo "🔄 Starting synthesis batch"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -117,7 +117,7 @@ jobs:
         run: |
           ENTITY_TYPE="${{ inputs.entity_type || 'Organization' }}"
           BATCH_SIZE="${{ inputs.batch_size || 50 }}"
-          MODEL="${{ inputs.model || 'gpt-4o' }}"
+          MODEL="${{ inputs.model || 'gpt-4o-mini' }}"
           
           echo "🔄 Retrying synthesis batch"
           
