@@ -87,6 +87,50 @@ def register_synthesis_tools(registry: ToolRegistry) -> None:
 
     registry.register_tool(
         ToolDefinition(
+            name="get_source_associations",
+            description="Retrieve extracted associations for a source document. Returns associations where entities from this source are involved.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "source_checksum": {
+                        "type": "string",
+                        "description": "Checksum of the source document.",
+                    },
+                },
+                "required": ["source_checksum"],
+                "additionalProperties": False,
+            },
+            handler=_get_source_associations_handler,
+            risk_level=ActionRisk.SAFE,
+        )
+    )
+
+    registry.register_tool(
+        ToolDefinition(
+            name="enrich_concept_attributes",
+            description="Extract description/definition for a concept from its source document. Returns attributes dict with 'description' field.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "raw_name": {
+                        "type": "string",
+                        "description": "The concept name to enrich.",
+                    },
+                    "source_checksum": {
+                        "type": "string",
+                        "description": "Checksum of the source document where concept was found.",
+                    },
+                },
+                "required": ["raw_name", "source_checksum"],
+                "additionalProperties": False,
+            },
+            handler=_enrich_concept_attributes_handler,
+            risk_level=ActionRisk.SAFE,
+        )
+    )
+
+    registry.register_tool(
+        ToolDefinition(
             name="resolve_entity",
             description="Resolve a raw entity name to a canonical entity (create or update).",
             parameters={
@@ -126,6 +170,15 @@ def register_synthesis_tools(registry: ToolRegistry) -> None:
                     "needs_review": {
                         "type": "boolean",
                         "description": "Whether this resolution needs human review. Defaults to false.",
+                    },
+                    "attributes": {
+                        "type": "object",
+                        "description": "Optional entity-specific attributes (e.g., for Concepts: {'description': '...'}). Defaults to empty dict.",
+                    },
+                    "associations": {
+                        "type": "array",
+                        "description": "Optional list of association objects from source data. Each should have: target_id, target_type, relationship, evidence. Defaults to empty array.",
+                        "items": {"type": "object"},
                     },
                 },
                 "required": ["raw_name", "entity_type", "source_checksum", "canonical_id", "is_new", "reasoning"],
@@ -204,6 +257,9 @@ def _list_pending_entities_handler(args: Mapping[str, Any]) -> ToolResult:
             return ToolResult(success=False, output=None, error=f"Unknown entity_type: {entity_type}")
         
         if directory.exists():
+            import sys
+            print(f"\n🔍 Scanning {entity_type} directory: {directory}", file=sys.stderr)
+            
             for entity_file in directory.glob("*.json"):
                 source_checksum = entity_file.stem
                 entity_list = []
@@ -219,15 +275,36 @@ def _list_pending_entities_handler(args: Mapping[str, Any]) -> ToolResult:
                     elif entity_type == "Concept":
                         extracted = kb_storage.get_extracted_concepts(source_checksum)
                         entity_list = extracted.concepts if extracted else []
-                except Exception:
-                    # Fallback: Try reading as simple JSON list (for backward compatibility / tests)
+                    
+                    print(f"  ✓ Loaded {source_checksum[:12]}... via KnowledgeGraphStorage: {len(entity_list)} entities", file=sys.stderr)
+                except Exception as e:
+                    # Fallback: Try reading JSON directly and extract entity list
+                    print(f"  ⚠ KnowledgeGraphStorage failed for {source_checksum[:12]}...: {type(e).__name__}", file=sys.stderr)
                     try:
                         with entity_file.open("r", encoding="utf-8") as f:
                             data = json.load(f)
+                        
+                        # Handle different JSON formats
                         if isinstance(data, list):
+                            # Simple list format (backward compatibility)
                             entity_list = data
-                    except Exception:
+                            print(f"  ✓ Loaded {source_checksum[:12]}... as JSON list: {len(entity_list)} entities", file=sys.stderr)
+                        elif isinstance(data, dict):
+                            # ExtractedPeople/Organizations/Concepts format
+                            if entity_type == "Person" and "people" in data:
+                                entity_list = data["people"]
+                                print(f"  ✓ Loaded {source_checksum[:12]}... from dict['people']: {len(entity_list)} entities", file=sys.stderr)
+                            elif entity_type == "Organization" and "organizations" in data:
+                                entity_list = data["organizations"]
+                                print(f"  ✓ Loaded {source_checksum[:12]}... from dict['organizations']: {len(entity_list)} entities", file=sys.stderr)
+                            elif entity_type == "Concept" and "concepts" in data:
+                                entity_list = data["concepts"]
+                                print(f"  ✓ Loaded {source_checksum[:12]}... from dict['concepts']: {len(entity_list)} entities", file=sys.stderr)
+                            else:
+                                print(f"  ✗ Unrecognized dict format for {source_checksum[:12]}...: keys={list(data.keys())}", file=sys.stderr)
+                    except Exception as fallback_error:
                         # Skip files that can't be loaded
+                        print(f"  ✗ Fallback failed for {source_checksum[:12]}...: {type(fallback_error).__name__}: {fallback_error}", file=sys.stderr)
                         continue
                 
                 for entity_name in entity_list:
@@ -245,6 +322,15 @@ def _list_pending_entities_handler(args: Mapping[str, Any]) -> ToolResult:
                 
                 if len(pending) >= limit:
                     break
+
+        import sys
+        print(f"\n📊 Summary for {entity_type}:", file=sys.stderr)
+        print(f"   Total pending entities: {len(pending)}", file=sys.stderr)
+        print(f"   Existing aliases in canonical store: {len(existing_aliases)}", file=sys.stderr)
+        if pending:
+            print(f"   Sample pending entities:", file=sys.stderr)
+            for entity in pending[:3]:
+                print(f"     • {entity['raw_name']} (from {entity['source_checksum'][:12]}...)", file=sys.stderr)
 
         return ToolResult(
             success=True,
@@ -311,6 +397,8 @@ def _resolve_entity_handler(args: Mapping[str, Any]) -> ToolResult:
     reasoning = args["reasoning"]
     confidence = args.get("confidence", 0.95)
     needs_review = args.get("needs_review", False)
+    attributes = args.get("attributes", {})
+    associations = args.get("associations", [])
 
     try:
         # Record this resolution for later batch save
@@ -324,6 +412,8 @@ def _resolve_entity_handler(args: Mapping[str, Any]) -> ToolResult:
             "confidence": confidence,
             "needs_review": needs_review,
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "attributes": attributes,
+            "associations": associations,
         })
 
         return ToolResult(
@@ -365,10 +455,25 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
             reasoning = change["reasoning"]
             confidence = change["confidence"]
             needs_review = change["needs_review"]
+            attributes = change.get("attributes", {})
+            associations = change.get("associations", [])
 
             if is_new:
                 # Create new canonical entity
                 now = datetime.now(timezone.utc)
+                
+                # Convert associations to CanonicalAssociation objects
+                from src.knowledge.canonical import CanonicalAssociation
+                canonical_associations = []
+                for assoc in associations:
+                    # Group associations by target
+                    canonical_associations.append(CanonicalAssociation(
+                        target_id=assoc.get("target_id", ""),
+                        target_type=assoc.get("target_type", "Unknown"),
+                        relationships=[{"type": assoc.get("relationship", "related"), "count": 1}],
+                        source_checksums=[source_checksum],
+                    ))
+                
                 entity = CanonicalEntity(
                     canonical_id=canonical_id,
                     canonical_name=raw_name,
@@ -386,8 +491,8 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
                             reasoning=reasoning,
                         )
                     ],
-                    attributes={},
-                    associations=[],
+                    attributes=attributes,
+                    associations=canonical_associations,
                     metadata={
                         "synthesis_complete": True,
                         "synthesis_batch_id": batch_id,
@@ -503,3 +608,140 @@ def _save_synthesis_batch_handler(args: Mapping[str, Any]) -> ToolResult:
         )
     except Exception as exc:
         return ToolResult(success=False, output=None, error=str(exc))
+
+
+def _get_source_associations_handler(args: Mapping[str, Any]) -> ToolResult:
+    """Retrieve extracted associations for a source document."""
+    source_checksum = args["source_checksum"]
+
+    try:
+        kb_dir = get_knowledge_graph_root()
+        kb_storage = KnowledgeGraphStorage(kb_dir)
+
+        # Load associations for this source
+        extracted_assoc = kb_storage.get_extracted_associations(source_checksum)
+        
+        if extracted_assoc is None or not extracted_assoc.associations:
+            return ToolResult(
+                success=True,
+                output={
+                    "source_checksum": source_checksum,
+                    "associations": [],
+                    "count": 0,
+                },
+                error=None,
+            )
+
+        # Convert to dict format for agent
+        associations = [assoc.to_dict() for assoc in extracted_assoc.associations]
+
+        return ToolResult(
+            success=True,
+            output={
+                "source_checksum": source_checksum,
+                "associations": associations,
+                "count": len(associations),
+            },
+            error=None,
+        )
+    except Exception as exc:
+        return ToolResult(success=False, output=None, error=str(exc))
+
+
+def _enrich_concept_attributes_handler(args: Mapping[str, Any]) -> ToolResult:
+    """Extract description/definition for a concept from its source document."""
+    raw_name = args["raw_name"]
+    source_checksum = args["source_checksum"]
+
+    try:
+        # Try to load the source document's parsed markdown
+        kb_dir = get_knowledge_graph_root()
+        evidence_dir = kb_dir.parent / "evidence" / "parsed"
+        
+        # Look for parsed markdown file with this checksum
+        parsed_file = evidence_dir / f"{source_checksum}.md"
+        
+        if not parsed_file.exists():
+            # No parsed content available - return minimal attributes
+            return ToolResult(
+                success=True,
+                output={
+                    "attributes": {
+                        "description": f"Concept: {raw_name}",
+                        "enrichment_status": "no_source_content",
+                    },
+                },
+                error=None,
+            )
+
+        # Read the source content
+        content = parsed_file.read_text(encoding="utf-8")
+        
+        # Extract a description using simple heuristics
+        # (In production, this could call an LLM for better extraction)
+        description = _extract_concept_description(raw_name, content)
+
+        return ToolResult(
+            success=True,
+            output={
+                "attributes": {
+                    "description": description,
+                    "enrichment_status": "extracted",
+                },
+            },
+            error=None,
+        )
+    except Exception as exc:
+        # Fallback to minimal attributes on error
+        return ToolResult(
+            success=True,
+            output={
+                "attributes": {
+                    "description": f"Concept: {raw_name}",
+                    "enrichment_status": "error",
+                    "error_message": str(exc),
+                },
+            },
+            error=None,
+        )
+
+
+def _extract_concept_description(concept_name: str, content: str, max_length: int = 500) -> str:
+    """Extract a description for a concept from document content using heuristics."""
+    # Simple heuristic: find sentences containing the concept
+    # Split into sentences (rough approximation)
+    sentences = content.replace("\\n", " ").split(". ")
+    
+    # Find sentences mentioning the concept (case-insensitive)
+    concept_lower = concept_name.lower()
+    relevant_sentences = []
+    
+    for sentence in sentences:
+        if concept_lower in sentence.lower():
+            # Clean up the sentence
+            clean_sentence = sentence.strip()
+            if clean_sentence and len(clean_sentence) > 20:  # Ignore very short sentences
+                relevant_sentences.append(clean_sentence)
+                
+                # Stop if we have enough context
+                total_length = sum(len(s) for s in relevant_sentences)
+                if total_length >= max_length:
+                    break
+    
+    if relevant_sentences:
+        # Combine relevant sentences
+        description = ". ".join(relevant_sentences[:3])  # Max 3 sentences
+        
+        # Truncate if too long
+        if len(description) > max_length:
+            description = description[:max_length] + "..."
+        
+        return description
+    
+    # Fallback: use first part of document if no specific mention found
+    preview = content[:max_length].strip()
+    if "\\n" in preview:
+        # Get first paragraph
+        preview = preview.split("\\n\\n")[0]
+    
+    return f"{concept_name}: {preview}..."
