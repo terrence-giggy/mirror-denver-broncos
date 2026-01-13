@@ -13,6 +13,7 @@ from src.orchestration.toolkit.synthesis import (
     _get_alias_map_handler,
     _get_canonical_entity_handler,
     _list_pending_entities_handler,
+    _resolve_association_targets_handler,
     _resolve_entity_handler,
     _save_synthesis_batch_handler,
     register_synthesis_tools,
@@ -86,6 +87,9 @@ def test_register_synthesis_tools():
         "list_pending_entities",
         "get_canonical_entity",
         "get_alias_map",
+        "resolve_association_targets",
+        "enrich_entity_attributes",
+        "enrich_concept_attributes",  # Deprecated but kept for compatibility
         "resolve_entity",
         "save_synthesis_batch",
     ]
@@ -227,3 +231,64 @@ def test_save_synthesis_batch(temp_kb_dir: Path):
             
         # Verify alias-map.json is included
         assert any("alias-map.json" in path for path in modified_file_paths)
+
+def test_resolve_association_targets(temp_kb_dir: Path):
+    """Test resolving association target names to canonical IDs."""
+    import src.orchestration.toolkit.synthesis as synthesis_module
+    
+    with patch("src.orchestration.toolkit.synthesis.get_knowledge_graph_root", return_value=temp_kb_dir):
+        # Clear state to ensure clean test
+        synthesis_module._batch_canonical_store = None
+        
+        # Raw associations from extraction (with entity names)
+        raw_associations = [
+            {
+                "source": "AFC West",
+                "target": "Denver Broncos",
+                "source_type": "Concept",
+                "target_type": "Organization",
+                "relationship": "includes",
+                "evidence": "Denver Broncos are in the AFC West division",
+                "confidence": 0.95,
+            },
+            {
+                "source": "AFC West",
+                "target": "Los Angeles Chargers",  # Changed to entity NOT in alias map
+                "source_type": "Concept",
+                "target_type": "Organization",
+                "relationship": "includes",
+                "evidence": "Chargers compete in AFC West",
+                "confidence": 0.95,
+            },
+        ]
+        
+        result = _resolve_association_targets_handler({"associations": raw_associations})
+        
+        assert result.success
+        assert result.output["count"] == 2
+        
+        resolved = result.output["resolved_associations"]
+        
+        # First association: "Denver Broncos" should resolve to "denver-broncos" (exists in alias map)
+        assert resolved[0]["target_id"] == "denver-broncos"
+        assert resolved[0]["target_type"] == "Organization"
+        assert resolved[0]["relationship"] == "includes"
+        
+        # Second association: "Los Angeles Chargers" not in alias map, so target_id should be empty
+        assert resolved[1]["target_id"] == ""
+        assert resolved[1]["target_type"] == "Organization"
+        assert resolved[1]["relationship"] == "includes"
+        
+        # Unresolved count should be 1 (Los Angeles Chargers)
+        assert result.output["unresolved_count"] == 1
+
+
+def test_resolve_association_targets_empty(temp_kb_dir: Path):
+    """Test resolving empty associations list."""
+    with patch("src.orchestration.toolkit.synthesis.get_knowledge_graph_root", return_value=temp_kb_dir):
+        result = _resolve_association_targets_handler({"associations": []})
+        
+        assert result.success
+        assert result.output["count"] == 0
+        assert result.output["unresolved_count"] == 0
+        assert result.output["resolved_associations"] == []
