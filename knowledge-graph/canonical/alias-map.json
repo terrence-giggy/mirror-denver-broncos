@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-12T22:51:50.744937+00:00",
+  "last_updated": "2026-01-13T01:36:56.855610+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -120,6 +120,15 @@
       "westwood one": "westwood-one",
       "paramount +": "paramount+"
     },
-    "Concept": {}
+    "Concept": {
+      "broncos in 60": "broncos-in-60",
+      "joe lombardi": "joe-lombardi",
+      "offensive coordinator": "offensive-coordinator",
+      "week 18 matchup": "week-18-matchup",
+      "los angeles chargers": "los-angeles-chargers",
+      "vance joseph": "vance-joseph",
+      "defensive coordinator": "defensive-coordinator",
+      "creating turnovers": "creating-turnovers"
+    }
   }
 }

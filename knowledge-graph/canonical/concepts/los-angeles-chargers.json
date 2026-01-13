@@ -1,0 +1,30 @@
+{
+  "canonical_id": "los-angeles-chargers",
+  "canonical_name": "Los Angeles Chargers",
+  "entity_type": "Concept",
+  "aliases": [
+    "Los Angeles Chargers"
+  ],
+  "source_checksums": [
+    "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-13T01:36:56.855013+00:00",
+  "last_updated": "2026-01-13T01:36:56.855013+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-13T01:36:56.855013+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "New concept derived from the team name"
+    }
+  ],
+  "attributes": {},
+  "associations": [],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260113-013602",
+    "confidence": 0.95,
+    "needs_review": false
+  }
+}
