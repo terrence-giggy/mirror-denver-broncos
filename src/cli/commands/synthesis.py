@@ -177,11 +177,6 @@ def _gather_unresolved_entities(
                     if normalized not in alias_map.by_type.get("Concept", {}):
                         unresolved.append((name, checksum))
                         unresolved_in_file += 1
-        
-        if entities_in_file > 0:
-            print(f"   File {checksum[:12]}...: {entities_in_file} entities, {unresolved_in_file} unresolved", file=sys.stderr)
-        else:
-            print(f"   File {checksum[:12]}...: EMPTY (no entities extracted)", file=sys.stderr)
     
     print(f"   TOTAL unresolved: {len(unresolved)}", file=sys.stderr)
     

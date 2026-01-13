@@ -32,7 +32,15 @@ goal: |
      - **FOR CONCEPTS:** Use get_source_associations tool to retrieve associations for this source_checksum
        * Extract any associations where this concept is the source or target
        * These will be used to populate the associations field in the canonical entity
-     - **FOR CONCEPTS:** Call enrich_concept_attributes to get a description/definition for the concept
+       * **IMPORTANT:** Call resolve_association_targets with the raw associations to convert target names to canonical IDs
+       * Pass the resolved_associations from resolve_association_targets to the resolve_entity tool
+     - **FOR ALL ENTITIES:** Call enrich_entity_attributes to get a description
+       * Pass raw_name, entity_type, and source_checksum
+       * The tool will use LLM to extract a high-quality, informative description from the source document
+       * This populates the attributes.description field with actual context about the entity
+       * For Concepts: what the concept is, its meaning or significance
+       * For Organizations: what the organization is, its purpose or role
+       * For People: who they are, their role, title, or significance
        * Pass raw_name and source_checksum
        * The tool will read the source document and extract concept meaning
        * This populates the attributes.description field
@@ -46,8 +54,8 @@ goal: |
        * reasoning: explain why (e.g., "Abbreviation of canonical name"). Include cross-type concerns if detected.
        * confidence: 0.0-1.0 (default 0.95, but < 0.8 if cross-type issue detected)
        * needs_review: true if ambiguous or cross-type issue detected
-       * **attributes:** for Concepts, include {"description": "..."}  from enrich_concept_attributes
-       * **associations:** for any entity, include merged associations from get_source_associations
+       * **attributes:** include {"description": "..."} from enrich_entity_attributes for meaningful context
+       * **associations:** for any entity, include merged associations from get_source_associations (after resolving targets)
   4. After processing all entities, call save_synthesis_batch with a unique batch_id.
      This writes files to disk AND returns modified_file_paths array (just file paths, not content).
      **The modified_file_paths array includes BOTH entity files AND alias-map.json.**
@@ -91,7 +99,9 @@ allowed_tools:
   - get_canonical_entity
   - get_alias_map
   - get_source_associations
-  - enrich_concept_attributes
+  - resolve_association_targets
+  - enrich_entity_attributes
+  - enrich_concept_attributes  # Deprecated, kept for backward compatibility
   - resolve_entity
   - save_synthesis_batch
   - read_file_content
