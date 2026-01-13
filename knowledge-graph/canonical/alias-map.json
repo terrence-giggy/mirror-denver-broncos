@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-01-12T22:26:05.778730+00:00",
+  "last_updated": "2026-01-12T22:51:50.744937+00:00",
   "by_type": {
     "Person": {
       "bo nix": "bo-nix",
@@ -117,7 +117,8 @@
       "nfl mobile app": "nfl-mobile-app",
       "nfl+ premium": "nfl+premium",
       "game pass": "game-pass",
-      "westwood one": "westwood-one"
+      "westwood one": "westwood-one",
+      "paramount +": "paramount+"
     },
     "Concept": {}
   }
