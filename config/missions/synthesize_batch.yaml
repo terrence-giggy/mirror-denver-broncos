@@ -20,10 +20,22 @@ goal: |
   3. For each pending entity (up to batch_size):
      - Normalize the raw_name (lowercase, strip, collapse spaces)
      - Check if normalized name exists in alias map (if yes → skip, already resolved)
+     - **CROSS-TYPE CHECK:** Detect if entity should be in a different type:
+       * If entity_type is Concept and name looks like a person (e.g., "Joe Lombardi", "Vance Joseph"), set needs_review=true and add note in reasoning
+       * If entity_type is Concept and name looks like an organization (e.g., "Los Angeles Chargers"), set needs_review=true and add note in reasoning
+       * Person indicators: proper names with first+last, titles like "Coach", "Director"
+       * Org indicators: team names, company names, "LLC", "Inc", "Foundation"
      - Search canonical entities for semantic matches using get_canonical_entity
        * Abbreviations: "Broncos" → "Denver Broncos"
        * Variants: "The Denver Broncos" → "Denver Broncos"
        * Nicknames or alternate spellings
+     - **FOR CONCEPTS:** Use get_source_associations tool to retrieve associations for this source_checksum
+       * Extract any associations where this concept is the source or target
+       * These will be used to populate the associations field in the canonical entity
+     - **FOR CONCEPTS:** Call enrich_concept_attributes to get a description/definition for the concept
+       * Pass raw_name and source_checksum
+       * The tool will read the source document and extract concept meaning
+       * This populates the attributes.description field
      - Decide: MATCH to existing canonical_id OR create NEW entity with new canonical_id (slug)
      - Call resolve_entity with your decision:
        * raw_name: the original extracted name
@@ -31,9 +43,11 @@ goal: |
        * source_checksum: from pending entity
        * canonical_id: existing ID (if match) or new slug (if new)
        * is_new: true for new entities, false for matches
-       * reasoning: explain why (e.g., "Abbreviation of canonical name")
-       * confidence: 0.0-1.0 (default 0.95)
-       * needs_review: true if ambiguous
+       * reasoning: explain why (e.g., "Abbreviation of canonical name"). Include cross-type concerns if detected.
+       * confidence: 0.0-1.0 (default 0.95, but < 0.8 if cross-type issue detected)
+       * needs_review: true if ambiguous or cross-type issue detected
+       * **attributes:** for Concepts, include {"description": "..."}  from enrich_concept_attributes
+       * **associations:** for any entity, include merged associations from get_source_associations
   4. After processing all entities, call save_synthesis_batch with a unique batch_id.
      This writes files to disk AND returns modified_file_paths array (just file paths, not content).
      **The modified_file_paths array includes BOTH entity files AND alias-map.json.**
@@ -76,6 +90,8 @@ allowed_tools:
   - list_pending_entities
   - get_canonical_entity
   - get_alias_map
+  - get_source_associations
+  - enrich_concept_attributes
   - resolve_entity
   - save_synthesis_batch
   - read_file_content
