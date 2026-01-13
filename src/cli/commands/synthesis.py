@@ -131,37 +131,59 @@ def _gather_unresolved_entities(
     Returns:
         List of (entity_name, source_checksum) tuples
     """
+    import sys
+    
     unresolved: List[tuple[str, str]] = []
     alias_map = canonical_storage.load_alias_map()
     
     # Get source checksums for this entity type only
     checksums = _list_all_checksums(kg_storage, entity_type)
     
+    print(f"\n🔍 DEBUG: _gather_unresolved_entities for {entity_type}", file=sys.stderr)
+    print(f"   Found {len(checksums)} checksum files", file=sys.stderr)
+    print(f"   Alias map has {len(alias_map.by_type.get(entity_type, {}))} existing {entity_type} aliases", file=sys.stderr)
+    
     # Check each source for unresolved entities
     for checksum in checksums:
+        entities_in_file = 0
+        unresolved_in_file = 0
+        
         if entity_type == "Person":
             extracted = kg_storage.get_extracted_people(checksum)
             if extracted:
+                entities_in_file = len(extracted.people)
                 for name in extracted.people:
                     normalized = normalize_name(name)
                     if normalized not in alias_map.by_type.get("Person", {}):
                         unresolved.append((name, checksum))
+                        unresolved_in_file += 1
         
         elif entity_type == "Organization":
             extracted = kg_storage.get_extracted_organizations(checksum)
             if extracted:
+                entities_in_file = len(extracted.organizations)
                 for name in extracted.organizations:
                     normalized = normalize_name(name)
                     if normalized not in alias_map.by_type.get("Organization", {}):
                         unresolved.append((name, checksum))
+                        unresolved_in_file += 1
         
         elif entity_type == "Concept":
             extracted = kg_storage.get_extracted_concepts(checksum)
             if extracted:
+                entities_in_file = len(extracted.concepts)
                 for name in extracted.concepts:
                     normalized = normalize_name(name)
                     if normalized not in alias_map.by_type.get("Concept", {}):
                         unresolved.append((name, checksum))
+                        unresolved_in_file += 1
+        
+        if entities_in_file > 0:
+            print(f"   File {checksum[:12]}...: {entities_in_file} entities, {unresolved_in_file} unresolved", file=sys.stderr)
+        else:
+            print(f"   File {checksum[:12]}...: EMPTY (no entities extracted)", file=sys.stderr)
+    
+    print(f"   TOTAL unresolved: {len(unresolved)}", file=sys.stderr)
     
     return unresolved
 
@@ -177,6 +199,8 @@ def _list_all_checksums(kg_storage: KnowledgeGraphStorage, entity_type: str | No
     Returns:
         Sorted list of unique checksums
     """
+    import sys
+    
     checksums: set[str] = set()
     
     # Determine which directories to scan based on entity_type
@@ -195,10 +219,21 @@ def _list_all_checksums(kg_storage: KnowledgeGraphStorage, entity_type: str | No
             kg_storage._concepts_dir,  # noqa: SLF001
         ]
     
+    print(f"\n🔍 DEBUG: _list_all_checksums for {entity_type}", file=sys.stderr)
+    
     for directory in directories:
+        dir_name = directory.name
         if directory.exists():
-            for path in directory.glob("*.json"):
+            files = list(directory.glob("*.json"))
+            print(f"   Directory {dir_name}: {len(files)} files", file=sys.stderr)
+            if files and len(files) <= 5:
+                print(f"      Files: {[f.stem[:12] + '...' for f in files]}", file=sys.stderr)
+            for path in files:
                 checksums.add(path.stem)
+        else:
+            print(f"   Directory {dir_name}: DOES NOT EXIST", file=sys.stderr)
+    
+    print(f"   Total unique checksums: {len(checksums)}", file=sys.stderr)
     
     return sorted(checksums)
 
