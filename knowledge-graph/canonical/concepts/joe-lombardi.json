@@ -1,0 +1,124 @@
+{
+  "canonical_id": "joe-lombardi",
+  "canonical_name": "Joe Lombardi",
+  "entity_type": "Concept",
+  "aliases": [
+    "Joe Lombardi"
+  ],
+  "source_checksums": [
+    "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce"
+  ],
+  "corroboration_score": 1,
+  "first_seen": "2026-01-13T03:52:41.276756+00:00",
+  "last_updated": "2026-01-13T03:52:41.276756+00:00",
+  "resolution_history": [
+    {
+      "action": "created",
+      "timestamp": "2026-01-13T03:52:41.276756+00:00",
+      "by": "synthesis-agent",
+      "reasoning": "Person name, marking for review."
+    }
+  ],
+  "attributes": {
+    "description": "Concept: Joe Lombardi"
+  },
+  "associations": [
+    {
+      "target_id": "",
+      "target_type": "Concept",
+      "relationships": [
+        {
+          "type": "Related to",
+          "count": 1
+        }
+      ],
+      "source_checksums": [
+        "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce"
+      ]
+    },
+    {
+      "target_id": "",
+      "target_type": "Concept",
+      "relationships": [
+        {
+          "type": "Related to",
+          "count": 1
+        }
+      ],
+      "source_checksums": [
+        "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce"
+      ]
+    },
+    {
+      "target_id": "",
+      "target_type": "Concept",
+      "relationships": [
+        {
+          "type": "Related to",
+          "count": 1
+        }
+      ],
+      "source_checksums": [
+        "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce"
+      ]
+    },
+    {
+      "target_id": "",
+      "target_type": "Organization",
+      "relationships": [
+        {
+          "type": "Related to",
+          "count": 1
+        }
+      ],
+      "source_checksums": [
+        "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce"
+      ]
+    },
+    {
+      "target_id": "",
+      "target_type": "Concept",
+      "relationships": [
+        {
+          "type": "Related to",
+          "count": 1
+        }
+      ],
+      "source_checksums": [
+        "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce"
+      ]
+    },
+    {
+      "target_id": "",
+      "target_type": "Concept",
+      "relationships": [
+        {
+          "type": "Related to",
+          "count": 1
+        }
+      ],
+      "source_checksums": [
+        "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce"
+      ]
+    },
+    {
+      "target_id": "",
+      "target_type": "Concept",
+      "relationships": [
+        {
+          "type": "Related to",
+          "count": 1
+        }
+      ],
+      "source_checksums": [
+        "ccdf59cd6b2035622e5386ce8da2692db2ae0000563a525fae99ff059c11d6ce"
+      ]
+    }
+  ],
+  "metadata": {
+    "synthesis_complete": true,
+    "synthesis_batch_id": "20260113-035016",
+    "confidence": 0.95,
+    "needs_review": true
+  }
+}
